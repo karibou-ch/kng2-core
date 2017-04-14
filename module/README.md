@@ -17,7 +17,7 @@ Clone the repository and do:
 
 # Building the library
 
-    npm run build
+    npm run module
     
 ## Install the SystemJs Example 
     
