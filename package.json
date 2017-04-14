@@ -10,7 +10,7 @@
     "test": "ng test",
     "lint": "ng lint",
     "e2e": "ng e2e",
-    "module":"rm -rf lib && tsc -p module"
+    "module":"rm -rf lib && ./node_modules/.bin/tsc -p module/"
   },
   "files": [
     "dist",
