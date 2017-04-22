@@ -1,19 +1,14 @@
 
-# Karibou.ch Angular 2 core Library
-This project will provide a standalone angular2 library that provide all core features (API mapping) of karibou.ch. This library is also available on npmjs
-This module must be a kickstart base for every new web application/ionic declinaison (based on your Idea). 
+# TODO
 
-## Authors
+- [ ] understanding [caching](http://www.syntaxsuccess.com/viewarticle/caching-with-rxjs-observables-in-angular-2.0) rxjs observables paradigm 
+- [ ] modelize hierarchy of services (based on current angularjs implementation)
+- [ ] modelize streamflow (rxjs) when application load 
+- [ ] modelize streamflow (rxjs) when product is updated
+- [ ] modelize streamflow (rxjs) when shop is updated
+- [ ] modelize streamflow (rxjs) when category is updated
+- [ ] modelize streamflow (rxjs) when user is updated
 
-- David Gonzalez, https://github.com/GonzalD
-- Evalet Olivier, https://github.com/evaletolab
-
-
-# Installation
-
-Clone the repository and do:
-
-    npm install
 
 # Building the library
 
