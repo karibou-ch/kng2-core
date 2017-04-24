@@ -277,7 +277,7 @@ export class UserService {
   // How to build Angular apps using Observable Data Services
   // http://blog.angular-university.io/how-to-build-angular2-apps-using-rxjs-observable-data-services-pitfalls-to-avoid/
   ge(id:number) {
-    return this.http.get('/someUrl',{headers:this.headers})
+    return this.http.get(this.config.API_SERVER+'/v1/users/:id/:action/:aid/:detail',{headers:this.headers})
         .map(res => res.json()).publishLast().refCount();
   }
 
