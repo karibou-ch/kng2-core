@@ -15,6 +15,7 @@ The module goal mainly provide a kickstart kit to make every new idea/motivation
 
 - David Gonzalez, https://github.com/GonzalD
 - Evalet Olivier, https://github.com/evaletolab
+- Noria Foukia Enseignante en mathématiques @HEPIA 
 
 
 # Project installation
