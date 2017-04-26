@@ -4,8 +4,8 @@ The module goal mainly provide a kickstart kit to make every new idea/motivation
 
 [![David](https://img.shields.io/david/karibou-ch/kng-core.svg?style=flat)](https://david-dm.org/karibou-ch/kng-core)
 [![Build Status](https://travis-ci.org/karibou-ch/kng-core.svg?branch=master)](https://travis-ci.org/karibou-ch/kng-core)
-<a href="https://gitter.im/karibou-ch/?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge"><img src="https://badges.gitter.im/Join Chat.svg" alt="Gitter chat" height="20"></a>
- 
+[![Gitter](https://badges.gitter.im/karibou-ch/kng2-core.svg)](https://gitter.im/karibou-ch/kng2-core?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
+
 # TODO
 1. [readme](module/README.md)
 2. [tasks]()
