@@ -1,4 +1,6 @@
 # Kng2Core means karibou.ch Angular 2 core Library :rocket:
+
+[![Join the chat at https://gitter.im/karibou-ch/kng2-core](https://badges.gitter.im/karibou-ch/kng2-core.svg)](https://gitter.im/karibou-ch/kng2-core?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 This project will provide a standalone angular2 library that implement all core features (API mapping) of karibou.ch. 
 The module goal mainly provide a kickstart kit to make every new idea/motivation web application/ionic declinaison without friction.
 
