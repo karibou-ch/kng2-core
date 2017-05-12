@@ -4,16 +4,16 @@ import { FormsModule } from '@angular/forms';
 import { HttpModule } from '@angular/http';
 
 import { AppComponent } from './app.component';
-import { UserPipe } from './user.pipe';
+import { Kng2CoreModule } from '../../module/kng2-core.module';
 
 @NgModule({
   declarations: [
-    AppComponent,
-    UserPipe
+    AppComponent
   ],
   imports: [
     BrowserModule,
     FormsModule,
+    Kng2CoreModule,
     HttpModule
   ],
   providers: [],

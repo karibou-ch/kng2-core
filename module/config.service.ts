@@ -56,7 +56,7 @@ export class ConfigService {
   ) { 
     this.headers = new Headers();
     this.headers.append('Content-Type', 'application/json');    
-    this.http.get(this.API_SERVER+'/v1/config?lang='+$translate.use(),{headers:this.headers})
+    this.http.get(this.API_SERVER+'/v1/config?lang=',{headers:this.headers})
         .map(res => {
           Object.assign(this.shop,res.json())
         });
