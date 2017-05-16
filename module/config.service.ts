@@ -69,17 +69,11 @@ export class ConfigService {
     public http: Http
   ) {
     this.headers = new Headers();
-    this.headers.append('Content-Type', 'application/json');  
-
-    // TODO use translate from i18n
-    this.config=this.http.get(this.API_SERVER+'/v1/config?lang=fr',{
-        headers:this.headers, withCredentials:true
-      })
-      .map(res => res.json())
-      .map(config => {
-        config.shippingweek.map(week=>new Date(week));
-        return Object.assign(this.shop,config);
-      });
+    this.headers.append('Content-Type', 'application/json');    
+    this.http.get(this.API_SERVER+'/v1/config?lang=',{headers:this.headers})
+        .map(res => {
+          Object.assign(this.shop,res.json())
+        });
   }
 
   getConfig():Observable<any>{
