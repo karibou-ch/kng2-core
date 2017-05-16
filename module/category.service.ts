@@ -1,4 +1,4 @@
-import { Http, Headers } from '@angular/http';
+import { Http, Headers, RequestOptions } from '@angular/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs/Rx';
 import { ConfigService } from './config.service'
@@ -46,6 +46,7 @@ export class CategoryService {
       this.cache.list.push(category);
       return;
     }
+    //update existing entry
     return Object.assign(this.cache.map[category.slug],category);    
   }
 
@@ -77,7 +78,7 @@ export class CategoryService {
   }
 
 
-  // request with filter
+  // request categories with filter
   select(filter?: any):Observable<Category[]> {
     filter = filter || {};
 
@@ -91,69 +92,84 @@ export class CategoryService {
     //.catch;
   }
 
-  //get c
+  //get category based on his slug
   get(slug):Observable<Category> {
-    let cached:Observable<Category>;
+    let cached:Observable<Category>; //????
 
-    // vérifie si dans le cache
+    // check if in the cache
     if (this.cache.map[slug]){
       return Observable.from(this.cache.map[slug]);
     }
 
 
-    this.http.get(this.config.API_SERVER + '/v1/category/'+slug, {
+    return this.http.get(this.config.API_SERVER + '/v1/category/'+slug, {
       headers: this.headers,
       withCredentials: true
     })
       .map(res => res.json() as Category)
-      .map(category => this.addCache(category));
-
-    //   var loaded=Category.find({slug:slug});if (loaded){
-    //     if(cb){cb(loaded);}
-    //     return loaded;
-    //   }
-
-    //   var category=this, c=this.backend.get({category:slug},function() {
-    //     //wrap = as Category
-    //     category.wrap(s);
-    //     if(cb){cb(category);}
-    //   },err);
-    //   return category;
-
+      .map(category => this.addCache(category))
+      .catch(this.handleError);
 
   }
 
 
-  // avec POST
-  save(cb, err) {
+  //   app.post('/v1/category/:category', auth.ensureAdmin, categories.update);
+  save(slug):Observable<Category> {
     //console.log("model",this.photo)
+    
+    return this.http.post(this.config.API_SERVER + '/v1/category/'+slug, {
+      headers: this.headers,
+      withCredentials: true
+    })
+    .map(res => res.json() as Category)
+    .catch(this.handleError);
 
-/*
-    if (!err) { err = onerr; }
-    var category = this, s = this.backend.save({ category: this.slug }, this, function () {
-      category.wrap(s);
-      if (cb) { cb(category); }
-    }, err);
-    return category;
-    */
-  };
+  }
 
-  create(cat, cb, err) {
+//  app.post('/v1/category', auth.ensureAdmin, categories.create);
+  create(cat: Category):Observable<Category> {
+
+    return this.http.post(this.config.API_SERVER + '/v1/category/', cat, {
+      headers: this.headers,
+      withCredentials: true
+    })
+    .map(res => res.json() as Category)
+    .map(category => this.addCache(category))
+    .catch(this.handleError);
+    /*
     if (!err) { err = function () { }; }
     var category = this, s = this.backend.save(cat, function () {
       category = category.wrap(s);
       if (cb) { cb(category); }
     }, err);
     return category;
-  };
+    */
+  }
 
-  remove(password, cb, err) {
-    if (!err) { err = function () { }; }
-    var category = this, s = this.backend.delete({ category: this.slug }, { password: password }, function () {
-      if (cb) { cb(category); }
-    }, err);
-    return category;
-  };
+//  app.put('/v1/category/:category', auth.ensureAdmin, auth.checkPassword, categories.remove);
+  remove(slug, password) {
+    return this.http.put(this.config.API_SERVER + '/v1/category/' + slug, {
+      headers: this.headers,
+      withCredentials: true,
+      password:password
+    })
+    .map(res => res.json() as Category)
+    .catch(this.handleError);
+  }
 
+
+  private handleError (error: Response | any) {
+  // In a real world app, you might use a remote logging infrastructure
+  let errMsg: string;
+  if (error instanceof Response) {
+    const body = error.json() || '';
+    const err = body.error || JSON.stringify(body);
+    errMsg = `${error.status} - ${error.statusText || ''} ${err}`;
+  } else {
+    errMsg = error.message ? error.message : error.toString();
+  }
+  console.error(errMsg);
+  return Observable.throw(errMsg);
+}
 
 }
