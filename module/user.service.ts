@@ -260,6 +260,30 @@ export class UserService {
     }
   };
 
+    private cache: {
+    list: Category[];
+    map: Map<string, Category>; //key is a slug
+  }
+  private updateCache(category:Category){
+
+  }
+
+  private deleteCache(category:Category){
+
+  }
+
+  private addCache(category:Category){
+    //
+    //check if already exist on cache and add in it if not the case
+    if (!this.cache.map[category.slug]){
+      this.cache.map[category.slug] = category;
+      this.cache.list.push(category);
+      return;
+    }
+    //update existing entry
+    return Object.assign(this.cache.map[category.slug],category);    
+  }
+
   private headers:Headers;
 
   constructor(
@@ -276,7 +300,7 @@ export class UserService {
   //
   // How to build Angular apps using Observable Data Services
   // http://blog.angular-university.io/how-to-build-angular2-apps-using-rxjs-observable-data-services-pitfalls-to-avoid/
-  ge(id:number) {
+  get(id:number) {
     return this.http.get(this.config.API_SERVER+'/v1/users/:id/:action/:aid/:detail',{headers:this.headers})
         .map(res => res.json()).publishLast().refCount();
   }
