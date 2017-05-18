@@ -263,6 +263,9 @@ export class UserService {
 
   private headers: Headers;
 
+
+  private cache:Map<string,User>;
+
   constructor(
     public config: ConfigService,
     public http: Http
