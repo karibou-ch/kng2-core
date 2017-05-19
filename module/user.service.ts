@@ -11,208 +11,208 @@ import { ConfigService } from './config.service';
 
 
 // TEMP CLASS TO AVOID IMPORT ERROR
-export class Shop{
-  name:string;
-  constructor(){}
+export class Shop {
+  name: string;
+  constructor() { }
 };
 
-export class User{
-    id:string;
+export class User {
+  id: string;
 
-    /* The provider which with the user authenticated (facebook, twitter, etc.) */
-    provider:string;
+  /* The provider which with the user authenticated (facebook, twitter, etc.) */
+  provider: string;
 
-    email:{
-      address:string;
-      cc:string;
-      status:any;
-    };
+  email: {
+    address: string;
+    cc: string;
+    status: any;
+  };
 
-    /* The name of this user, suitable for display.*/
-    displayName:string;
-    name: {
-        familyName:string;
-        givenName:string;
-    };
+  /* The name of this user, suitable for display.*/
+  displayName: string;
+  name: {
+    familyName: string;
+    givenName: string;
+  };
 
-    birthday:Date;
-    gender:string;
-    tags:string[];
-    url:string;
+  birthday: Date;
+  gender: string;
+  tags: string[];
+  url: string;
 
-    phoneNumbers: [{
-        number:string;
-        what:string;
-    }];
+  phoneNumbers: [{
+    number: string;
+    what: string;
+  }];
 
-    photo: string;
+  photo: string;
 
-    addresses: [{
-          name: string;
-          note: string;
-          floor: string;
-          streetAdress: string;
-          region: string;
-          postalCode: string;
-          primary:boolean;
-          geo:{
-            lat:number;
-            lng:number;
-          }
-    }];
+  addresses: [{
+    name: string;
+    note: string;
+    floor: string;
+    streetAdress: string;
+    region: string;
+    postalCode: string;
+    primary: boolean;
+    geo: {
+      lat: number;
+      lng: number;
+    }
+  }];
 
-    /* preferred postalCode*/
-    logistic:{
-      postalCode:string;
-    };
-
-
-    /* preferred products*/
-    likes:number[];
-
-    /* The available Shop for this user */
-    shops:Shop[];
-
-    /* disqus sso */
-    context:any;
-
-    /* payments methods */
-    payments:any[];
-    // payments:[{
-    //   type:{type:String},
-    //   name:{type:String},
-    //   number:{type:String},
-    //   expiry:{type:String},
-    //   provider:{type:String,unique:true,required:true},
-    //   alias:{type:String,unique:true,required:true}
-    // }],
-
-    merchant:boolean;
-
-    reminder:{
-      active:boolean;
-      weekdays:number[];
-      time:number;
-    };
+  /* preferred postalCode*/
+  logistic: {
+    postalCode: string;
+  };
 
 
-    status:boolean;
-    created:Date;
-    updated:Date;
-    logged:Date;
-		roles:string[];
-    rank:string;
+  /* preferred products*/
+  likes: number[];
+
+  /* The available Shop for this user */
+  shops: Shop[];
+
+  /* disqus sso */
+  context: any;
+
+  /* payments methods */
+  payments: any[];
+  // payments:[{
+  //   type:{type:String},
+  //   name:{type:String},
+  //   number:{type:String},
+  //   expiry:{type:String},
+  //   provider:{type:String,unique:true,required:true},
+  //   alias:{type:String,unique:true,required:true}
+  // }],
+
+  merchant: boolean;
+
+  reminder: {
+    active: boolean;
+    weekdays: number[];
+    time: number;
+  };
+
+
+  status: boolean;
+  created: Date;
+  updated: Date;
+  logged: Date;
+  roles: string[];
+  rank: string;
 
 
 
   //
   // methods
-  display(){
-    if (this.displayName){
+  display() {
+    if (this.displayName) {
       return this.displayName;
     }
     if (this.name && (this.name.givenName || this.name.familyName)) {
-      return this.name.givenName+' '+this.name.familyName;
+      return this.name.givenName + ' ' + this.name.familyName;
     }
-    if (this.id){
-      return this.id+'@'+this.provider;
+    if (this.id) {
+      return this.id + '@' + this.provider;
     }
     return 'Anonymous';
   }
 
 
   loggedTime() {
-    return (Date.now()-(new Date(this.logged)).getTime())/1000;
+    return (Date.now() - (new Date(this.logged)).getTime()) / 1000;
   }
 
-  isOwner(shopname){
+  isOwner(shopname) {
 
-      //if (this.isAdmin())return true;
-      for (var i in this.shops) {
-        if (this.shops[i].name === shopname) {
-          return true;
-        }
+    //if (this.isAdmin())return true;
+    for (var i in this.shops) {
+      if (this.shops[i].name === shopname) {
+        return true;
       }
-      return false;
+    }
+    return false;
   }
 
-  isOwnerOrAdmin(shopname){
-    if(this.isAdmin())
+  isOwnerOrAdmin(shopname) {
+    if (this.isAdmin())
       return true;
     return this.isOwner(shopname);
   }
 
-   isAuthenticated () {
-      return this.id !== '';
+  isAuthenticated() {
+    return this.id !== '';
   }
 
-   isAdmin () {
+  isAdmin() {
     return this.hasRole('admin');
   }
 
-  isReady(){
-    return (this.email&&this.email.status === true);
+  isReady() {
+    return (this.email && this.email.status === true);
   }
 
-   hasRole (role) {
-      for (var i in this.roles){
-        if (this.roles[i]===role) return true;
+  hasRole(role) {
+    for (var i in this.roles) {
+      if (this.roles[i] === role) return true;
+    }
+    return false;
+  }
+
+  hasLike(product) {
+    if (this.likes && this.likes.length) {
+      if (this.likes.indexOf(product.sku) !== -1) {
+        return true;
       }
-      return false;
+    }
+    // for (var i in this.likes){
+    //   if (this.likes[i]==product.sku) return true;
+    // }
+    return false;
   }
 
-   hasLike (product) {
-      if(this.likes&&this.likes.length){
-        if(this.likes.indexOf(product.sku)!==-1){
-          return true;
-        }
-      }
-      // for (var i in this.likes){
-      //   if (this.likes[i]==product.sku) return true;
-      // }
-      return false;
-  }
-
-   hasPrimaryAddress () {
-      if (this.addresses&&this.addresses.length==1)return 0;
-      for (var i in this.addresses){
-        if (this.addresses[i].primary===true)
-          return i;
-      }
-      return false;
+  hasPrimaryAddress() {
+    if (this.addresses && this.addresses.length == 1) return 0;
+    for (var i in this.addresses) {
+      if (this.addresses[i].primary === true)
+        return i;
+    }
+    return false;
   }
 
 
-  getEmailStatus(){
-    if(!this.email||!this.email.status)
+  getEmailStatus() {
+    if (!this.email || !this.email.status)
       return false;
 
-    if(this.email.status===true)
+    if (this.email.status === true)
       return true;
 
     return moment(this.email.status).format('ddd DD MMM YYYY');
 
   }
 
-  populateAdresseName(){
+  populateAdresseName() {
     // autofill the address name when available
-    if(this.addresses&&this.addresses.length&&!this.addresses[0].name){
-      this.addresses[0].name=this.name.familyName+' '+this.name.givenName;
+    if (this.addresses && this.addresses.length && !this.addresses[0].name) {
+      this.addresses[0].name = this.name.familyName + ' ' + this.name.givenName;
     }
   }
 
-  getBVR(){
-    var self=this;
+  getBVR() {
+    var self = this;
   }
 
   //
   // init user 
-  init () {
-    var self=this;
+  init() {
+    var self = this;
 
     // set context for error
 
-    if(!self.addresses){
+    if (!self.addresses) {
       return;
     }
     //check address
@@ -220,9 +220,9 @@ export class User{
 
     // TODO get geo 
     // self.geo=new Map();
-    self.addresses.forEach(function(address,i){
+    self.addresses.forEach(function (address, i) {
       // address is correct
-      if(!address.geo||!address.geo.lat||!address.geo.lng){
+      if (!address.geo || !address.geo.lat || !address.geo.lng) {
         return;
       }
       //
@@ -240,7 +240,7 @@ export class User{
 
 @Injectable()
 export class UserService {
-  defaultUser:User = new User();
+  defaultUser: User = new User();
   // defaultUser:User = {
   //   id: '',
   //   name: {
@@ -260,38 +260,38 @@ export class UserService {
   //   }
   // };
 
-    private cache: {
+  private cache: {
     list: User[];
-    map: Map<number, User>; 
+    map: Map<number, User>;
   }
-  private updateCache(user:User){
-
-  }
-
-  private deleteCache(user:User){
+  private updateCache(user: User) {
 
   }
 
-  private addCache(user:User){
+  private deleteCache(user: User) {
+
+  }
+
+  private addCache(user: User) {
     //
     //check if already exist on cache and add in it if not the case
-    if (!this.cache.map[user.id]){
+    if (!this.cache.map[user.id]) {
       this.cache.map[user.id] = user;
       this.cache.list.push(user);
       return;
     }
     //update existing entry
-    return Object.assign(this.cache.map[user.id], user);    
+    return Object.assign(this.cache.map[user.id], user);
   }
 
-  private headers:Headers;
+  private headers: Headers;
 
   constructor(
-    public config:ConfigService,
-    public http: Http        
-  ) { 
+    public config: ConfigService,
+    public http: Http
+  ) {
     this.headers = new Headers();
-    this.headers.append('Content-Type', 'application/json');    
+    this.headers.append('Content-Type', 'application/json');
   }
 
   // token
@@ -300,14 +300,14 @@ export class UserService {
   //
   // How to build Angular apps using Observable Data Services
   // http://blog.angular-university.io/how-to-build-angular2-apps-using-rxjs-observable-data-services-pitfalls-to-avoid/
-  get(id:number):Observable<User> {
+  get(id: number): Observable<User> {
 
-    if (this.cache.map[id]){
+    if (this.cache.map[id]) {
       return Observable.from(this.cache.map[id]);
     }
 
-    return this.http.get(this.config.API_SERVER+'/v1/users/'+id,{headers:this.headers})
-        .map(res => res.json()).publishLast().refCount();
+    return this.http.get(this.config.API_SERVER + '/v1/users/' + id, { headers: this.headers })
+      .map(res => res.json()).publishLast().refCount();
   }
 
   //
@@ -319,14 +319,14 @@ export class UserService {
     //var self=this;
 
 
-     return this.http.get(this.config.API_SERVER+'/v1/users/me',{
-       headers:this.headers,
-       withCredentials: true
-      })
-          .map(res => res.json() as User)
-          .map(user => this.addCache(user))
-          .catch(err=> Observable.of(this.defaultUser));
-        
+    return this.http.get(this.config.API_SERVER + '/v1/users/me', {
+      headers: this.headers,
+      withCredentials: true
+    })
+      .map(res => res.json() as User)
+      .map(user => this.addCache(user))
+      .catch(err => Observable.of(this.defaultUser));
+
     //     // angular.extend(self,defaultUser);
     //     self.wrap(_u);
     //     // FIXME bad dependency circle
@@ -347,13 +347,13 @@ export class UserService {
     //   if([0,401].indexOf(error.status)!==-1){
     //     self.copy(defaultUser);
     //   }
-   //
+    //
     // );
-  
+
   }
 
   // app.get('/v1/users', auth.ensureAdmin, users.list);
-   query(filter?: any):Observable<User[]> {
+  query(filter?: any): Observable<User[]> {
     filter = filter || {};
 
     return this.http.get(this.config.API_SERVER + '/v1/users/', {
@@ -362,204 +362,285 @@ export class UserService {
       withCredentials: true
     })
       .map(res => res.json() as User[])
-      .map(users => users.map(user=>this.addCache(user)));
+      .map(users => users.map(user => this.addCache(user)));
   }
 
   // Reçoit un statut de requête http
   // app.get ('/v1/validate/:uid/:email', emails.validate);
-  validate(id, email):Observable<any> {
-    return this.http.get(this.config.API_SERVER+'/v1/validate/'+ id + '/'+email, {
-      headers:this.headers,
+  validate(id, email): Observable<any> {
+    return this.http.get(this.config.API_SERVER + '/v1/validate/' + id + '/' + email, {
+      headers: this.headers,
       withCredentials: true
     });
-    
+
   }
 
-// app.post('/v1/validate/create',auth.ensureAuthenticated, emails.create);
-  validateEmail(email):Observable<any>{
-    return this.http.post(this.config.API_SERVER+'/v1/validate/create',email, {
-      headers:this.headers,
-      withCredentials: true
-    });
-  }
-
-// app.post('/v1/recover/:token/:email/password', users.recover);
-  recover(token, email, recover):Observable<any>{
-    return this.http.post(this.config.API_SERVER+'/v1/recover/'+token+'/'+email+'/password',recover,{
-      headers:this.headers,
+  // app.post('/v1/validate/create',auth.ensureAuthenticated, emails.create);
+  validateEmail(email): Observable<any> {
+    return this.http.post(this.config.API_SERVER + '/v1/validate/create', email, {
+      headers: this.headers,
       withCredentials: true
     });
   }
 
+  // app.post('/v1/recover/:token/:email/password', users.recover);
+  recover(token, email, recover): Observable<any> {
+    return this.http.post(this.config.API_SERVER + '/v1/recover/' + token + '/' + email + '/password', recover, {
+      headers: this.headers,
+      withCredentials: true
+    });
+  }
 
 
-// app.post('/v1/users/:id', users.ensureMeOrAdmin,users.update);
-  save(user):Observable<User>{
+
+  // app.post('/v1/users/:id', users.ensureMeOrAdmin,users.update);
+  save(user): Observable<User> {
     // autofill the address name when available
-    user.populateAdresseName(); 
-    return this.http.post(this.config.API_SERVER + '/v1/users/'+user.id, user, {
-      headers:this.headers,
+    user.populateAdresseName();
+    return this.http.post(this.config.API_SERVER + '/v1/users/' + user.id, user, {
+      headers: this.headers,
       withCredentials: true
     })
-    .map(res => res.json() as User)
-    .catch(err=> Observable.of(this.defaultUser));
+      .map(res => res.json() as User)
+      .catch(err => Observable.of(this.defaultUser));
 
-  // TODO inform consumers of user change
-  // $rootScope.$broadcast("user.update",_user);
+    // TODO inform consumers of user change
+    // $rootScope.$broadcast("user.update",_user);
 
   }
 
-// app.get ('/logout', auth.logout);
-logout():Observable<User>{
+  // app.get ('/logout', auth.logout);
+  logout(): Observable<User> {
     return this.http.get(this.config.API_SERVER + '/logout/', {
-      headers:this.headers,
+      headers: this.headers,
       withCredentials: true
     })
-    .map(res => this.defaultUser as User)
-    .catch(err=> Observable.of(this.defaultUser));
-  // TODO inform consumers of user change
-  // $rootScope.$broadcast("user.update",_user);
-    
+      .map(res => this.defaultUser as User)
+      .catch(err => Observable.of(this.defaultUser));
+    // TODO inform consumers of user change
+    // $rootScope.$broadcast("user.update",_user);
+
   }
 
-// TODO voir lignes commentées (updateGeoCode etc.)
-// app.post('/register', queued(auth.register_post));
-  register(user):Observable<User>{
+  // TODO voir lignes commentées (updateGeoCode etc.)
+  // app.post('/register', queued(auth.register_post));
+  register(user): Observable<User> {
 
     // FIXME autofill the address name when available
     user.populateAdresseName();
-    return this.http.post(this.config.API_SERVER+'/register',user, {
-      headers:this.headers
+    return this.http.post(this.config.API_SERVER + '/register', user, {
+      headers: this.headers
       //withCredentials: true
     })
-    .map(res => res.json() as User)
-    .catch(err=> Observable.of(this.defaultUser));
-     // _user.copy(u);
-     // _user.updateGeoCode();
+      .map(res => res.json() as User)
+      .catch(err => Observable.of(this.defaultUser));
+    // _user.copy(u);
+    // _user.updateGeoCode();
 
   };
 
   // app.post('/v1/users/:id/password',users.ensureMe, users.password);
-  newpassword(id, change):Observable<any>{
-    return this.http.post(this.config.API_SERVER + '/v1/users/'+id+'/password',change, {
-      headers:this.headers,
+  newpassword(id, change): Observable<any> {
+    return this.http.post(this.config.API_SERVER + '/v1/users/' + id + '/password', change, {
+      headers: this.headers,
       withCredentials: true
     });
   };
 
-// TODO voir lignes commentées (updateGeoCode etc.) + Broadcast
-// app.post('/login', queued(auth.login_post));
-login(data):Observable<User>{
-    return this.http.post(this.config.API_SERVER+'/login', data,{
-      headers:this.headers
+  // TODO voir lignes commentées (updateGeoCode etc.) + Broadcast
+  // app.post('/login', queued(auth.login_post));
+  login(data): Observable<User> {
+    return this.http.post(this.config.API_SERVER + '/login', data, {
+      headers: this.headers
     })
-    .map(res => res.json() as User)
-    .catch(err=> Observable.of(this.defaultUser));
-      /*
-      _user.copy(u);
-      _user.updateGeoCode();
-      $rootScope.$broadcast("user.init",self);
-      */
+      .map(res => res.json() as User)
+      .catch(err => Observable.of(this.defaultUser));
+    /*
+    _user.copy(u);
+    _user.updateGeoCode();
+    $rootScope.$broadcast("user.init",self);
+    */
   };
 
   //
   // TODO move this action to the shop service
   // app.post('/v1/shops', auth.ensureUserValid, shops.ensureShopLimit, shops.create);
-  createShop(shop):Observable<Shop>{
-    return this.http.post(this.config.API_SERVER+'/v1/shops', shop, {
-      headers:this.headers,
+  createShop(shop): Observable<Shop> {
+    return this.http.post(this.config.API_SERVER + '/v1/shops', shop, {
+      headers: this.headers,
       withCredentials: true
     })
-    .map(res => res.json as Shop);
-     // _user.shops.push(s);
-      
+      .map(res => res.json as Shop);
+    // _user.shops.push(s);
+
   };
 
   // app.put('/v1/users/:id', auth.ensureAdmin, auth.checkPassword, users.remove);
-  remove(id, password):Observable<any>{
-    return this.http.put(this.config.API_SERVER+'/v1/users/',{password:password},{
-      headers:this.headers,
+  remove(id, password): Observable<any> {
+    return this.http.put(this.config.API_SERVER + '/v1/users/', { password: password }, {
+      headers: this.headers,
       withCredentials: true
     });
-      //self.delete();
-      //$rootScope.$broadcast("user.remove",self);
-      
+    //self.delete();
+    //$rootScope.$broadcast("user.remove",self);
+
   };
 
   // app.post('/v1/users/:id/like/:sku', users.ensureMe, users.like);
-  love(id,product):Observable<User>{
+  love(id, product): Observable<User> {
     //var self=this, params={};
-    return this.http.post(this.config.API_SERVER+'/v1/users/'+id+'/like/'+product.sku,{
-      headers:this.headers,
+    return this.http.post(this.config.API_SERVER + '/v1/users/' + id + '/like/' + product.sku, {
+      headers: this.headers,
       withCredentials: true
     })
-    .map(res => res.json() as User)
-    .catch(err=> Observable.of(this.defaultUser));
-      //self.copy(u);
-      //$rootScope.$broadcast("user.update.love",self);
+      .map(res => res.json() as User)
+      .catch(err => Observable.of(this.defaultUser));
+    //self.copy(u);
+    //$rootScope.$broadcast("user.update.love",self);
 
-   // return this;
+    // return this;
   };
-//================================================
+  //================================================
 
-  updateGeoCode=function () {
-    var promises=[], dirty=false, self=this;
+  updateGeoCode() {
+    var promises = [], dirty = false, self = this;
     // check state
-    if(self.geo){
+    if (self.geo) {
       return;
     }
-    if(self.addresses.length===0||self.addresses.length && self.addresses[0].geo && self.addresses[0].geo.lat){
+    if (self.addresses.length === 0 || self.addresses.length && self.addresses[0].geo && self.addresses[0].geo.lat) {
       return;
     }
 
     //
     // get geo lt/lng
-    if(!self.geo)self.geo=new Map();
+    if (!self.geo) self.geo = new Map();
 
 
-    self.addresses.forEach(function(address,i){
+    self.addresses.forEach(function (address, i) {
       // address is correct
-      if(address.geo&&address.geo.lat&&address.geo.lng){
+      if (address.geo && address.geo.lat && address.geo.lng) {
         return;
       }
 
-      promises.push(self.geo.geocode(address.streetAdress, address.postalCode, address.country, function(geo){
-        if(!geo.results.length||!geo.results[0].geometry){
-         return;
+      promises.push(self.geo.geocode(address.streetAdress, address.postalCode, address.country, function (geo) {
+        if (!geo.results.length || !geo.results[0].geometry) {
+          return;
         }
-        if(!geo.results[0].geometry.lat){
+        if (!geo.results[0].geometry.lat) {
           return;
         }
 
         //
         //update data
-        address.geo={};
-        address.geo.lat=geo.results[0].geometry.location.lat;
-        address.geo.lng=geo.results[0].geometry.location.lng;
+        address.geo = {};
+        address.geo.lat = geo.results[0].geometry.location.lat;
+        address.geo.lng = geo.results[0].geometry.location.lng;
 
         //
         //setup marker
-        self.geo.addMarker(i,{
-          lat:address.geo.lat,
-          lng:address.geo.lng,
-          message:address.streetAdress+'/'+address.postalCode
+        self.geo.addMarker(i, {
+          lat: address.geo.lat,
+          lng: address.geo.lng,
+          message: address.streetAdress + '/' + address.postalCode
         });
 
 
-        dirty=true;
+        dirty = true;
       }));// end of promise
     }); // end of forEach
 
     // should we save the user?
     $q.all(promises).finally(function () {
-      $log('save user geo map',dirty);
-      if(dirty)self.save();
+      $log('save user geo map', dirty);
+      if (dirty) self.save();
     });
 
+  }
 
-  };
+  /**
+   * payment methods
+   */
+  // app.post('/v1/users/:id/payment/:alias/check', users.ensureMeOrAdmin,users.checkPaymentMethod);
+  checkPaymentMethod() {
+    var self = this, allAlias = [], alias;
+    if (!self.payments || !self.payments.length) {
+      return cb({});
+    }
+    allAlias = self.payments.map(function (payment) {
+      return payment.alias;
+    });
+    alias = allAlias.pop();
+    backend.$user.save({ id: this.id, action: 'payment', aid: alias, detail: 'check' }, { alias: allAlias }, function (methodStatus) {
+      if (cb) cb(methodStatus);
+    }, function (error) {
+      if ([0, 401].indexOf(error.status) !== -1) {
+        self.copy(defaultUser);
+      }
+    });
+    return this;
+  }
+
+  // app.post('/v1/users/:id/payment', users.ensureMeOrAdmin,users.addPayment);
+  addPaymentMethod(payment, uid) {
+    var self = this, params = {};
+    // 
+    // we can now update different user
+    if (cb === undefined) { cb = uid; uid = this.id; }
+    if (uid === undefined) uid = this.id;
+    backend.$user.save({ id: uid, action: 'payment' }, payment, function (u) {
+      $rootScope.$broadcast("user.update.payment");
+      self.payments = u.payments;
+      if (cb) cb(self);
+    });
+    return this;
+  }
+
+  // app.post('/v1/users/:id/payment/:alias/delete', users.ensureMeOrAdmin,users.deletePayment);
+  deletePaymentMethod(alias, uid) {
+    var self = this, params = {};
+    // 
+    // we can now update different user
+    if (cb === undefined) { cb = uid; uid = self.id; }
+    if (uid === undefined) uid = this.id;
+    backend.$user.save({ id: uid, action: 'payment', aid: alias, detail: 'delete' }, function () {
+      for (var p in self.payments) {
+        if (self.payments[p].alias === alias) {
+          self.payments.splice(p, 1);
+        }
+      }
+      $rootScope.$broadcast("user.update.payment");
+      if (cb) cb(self);
+    });
+    return this;
+  }
+
+  // app.get('/v1/users/:id/psp', users.ensureMe, psp.pspCharge);
+  pspForm() {
+    var self = this, params = {};
+    backend.$user.get({ id: this.id, action: 'psp' }, function (form) {
+      self.ecommerceForm = form;
+      if (cb) cb(self);
+    });
+    return this;
+  }
 
 
-
+  /**
+   * ADMIN
+   */
+  // app.post('/v1/users/:id/status', auth.ensureAdmin,users.status);
+  updateStatus(id, status):Observable<User> {
+    //var self = this, params = {};
+    return this.http.post(this.config.API_SERVER+'/v1/users/'+id+'/status', { status: status }, {
+      headers: this.headers,
+      withCredentials: true
+    })
+      .map(res => res.json() as User)
+      .catch(err => Observable.of(this.defaultUser));
+    }
+      //self.copy(u);
+    
+  
 
 }
