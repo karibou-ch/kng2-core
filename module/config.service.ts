@@ -70,8 +70,11 @@ export class ConfigService {
   ) {
     this.headers = new Headers();
     this.headers.append('Content-Type', 'application/json');    
-    this.http.get(this.API_SERVER+'/v1/config?lang=',{headers:this.headers})
-        .subscribe(res => {
+    this.config = this.http.get(this.API_SERVER+'/v1/config?lang=',{
+      headers:this.headers, 
+      withCredentials: true,
+    })
+        .map(res => {
           Object.assign(this.shop,res.json())
         });
   }

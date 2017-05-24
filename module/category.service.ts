@@ -10,7 +10,16 @@ export interface QueryFilter {
 
 export class Category {
   slug: string;
-  group: string;
+  group: string;  /* permet de grouper une catégorie (toutes les catégories des artisans, producteurs*/
+  _id;
+  cover: string;  /* image de la catégorie */
+  description: string;
+  image: string; /* icon associé à la catégorie */
+  name: string; 
+  weight; /*permet d'ordonner les cat les plus légère en haut */
+  type: string; 
+  home: boolean; /* afficher une sélection de cat sur la home */
+  active: boolean;
 
 }
 
@@ -30,12 +39,20 @@ export class CategoryService {
     list: Category[];
     map: Map<string, Category>; //key is a slug
   }
-  private updateCache(category:Category){
 
+
+  private updateCache(cat: Category) {
+    if (this.cache.map[cat.slug])
+      return Object.assign(this.cache.map[cat.slug], cat);
   }
 
-  private deleteCache(category:Category){
-
+  private deleteCache(cat: Category) {
+    if (this.cache.map[cat.slug]) {
+      this.cache.map.delete(cat.slug);
+      let index = this.cache.list.indexOf(cat)
+      if (index > -1)
+        this.cache.list.splice(index, 1);
+    }
   }
 
   private addCache(category:Category){
@@ -114,10 +131,10 @@ export class CategoryService {
 
 
   //   app.post('/v1/category/:category', auth.ensureAdmin, categories.update);
-  save(slug):Observable<Category> {
+  save(slug, cat:Category):Observable<Category> {
     //console.log("model",this.photo)
     
-    return this.http.post(this.config.API_SERVER + '/v1/category/'+slug, {
+    return this.http.post(this.config.API_SERVER + '/v1/category/'+slug, cat, {
       headers: this.headers,
       withCredentials: true
     })
@@ -154,6 +171,7 @@ export class CategoryService {
       password:password
     })
     .map(res => res.json() as Category)
+    .map(cat => this.deleteCache(cat))
     .catch(this.handleError);
   }
 
