@@ -17,6 +17,65 @@ export class Shop {
 };
 
 export class User {
+  constructor() {
+    this.id = '';
+    this.displayName = '';
+    this.name = {
+      givenName: '',
+      familyName: '',
+    };
+    this.birthday = new Date();
+    this.gender = '';
+    this.tags =  [];
+    this.url = '';
+
+    this.email = {
+      address: '',
+      cc: '',
+      status: ''
+    };
+
+    this.reminder = {
+      active: false,
+      weekdays: [],
+      time: null
+    };
+
+    this.roles = [];
+    this.shops = [];
+    this.provider = '';
+    this.url = '';
+
+    this.phoneNumbers = [{
+      number: '',
+      what: 'mobile'
+    }];
+
+    this.photo = '';
+
+    this.addresses = [{
+      name: '',
+      note: '',
+      floor: '',
+      streetAdress: '',
+      region: '',
+      postalCode: '',
+      primary: false,
+      geo: {
+        lat: null,
+        lng: null
+      }
+    }];
+
+    this.logistic = {
+      postalCode: ''
+    };
+
+  
+
+  }
+
+
   id: string;
 
   /* The provider which with the user authenticated (facebook, twitter, etc.) */
@@ -103,7 +162,7 @@ export class User {
   roles: string[];
   rank: string;
 
-
+  
 
   //
   // methods
@@ -205,6 +264,62 @@ export class User {
     var self = this;
   }
 
+  updateGeoCode() {
+    var promises = [], dirty = false, self = this;
+    // check state
+    if (self.addresses[0].geo) {
+      return;
+    }
+    if (self.addresses.length === 0 || self.addresses.length && self.addresses[0].geo && self.addresses[0].geo.lat) {
+      return;
+    }
+
+    //
+    // get geo lt/lng
+    if (!self.addresses[0].geo) self.addresses[0].geo = {lat:null, lng:null};
+
+
+    self.addresses.forEach(function (address, i) {
+      // address is correct
+      if (address.geo && address.geo.lat && address.geo.lng) {
+        return;
+      }
+
+      promises.push(self.addresses[0].geo.geocode(address.streetAdress, address.postalCode, address.country, function (geo) {
+        if (!geo.results.length || !geo.results[0].geometry) {
+          return;
+        }
+        if (!geo.results[0].geometry.lat) {
+          return;
+        }
+
+        //
+        //update data
+        address.geo = {lat:null, lng:null};
+        address.geo.lat = geo.results[0].geometry.location.lat;
+        address.geo.lng = geo.results[0].geometry.location.lng;
+
+        //
+        //setup marker
+        self.geo.addMarker(i, {
+          lat: address.geo.lat,
+          lng: address.geo.lng,
+          message: address.streetAdress + '/' + address.postalCode
+        });
+
+
+        dirty = true;
+      }));// end of promise
+    }); // end of forEach
+
+    // should we save the user?
+    $q.all(promises).finally(function () {
+      $log('save user geo map', dirty);
+      if (dirty) self.save();
+    });
+
+  }
+
   //
   // init user 
   init() {
@@ -241,35 +356,24 @@ export class User {
 @Injectable()
 export class UserService {
   defaultUser: User = new User();
-  // defaultUser:User = {
-  //   id: '',
-  //   name: {
-  //     givenName: '',
-  //     familyName: '',
-  //   },
-  //   email: {},
-  //   reminder:{weekdays:[]},
-  //   roles: [],
-  //   shops: [],
-  //   provider: '',
-  //   url: '',
-  //   phoneNumbers:[{what:'mobile'}],
-  //   addresses:[],
-  //   logistic:{
-  //     postalCode:[]
-  //   }
-  // };
+
 
   private cache: {
     list: User[];
-    map: Map<number, User>;
+    map: Map<string, User>;
   }
   private updateCache(user: User) {
-
+    if (this.cache.map[user.id])
+      return Object.assign(this.cache.map[user.id], user);
   }
 
   private deleteCache(user: User) {
-
+    if (this.cache.map[user.id]) {
+      this.cache.map.delete(user.id);
+      let index = this.cache.list.indexOf(user)
+      if (index > -1)
+        this.cache.list.splice(index, 1);
+    }
   }
 
   private addCache(user: User) {
@@ -306,8 +410,14 @@ export class UserService {
       return Observable.from(this.cache.map[id]);
     }
 
-    return this.http.get(this.config.API_SERVER + '/v1/users/' + id, { headers: this.headers })
-      .map(res => res.json()).publishLast().refCount();
+    return this.http.get(this.config.API_SERVER + '/v1/users/' + id, {
+      headers: this.headers,
+      withCredentials: true
+    })
+      .map(res => res.json() as User)
+      .map(user => this.addCache(user))
+      .catch(err => Observable.of(this.defaultUser));
+    //   .map(res => res.json()).publishLast().refCount();
   }
 
   //
@@ -429,8 +539,8 @@ export class UserService {
     // FIXME autofill the address name when available
     user.populateAdresseName();
     return this.http.post(this.config.API_SERVER + '/register', user, {
-      headers: this.headers
-      //withCredentials: true
+      headers: this.headers,
+      withCredentials: true
     })
       .map(res => res.json() as User)
       .catch(err => Observable.of(this.defaultUser));
@@ -451,7 +561,8 @@ export class UserService {
   // app.post('/login', queued(auth.login_post));
   login(data): Observable<User> {
     return this.http.post(this.config.API_SERVER + '/login', data, {
-      headers: this.headers
+      headers: this.headers,
+      withCredentials: true
     })
       .map(res => res.json() as User)
       .catch(err => Observable.of(this.defaultUser));
@@ -480,7 +591,9 @@ export class UserService {
     return this.http.put(this.config.API_SERVER + '/v1/users/', { password: password }, {
       headers: this.headers,
       withCredentials: true
-    });
+    })
+      .map(res => res.json() as User)
+      .map(user => this.deleteCache(user));
     //self.delete();
     //$rootScope.$broadcast("user.remove",self);
 
@@ -489,11 +602,15 @@ export class UserService {
   // app.post('/v1/users/:id/like/:sku', users.ensureMe, users.like);
   love(id, product): Observable<User> {
     //var self=this, params={};
-    return this.http.post(this.config.API_SERVER + '/v1/users/' + id + '/like/' + product.sku, {
+    return this.http.post(this.config.API_SERVER + '/v1/users/' + id + '/like/' + product.sku, null, {
       headers: this.headers,
       withCredentials: true
     })
       .map(res => res.json() as User)
+      .map(user => {
+        this.cache.list.find(u => u.id === user.id).likes = user.likes.slice();
+        this.cache.map.get(user.id).likes = user.likes.slice();
+      })
       .catch(err => Observable.of(this.defaultUser));
     //self.copy(u);
     //$rootScope.$broadcast("user.update.love",self);
@@ -502,67 +619,27 @@ export class UserService {
   };
   //================================================
 
-  updateGeoCode() {
-    var promises = [], dirty = false, self = this;
-    // check state
-    if (self.geo) {
-      return;
-    }
-    if (self.addresses.length === 0 || self.addresses.length && self.addresses[0].geo && self.addresses[0].geo.lat) {
-      return;
-    }
 
-    //
-    // get geo lt/lng
-    if (!self.geo) self.geo = new Map();
-
-
-    self.addresses.forEach(function (address, i) {
-      // address is correct
-      if (address.geo && address.geo.lat && address.geo.lng) {
-        return;
-      }
-
-      promises.push(self.geo.geocode(address.streetAdress, address.postalCode, address.country, function (geo) {
-        if (!geo.results.length || !geo.results[0].geometry) {
-          return;
-        }
-        if (!geo.results[0].geometry.lat) {
-          return;
-        }
-
-        //
-        //update data
-        address.geo = {};
-        address.geo.lat = geo.results[0].geometry.location.lat;
-        address.geo.lng = geo.results[0].geometry.location.lng;
-
-        //
-        //setup marker
-        self.geo.addMarker(i, {
-          lat: address.geo.lat,
-          lng: address.geo.lng,
-          message: address.streetAdress + '/' + address.postalCode
-        });
-
-
-        dirty = true;
-      }));// end of promise
-    }); // end of forEach
-
-    // should we save the user?
-    $q.all(promises).finally(function () {
-      $log('save user geo map', dirty);
-      if (dirty) self.save();
-    });
-
-  }
 
   /**
    * payment methods
    */
   // app.post('/v1/users/:id/payment/:alias/check', users.ensureMeOrAdmin,users.checkPaymentMethod);
-  checkPaymentMethod() {
+  checkPaymentMethod(user): Observable<User> {
+
+    let allAlias = user.payments.map(payment => { return payment.alias; });
+    let alias = allAlias.pop();
+
+    return this.http.post(this.config.API_SERVER + '/v1/users/' + user.id + '/payment/' + alias + '/check', allAlias, {
+      headers: this.headers,
+      withCredentials: true
+    })
+      .map(res => res.json() as User)
+      .map(user => this.updateCache(user))
+      .catch(err => Observable.of(this.defaultUser));;
+
+
+    /*
     var self = this, allAlias = [], alias;
     if (!self.payments || !self.payments.length) {
       return cb({});
@@ -579,10 +656,20 @@ export class UserService {
       }
     });
     return this;
+    */
   }
 
   // app.post('/v1/users/:id/payment', users.ensureMeOrAdmin,users.addPayment);
-  addPaymentMethod(payment, uid) {
+  addPaymentMethod(payment, uid): Observable<User> {
+
+    return this.http.post(this.config.API_SERVER + '/v1/users/' + uid + '/payment', payment, {
+      headers: this.headers,
+      withCredentials: true
+    })
+      .map(res => res.json() as User)
+      .map(user => this.updateCache(user))
+      .catch(err => Observable.of(this.defaultUser));
+    /*
     var self = this, params = {};
     // 
     // we can now update different user
@@ -594,10 +681,20 @@ export class UserService {
       if (cb) cb(self);
     });
     return this;
+    */
   }
 
   // app.post('/v1/users/:id/payment/:alias/delete', users.ensureMeOrAdmin,users.deletePayment);
-  deletePaymentMethod(alias, uid) {
+  deletePaymentMethod(alias, uid): Observable<User> {
+
+    return this.http.post(this.config.API_SERVER + '/v1/users/' + uid + '/payment/' + alias + '/delete', null, {
+      headers: this.headers,
+      withCredentials: true
+    })
+      .map(res => res.json() as User)
+      .map(user => this.updateCache(user))
+      .catch(err => Observable.of(this.defaultUser));
+    /*
     var self = this, params = {};
     // 
     // we can now update different user
@@ -613,16 +710,7 @@ export class UserService {
       if (cb) cb(self);
     });
     return this;
-  }
-
-  // app.get('/v1/users/:id/psp', users.ensureMe, psp.pspCharge);
-  pspForm() {
-    var self = this, params = {};
-    backend.$user.get({ id: this.id, action: 'psp' }, function (form) {
-      self.ecommerceForm = form;
-      if (cb) cb(self);
-    });
-    return this;
+    */
   }
 
 
@@ -630,17 +718,18 @@ export class UserService {
    * ADMIN
    */
   // app.post('/v1/users/:id/status', auth.ensureAdmin,users.status);
-  updateStatus(id, status):Observable<User> {
+  updateStatus(id, status): Observable<User> {
     //var self = this, params = {};
-    return this.http.post(this.config.API_SERVER+'/v1/users/'+id+'/status', { status: status }, {
+    return this.http.post(this.config.API_SERVER + '/v1/users/' + id + '/status', { status: status }, {
       headers: this.headers,
       withCredentials: true
     })
       .map(res => res.json() as User)
+      .map(user => this.updateCache(user))
       .catch(err => Observable.of(this.defaultUser));
-    }
-      //self.copy(u);
-    
-  
+  }
+  //self.copy(u);
+
+
 
 }
