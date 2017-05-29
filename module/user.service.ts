@@ -1,6 +1,8 @@
 import { Http, Headers } from '@angular/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs/Rx';
+import 'rxjs/add/observable/from';
+import Rx from 'rxjs/Rx';
 
 import * as moment from 'moment';
 //import Moment from 'moment';
@@ -26,7 +28,7 @@ export class User {
     };
     this.birthday = new Date();
     this.gender = '';
-    this.tags =  [];
+    this.tags = [];
     this.url = '';
 
     this.email = {
@@ -71,7 +73,7 @@ export class User {
       postalCode: ''
     };
 
-  
+
 
   }
 
@@ -162,7 +164,7 @@ export class User {
   roles: string[];
   rank: string;
 
-  
+
 
   //
   // methods
@@ -264,61 +266,6 @@ export class User {
     var self = this;
   }
 
-  updateGeoCode() {
-    var promises = [], dirty = false, self = this;
-    // check state
-    if (self.addresses[0].geo) {
-      return;
-    }
-    if (self.addresses.length === 0 || self.addresses.length && self.addresses[0].geo && self.addresses[0].geo.lat) {
-      return;
-    }
-
-    //
-    // get geo lt/lng
-    if (!self.addresses[0].geo) self.addresses[0].geo = {lat:null, lng:null};
-
-
-    self.addresses.forEach(function (address, i) {
-      // address is correct
-      if (address.geo && address.geo.lat && address.geo.lng) {
-        return;
-      }
-
-      promises.push(self.addresses[0].geo.geocode(address.streetAdress, address.postalCode, address.country, function (geo) {
-        if (!geo.results.length || !geo.results[0].geometry) {
-          return;
-        }
-        if (!geo.results[0].geometry.lat) {
-          return;
-        }
-
-        //
-        //update data
-        address.geo = {lat:null, lng:null};
-        address.geo.lat = geo.results[0].geometry.location.lat;
-        address.geo.lng = geo.results[0].geometry.location.lng;
-
-        //
-        //setup marker
-        self.geo.addMarker(i, {
-          lat: address.geo.lat,
-          lng: address.geo.lng,
-          message: address.streetAdress + '/' + address.postalCode
-        });
-
-
-        dirty = true;
-      }));// end of promise
-    }); // end of forEach
-
-    // should we save the user?
-    $q.all(promises).finally(function () {
-      $log('save user geo map', dirty);
-      if (dirty) self.save();
-    });
-
-  }
 
   //
   // init user 
@@ -362,10 +309,6 @@ export class UserService {
     list: User[];
     map: Map<string, User>;
   }
-  private updateCache(user: User) {
-    if (this.cache.map[user.id])
-      return Object.assign(this.cache.map[user.id], user);
-  }
 
   private deleteCache(user: User) {
     if (this.cache.map[user.id]) {
@@ -376,13 +319,13 @@ export class UserService {
     }
   }
 
-  private addCache(user: User) {
+  private updateCache(user: User): User {
     //
     //check if already exist on cache and add in it if not the case
     if (!this.cache.map[user.id]) {
       this.cache.map[user.id] = user;
       this.cache.list.push(user);
-      return;
+      return user;
     }
     //update existing entry
     return Object.assign(this.cache.map[user.id], user);
@@ -415,7 +358,7 @@ export class UserService {
       withCredentials: true
     })
       .map(res => res.json() as User)
-      .map(user => this.addCache(user))
+      .map(user => this.updateCache(user))
       .catch(err => Observable.of(this.defaultUser));
     //   .map(res => res.json()).publishLast().refCount();
   }
@@ -434,7 +377,7 @@ export class UserService {
       withCredentials: true
     })
       .map(res => res.json() as User)
-      .map(user => this.addCache(user))
+      .map(user => this.updateCache(user))
       .catch(err => Observable.of(this.defaultUser));
 
     //     // angular.extend(self,defaultUser);
@@ -472,7 +415,7 @@ export class UserService {
       withCredentials: true
     })
       .map(res => res.json() as User[])
-      .map(users => users.map(user => this.addCache(user)));
+      .map(users => users.map(user => this.updateCache(user)));
   }
 
   // Reçoit un statut de requête http
@@ -525,7 +468,7 @@ export class UserService {
       headers: this.headers,
       withCredentials: true
     })
-      .map(res => this.defaultUser as User)
+      .map(res => this.defaultUser)
       .catch(err => Observable.of(this.defaultUser));
     // TODO inform consumers of user change
     // $rootScope.$broadcast("user.update",_user);
@@ -543,6 +486,7 @@ export class UserService {
       withCredentials: true
     })
       .map(res => res.json() as User)
+      .map(user => this.updateCache(user))
       .catch(err => Observable.of(this.defaultUser));
     // _user.copy(u);
     // _user.updateGeoCode();
@@ -565,6 +509,7 @@ export class UserService {
       withCredentials: true
     })
       .map(res => res.json() as User)
+      .map(user => this.updateCache(user))
       .catch(err => Observable.of(this.defaultUser));
     /*
     _user.copy(u);
@@ -619,7 +564,131 @@ export class UserService {
   };
   //================================================
 
+  geocode(street, postal, region): Observable<any> {
+    // google format: Route de Chêne 34, 1208 Genève, Suisse
+    if (!region) region = "Suisse";
+    var fulladdress = street + "," + postal + ", " + region;//"34+route+de+chêne,+Genève,+Suisse
+    var url = "//maps.googleapis.com/maps/api/geocode/json?address=" + fulladdress + "&sensor=false";
+    return this.http.get(url, { withCredentials: false })
+      .map(res => res.json());
+  }
 
+  //boucle observables, map met a jour l'adresse, liste observable, merge ou concat, subscribe(TODO notify success or error)
+  updateGeoCode(user) {
+    let obs = [], self = this;
+    //let dirty = false;
+    // check state
+    if (user.geo) {
+      return;
+    }
+    if (user.addresses.length === 0 || user.addresses.length && user.addresses[0].geo && user.addresses[0].geo.lat) {
+      return;
+    }
+
+    // get geo lt/lng
+    if (!user.addresses[0].geo) user.addresses[0].geo = { lat: null, lng: null };
+
+    //on construit le tableau d'observables
+    user.addresses.forEach(function (address, i) {
+      obs.push(this.geocode(address.streetAdress, address.postalCode, address.region)
+        .map(geo => {
+          if (!geo.results.length || !geo.results[0].geometry) {
+            return;
+          }
+          if (!geo.results[0].geometry.lat) {
+            return;
+          }
+          address.geo = { lat: null, lng: null };
+          address.geo.lat = geo.results[0].geometry.location.lat;
+          address.geo.lng = geo.results[0].geometry.location.lng;
+
+          //     //
+          //     //setup marker
+          user.geo.addMarker(i, {
+            lat: address.geo.lat,
+            lng: address.geo.lng,
+            message: address.streetAdress + '/' + address.postalCode
+          });
+
+        }));
+    });
+
+    //on encapsule tout dans un observable et on y souscrit
+    let sub = Observable.from(obs);
+    sub.subscribe();
+
+  //   Observable.forkJoin(
+  //     user.addresses.map(
+  //       address => {return this.geocode(address.streetAdress, address.postalCode, address.region);}
+  //   ))
+
+  //  // Observable.from(user.addresses)
+  //   .concatMap(address => this.geocode(address.streetAdress, address.postalCode, address.region))
+    
+      /*
+      //     //
+      //     //update data
+      address.geo = { lat: null, lng: null };
+      address.geo.lat = geo.results[0].geometry.location.lat;
+      address.geo.lng = geo.results[0].geometry.location.lng;
+
+      //     //
+      //     //setup marker
+      user.geo.addMarker(i, {
+        lat: address.geo.lat,
+        lng: address.geo.lng,
+        message: address.streetAdress + '/' + address.postalCode
+      });
+      //  dirty = true;
+    
+
+
+    user.addresses.forEach(function (address, i) {
+      //   // address is correct
+      if (address.geo && address.geo.lat && address.geo.lng) {
+        return;
+      }
+
+      obs.push(this.geocode(address.streetAdress, address.postalCode, address.region));// end of promise
+    }); // end of forEach
+
+    let merged = Rx.Observable.merge(obsArray);
+
+    merged.subscribe((geo) => {
+      if (!geo.results.length || !geo.results[0].geometry) {
+        return;
+      }
+      if (!geo.results[0].geometry.lat) {
+        return;
+      }
+
+      //     //
+      //     //update data
+      address.geo = { lat: null, lng: null };
+      address.geo.lat = geo.results[0].geometry.location.lat;
+      address.geo.lng = geo.results[0].geometry.location.lng;
+
+      //     //
+      //     //setup marker
+      user.geo.addMarker(i, {
+        lat: address.geo.lat,
+        lng: address.geo.lng,
+        message: address.streetAdress + '/' + address.postalCode
+      });
+
+
+      dirty = true;
+    })
+      * /
+    /*
+   // // should we save the user?
+    $q.all(promises).finally(function () {
+      $log('save user geo map', dirty);
+      if (dirty) self.save();
+    });
+    */
+    
+  }
 
   /**
    * payment methods
