@@ -70,7 +70,7 @@ export class ConfigService {
   ) {
     this.headers = new Headers();
     this.headers.append('Content-Type', 'application/json');    
-    this.config = this.http.get(this.API_SERVER+'/v1/config?lang=',{
+    this.config = this.http.get(this.API_SERVER+'/v1/config?lang=fr',{
       headers:this.headers, 
       withCredentials: true,
     })
@@ -80,6 +80,6 @@ export class ConfigService {
   }
 
   getConfig():Observable<any>{
-    return this.config;
+    return this.config.subscribe(res => console.log(res));
   }
 }

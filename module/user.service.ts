@@ -288,6 +288,7 @@ export class UserService {
   //
   // REST api wrapper
   // TODO
+  /*
   me(cb) {
     var self = this;
     return this.chain(backend.$user.get({ id: 'me' }, function (_u, headers) {
@@ -312,6 +313,6 @@ export class UserService {
     }).$promise
     );
   };
-
+*/
 
 }
