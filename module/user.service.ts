@@ -574,11 +574,11 @@ export class UserService {
   }
 
   //boucle observables, map met a jour l'adresse, liste observable, merge ou concat, subscribe(TODO notify success or error)
-  updateGeoCode(user) {
+  updateGeoCode(user : User): Observable<any> {
     let obs = [], self = this;
     //let dirty = false;
     // check state
-    if (user.geo) {
+    if ("obj" in user) {
       return;
     }
     if (user.addresses.length === 0 || user.addresses.length && user.addresses[0].geo && user.addresses[0].geo.lat) {
@@ -589,7 +589,8 @@ export class UserService {
     if (!user.addresses[0].geo) user.addresses[0].geo = { lat: null, lng: null };
 
     //on construit le tableau d'observables
-    user.addresses.forEach(function (address, i) {
+    //TODO demander différence entre code dans "map" ou dans "subscribe"
+    user.addresses.forEach((address, i) => {
       obs.push(this.geocode(address.streetAdress, address.postalCode, address.region)
         .map(geo => {
           if (!geo.results.length || !geo.results[0].geometry) {
@@ -602,90 +603,29 @@ export class UserService {
           address.geo.lat = geo.results[0].geometry.location.lat;
           address.geo.lng = geo.results[0].geometry.location.lng;
 
-          //     //
-          //     //setup marker
-          user.geo.addMarker(i, {
-            lat: address.geo.lat,
-            lng: address.geo.lng,
-            message: address.streetAdress + '/' + address.postalCode
-          });
-
         }));
     });
 
     //on encapsule tout dans un observable et on y souscrit
-    let sub = Observable.from(obs);
-    sub.subscribe();
+    return Observable.from(obs);
 
-  //   Observable.forkJoin(
-  //     user.addresses.map(
-  //       address => {return this.geocode(address.streetAdress, address.postalCode, address.region);}
-  //   ))
-
-  //  // Observable.from(user.addresses)
-  //   .concatMap(address => this.geocode(address.streetAdress, address.postalCode, address.region))
-    
-      /*
-      //     //
-      //     //update data
-      address.geo = { lat: null, lng: null };
-      address.geo.lat = geo.results[0].geometry.location.lat;
-      address.geo.lng = geo.results[0].geometry.location.lng;
-
-      //     //
-      //     //setup marker
-      user.geo.addMarker(i, {
-        lat: address.geo.lat,
-        lng: address.geo.lng,
-        message: address.streetAdress + '/' + address.postalCode
+  // ==== méthodes alternative pour ce cas là =========
+  /*
+    return Observable.from(user.addresses)
+      .concatMap(address => {
+        return this.geocode(address.streetAdress, address.postalCode, address.region);
+      })
+      .map((geo, i) => {
+        if (!geo.results.length || !geo.results[0].geometry) {
+            return;
+          }
+          if (!geo.results[0].geometry.lat) {
+            return;
+          }
+          user.addresses[i].geo = { lat: null, lng: null };
+          user.addresses[i].geo.lat = geo.results[0].geometry.location.lat;
+          user.addresses[i].geo.lng = geo.results[0].geometry.location.lng;
       });
-      //  dirty = true;
-    
-
-
-    user.addresses.forEach(function (address, i) {
-      //   // address is correct
-      if (address.geo && address.geo.lat && address.geo.lng) {
-        return;
-      }
-
-      obs.push(this.geocode(address.streetAdress, address.postalCode, address.region));// end of promise
-    }); // end of forEach
-
-    let merged = Rx.Observable.merge(obsArray);
-
-    merged.subscribe((geo) => {
-      if (!geo.results.length || !geo.results[0].geometry) {
-        return;
-      }
-      if (!geo.results[0].geometry.lat) {
-        return;
-      }
-
-      //     //
-      //     //update data
-      address.geo = { lat: null, lng: null };
-      address.geo.lat = geo.results[0].geometry.location.lat;
-      address.geo.lng = geo.results[0].geometry.location.lng;
-
-      //     //
-      //     //setup marker
-      user.geo.addMarker(i, {
-        lat: address.geo.lat,
-        lng: address.geo.lng,
-        message: address.streetAdress + '/' + address.postalCode
-      });
-
-
-      dirty = true;
-    })
-      * /
-    /*
-   // // should we save the user?
-    $q.all(promises).finally(function () {
-      $log('save user geo map', dirty);
-      if (dirty) self.save();
-    });
     */
     
   }
