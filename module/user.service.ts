@@ -19,6 +19,7 @@ export class Shop {
 };
 
 export class User {
+
   constructor() {
     this.id = '';
     this.displayName = '';
@@ -74,9 +75,7 @@ export class User {
     };
 
 
-
   }
-
 
   id: string;
 
@@ -255,10 +254,12 @@ export class User {
 
   }
 
+
   populateAdresseName() {
     // autofill the address name when available
     if (this.addresses && this.addresses.length && !this.addresses[0].name) {
       this.addresses[0].name = this.name.familyName + ' ' + this.name.givenName;
+
     }
   }
 
@@ -302,6 +303,7 @@ export class User {
 
 @Injectable()
 export class UserService {
+
   defaultUser: User = new User();
 
 
@@ -316,6 +318,7 @@ export class UserService {
       let index = this.cache.list.indexOf(user)
       if (index > -1)
         this.cache.list.splice(index, 1);
+
     }
   }
 
@@ -347,6 +350,7 @@ export class UserService {
   //
   // How to build Angular apps using Observable Data Services
   // http://blog.angular-university.io/how-to-build-angular2-apps-using-rxjs-observable-data-services-pitfalls-to-avoid/
+
   get(id: number): Observable<User> {
 
     if (this.cache.map[id]) {
@@ -361,11 +365,13 @@ export class UserService {
       .map(user => this.updateCache(user))
       .catch(err => Observable.of(this.defaultUser));
     //   .map(res => res.json()).publishLast().refCount();
+
   }
 
   //
   //============================= REST api wrapper
   // TODO
+
 
   // app.get('/v1/users/me', auth.ensureAuthenticated, users.me);
   me(): Observable<User> {
