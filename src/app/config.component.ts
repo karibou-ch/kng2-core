@@ -42,8 +42,7 @@ import { ConfigService } from '../../module/config.service';
             border: 1px solid black;
             border-collapse: collapse;
         }
-`],
-    providers: [ConfigService]
+`]
 })
 export class ConfigComponent {
 
