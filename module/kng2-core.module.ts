@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 
 import { UserPipe } from './user.pipe';
 import { UserService } from './user.service';
+import { ConfigService }  from './config.service';
 
 
 @NgModule({
@@ -13,7 +14,8 @@ import { UserService } from './user.service';
     UserPipe
   ],
   providers:[
-    UserService
+    UserService,
+    ConfigService
   ],
   exports:[
     UserPipe    
