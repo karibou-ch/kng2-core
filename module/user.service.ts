@@ -2,7 +2,6 @@ import { Http, Headers } from '@angular/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs/Rx';
 import 'rxjs/add/observable/from';
-import Rx from 'rxjs/Rx';
 
 import * as moment from 'moment';
 //import Moment from 'moment';
