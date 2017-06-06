@@ -2,17 +2,19 @@ import { Component } from '@angular/core';
 import { Observable } from 'rxjs/Observable';
 
 import { ConfigService } from '../../module/config.service';
+import { UserService } from '../../module/user.service';
+
 
 @Component({
     selector: 'my-config',
     template: `
         <h2>Affichage de la config serveur</h2>
-        <div *ngIf="configObject">
+        <div >
             <table>
                 <tr>
                     <th>Menu</th>
                 </tr>
-                <tr *ngFor="let sub of configObject.menu">
+                <tr *ngFor="let sub of config.shared?.menu">
                     <td>{{sub.name.fr}} </td>
                 </tr>
             </table> <br>
@@ -22,7 +24,7 @@ import { ConfigService } from '../../module/config.service';
                     <th>lat/lng</th>
                 </tr>
                 
-                <tr *ngFor="let sub of configObject.marketplace.list">
+                <tr *ngFor="let sub of config.shared?.marketplace.list">
                     <td>{{sub.name}} </td>
                     <td>{{sub.lat}}/{{sub.lng}}</td>
                 </tr>
@@ -31,7 +33,7 @@ import { ConfigService } from '../../module/config.service';
                 <tr>
                     <th>Shipping Week</th>
                 </tr>
-                <tr *ngFor="let sub of configObject.shippingweek">
+                <tr *ngFor="let sub of config.shared?.shippingweek">
                     <td>{{sub | date:'medium'}} </td>
                 </tr>
             </table>
@@ -46,20 +48,25 @@ import { ConfigService } from '../../module/config.service';
 })
 export class ConfigComponent {
 
-    private configObject;
+    private config={};
 
-    constructor(private config: ConfigService) { }
+    constructor(
+        private configSrv: ConfigService,
+        private userSrv:UserService
+    ) { }
 
-    ngOnInit() { this.getConfig(); }
+    ngOnInit() { 
+        this.getConfig(); 
+    }
 
     getConfig() {
-        this.config.getConfig()
-            .subscribe(
-            res => {
-                console.log(res);
-                this.configObject = res;
-            }
-            );
+        this.configSrv.getConfig()
+            .subscribe(config => {
+                this.config=config
+            });
+        // this.config=this.configSrv.getConfig();
     }
+
+
 
 }
