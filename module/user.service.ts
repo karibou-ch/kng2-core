@@ -304,6 +304,7 @@ export class User {
 export class UserService {
 
   defaultUser: User = new User();
+  config:any;
 
 
   private cache: {
@@ -336,9 +337,10 @@ export class UserService {
   private headers: Headers;
 
   constructor(
-    public config: ConfigService,
+    public configSrv:ConfigService,
     public http: Http
   ) {
+    this.config=configSrv.config;
     this.headers = new Headers();
     this.headers.append('Content-Type', 'application/json');
   }
@@ -668,6 +670,7 @@ export class UserService {
       if ([0, 401].indexOf(error.status) !== -1) {
         self.copy(defaultUser);
       }
+
     });
     return this;
     */

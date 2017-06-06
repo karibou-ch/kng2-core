@@ -5,6 +5,7 @@ import { HttpModule } from '@angular/http';
 import { RouterModule, Routes } from '@angular/router';
 
 import { AppComponent } from './app.component';
+import { ConfigComponent }  from './config.component';
 import { Kng2CoreModule } from '../../module/kng2-core.module';
 import { LoginComponent } from './login/login.component';
 import { HeaderComponent } from './header/header.component';
@@ -26,7 +27,8 @@ const appRoutes: Routes = [
     AppComponent,
     LoginComponent,
     HeaderComponent,
-    RecoveryComponent
+    RecoveryComponent,
+    ConfigComponent
   ],
   imports: [
     BrowserModule,

@@ -5,6 +5,8 @@ import { UserPipe } from './user.pipe';
 import { UserService } from './user.service';
 import { ConfigService }  from './config.service';
 
+import { ConfigService } from './config.service';
+
 
 @NgModule({
   imports: [
