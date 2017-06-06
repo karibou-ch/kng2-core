@@ -38,7 +38,7 @@ export class ConfigService {
     photo:'//placehold.it/80x80',
   };
 
-  shop = {
+  shared = {
     photo:{
       fg:"//placehold.it/400x300",
       owner:"//placehold.it/80x80&text=owner",
@@ -75,7 +75,7 @@ export class ConfigService {
       withCredentials: true,
     })
         .map(res => {
-          Object.assign(this.shop,res.json())
+          Object.assign(this.shared,res.json())
         });
   }
 
