@@ -304,6 +304,8 @@ export class User {
 export class UserService {
 
   defaultUser: User = new User();
+  
+  // TODO make observable content !!
   config:any;
 
 
