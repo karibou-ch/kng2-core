@@ -4,6 +4,8 @@ import { CommonModule } from '@angular/common';
 import { UserPipe } from './user.pipe';
 import { UserService } from './user.service';
 
+import { OrderService } from './order/order.service';
+
 import { ConfigService } from './config.service';
 
 
@@ -15,8 +17,9 @@ import { ConfigService } from './config.service';
     UserPipe
   ],
   providers:[
+    ConfigService,
     UserService,
-    ConfigService
+    OrderService
   ],
   exports:[
     UserPipe    
