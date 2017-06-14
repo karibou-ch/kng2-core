@@ -3,12 +3,9 @@ import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs/Rx';
 import 'rxjs/add/operator/map'
 
-export class Config{
-  constructor(){
-    this.shared={};
-  }
-  shared:any;
-}
+import { Config } from './config';
+
+
 
 @Injectable()
 export class ConfigService {

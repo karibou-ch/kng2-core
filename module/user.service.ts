@@ -333,14 +333,14 @@ export class UserService {
     //update existing entry
     return Object.assign(this.cache.map[user.id], user);
   }
-
+publicpublic
   private headers: Headers;
 
   constructor(
     public configSrv:ConfigService,
     public http: Http
   ) {
-    this.config=configSrv.config;
+    this.config = configSrv.defaultConfig;
     this.headers = new Headers();
     this.headers.append('Content-Type', 'application/json');
   }

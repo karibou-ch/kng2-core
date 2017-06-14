@@ -7,9 +7,9 @@ import { RouterModule, Routes } from '@angular/router';
 import { AppComponent } from './app.component';
 import { ConfigComponent }  from './config.component';
 import { Kng2CoreModule } from '../../module/kng2-core.module';
-import { LoginComponent } from './login/login.component';
+import { LoginComponent } from './user.login/login.component';
 import { HeaderComponent } from './header/header.component';
-import { RecoveryComponent } from './recovery/recovery.component';
+import { RecoveryComponent } from './user.recovery/recovery.component';
 
 const appRoutes: Routes = [
   { path: 'login', component: LoginComponent },

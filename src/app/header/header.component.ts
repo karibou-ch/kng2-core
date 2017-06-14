@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { LoaderService }  from '../../../module/loader.service'
 
 @Component({
   selector: 'app-header',
@@ -7,7 +8,7 @@ import { Component, OnInit } from '@angular/core';
 })
 export class HeaderComponent implements OnInit {
   username : string = 'Anonyme';
-  constructor() { }
+  constructor(private loaderSrv : LoaderService) { }
 
   ngOnInit() {
   }
