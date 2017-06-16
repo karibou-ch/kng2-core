@@ -1,4 +1,4 @@
-import { NgModule, APP_INITIALIZER } from '@angular/core';
+import { NgModule} from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 import { UserPipe } from './user.pipe';
@@ -23,14 +23,6 @@ import {CategoryService } from './category.service'
     UserService,
     ConfigService,
     CategoryService
-    /*
-    {
-      provide: APP_INITIALIZER,
-      useFactory: loaderServiceFactory,
-      deps: [UserService],
-      multi: true
-    }
-    */
   ],
   exports:[
     UserPipe    

@@ -14,6 +14,7 @@ import { ConfigService } from './config.service';
 import { UserService } from './user.service';
 import { CategoryService } from './category.service'
 
+//manage the first requests needed when bootstrapping the application. Used by the components.
 @Injectable()
 export class LoaderService {
 
@@ -28,8 +29,9 @@ export class LoaderService {
     private categorySrv: CategoryService
   ) {
 
-    //create a multicast Observable with cachine property of BehaviorSubject (publishbehavior)
-    //every subscribing component will be connected to the same request and get the last item recieved
+
+    //create a multicast Observable with the caching property of BehaviorSubject (publishbehavior)
+    //every subscribing component will be connected to the same request and get the last item received
     this.loader = this.configSrv.getConfig()
       .flatMap(config =>
         //combineLatest to get array with last item of each when one emits an item
@@ -38,7 +40,8 @@ export class LoaderService {
           this.userSrv.me()
         )
       )
-      .publishBehavior(null)  // transform observable to ConnectableObservable (multicasting)
+      .do(x => console.log("debug loader",x))
+      .publishReplay(1)  // transform observable to ConnectableObservable (multicasting)
       .refCount();            // used to auto-connect to the source when there is >= 1 subscribers
   }
 

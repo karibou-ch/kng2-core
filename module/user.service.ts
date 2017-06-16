@@ -307,10 +307,10 @@ export class UserService {
   config:any;
 
 
-  private cache: {
-    list: User[];
-    map: Map<string, User>;
-  }
+  private cache = {
+    list: [],
+    map: new Map<string, User>()
+  };
 
   private deleteCache(user: User) {
     if (this.cache.map[user.id]) {
@@ -333,7 +333,7 @@ export class UserService {
     //update existing entry
     return Object.assign(this.cache.map[user.id], user);
   }
-publicpublic
+
   private headers: Headers;
 
   constructor(
@@ -352,6 +352,7 @@ publicpublic
   // How to build Angular apps using Observable Data Services
   // http://blog.angular-university.io/how-to-build-angular2-apps-using-rxjs-observable-data-services-pitfalls-to-avoid/
 
+  //get user data by his id
   get(id: number): Observable<User> {
 
     if (this.cache.map[id]) {
@@ -516,8 +517,8 @@ publicpublic
       withCredentials: true
     })
       .map(res => res.json() as User)
-      .map(user => this.updateCache(user))
-      .catch(err => Observable.of(this.defaultUser));
+      .map(user => this.updateCache(user));
+      
     /*
     _user.copy(u);
     _user.updateGeoCode();

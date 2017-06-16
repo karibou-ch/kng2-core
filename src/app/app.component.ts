@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { LoaderService }  from '../../module/loader.service'
+import { LoaderService } from '../../module/loader.service'
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
@@ -8,9 +8,9 @@ import { LoaderService }  from '../../module/loader.service'
 export class AppComponent {
   title = 'app works!';
 
-  constructor(private loaderSrv:LoaderService){
-    this.loaderSrv.ready().subscribe((e) => {
-      if(e) console.log('app ready!',e[1]);
-    })
+  constructor(private loaderSrv: LoaderService) {
+    this.loaderSrv.ready().subscribe(() =>
+      null// if (e) console.log('app ready!',e[1]
+      );
   }
 }
