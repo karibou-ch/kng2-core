@@ -1,6 +1,6 @@
 import { Http, Headers } from '@angular/http';
-import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs/Rx';
+import { EventEmitter, Injectable } from '@angular/core';
+import { Observable, BehaviorSubject, ReplaySubject } from 'rxjs/Rx';
 import 'rxjs/add/observable/from';
 
 import * as moment from 'moment';
@@ -322,7 +322,13 @@ export class UserService {
     }
   }
 
+
+
   private updateCache(user: User): User {
+    //
+    // notify 
+    this.user$.next(user);
+
     //
     //check if already exist on cache and add in it if not the case
     if (!this.cache.map[user.id]) {
@@ -335,6 +341,7 @@ export class UserService {
   }
 
   private headers: Headers;
+  private user$: ReplaySubject<User>;   
 
   constructor(
     public configSrv:ConfigService,
@@ -343,6 +350,8 @@ export class UserService {
     this.config = configSrv.defaultConfig;
     this.headers = new Headers();
     this.headers.append('Content-Type', 'application/json');
+
+    this.user$ = new ReplaySubject(1);
   }
 
   // token
@@ -385,8 +394,10 @@ export class UserService {
       withCredentials: true
     })
       .map(res => res.json() as User)
+      .catch(err => Observable.of(this.defaultUser))
       .map(user => this.updateCache(user))
-      .catch(err => Observable.of(this.defaultUser));
+      .flatMap(() => this.user$.asObservable());
+      
 
     //     // angular.extend(self,defaultUser);
     //     self.wrap(_u);
@@ -477,7 +488,9 @@ export class UserService {
       withCredentials: true
     })
       .map(res => this.defaultUser)
-      .catch(err => Observable.of(this.defaultUser));
+      .catch(err => Observable.of(this.defaultUser))
+      .map(user => this.updateCache(user));
+      
     // TODO inform consumers of user change
     // $rootScope.$broadcast("user.update",_user);
 
@@ -517,7 +530,9 @@ export class UserService {
       withCredentials: true
     })
       .map(res => res.json() as User)
+      .catch(err => Observable.of(this.defaultUser))
       .map(user => this.updateCache(user));
+      
       
     /*
     _user.copy(u);
