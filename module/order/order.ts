@@ -90,7 +90,7 @@ export class Order {
     status:EnumFinancialStatus;
     handle?:string;
     provider?:string;
-    logs:[string],
+    logs:string[],
     fees:{
       charge:number;
       shipping:number;
