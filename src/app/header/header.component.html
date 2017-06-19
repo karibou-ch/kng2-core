@@ -24,7 +24,7 @@
     </div>
     <!-- AUTH -->
     <ul class="nav navbar-nav navbar-right" *ngIf="isAuthenticated">
-      <li><a><span class="glyphicon glyphicon-user"></span> {{ user?.displayName }}</a></li>
+      <li><a routerLink="/dashboard"><span class="glyphicon glyphicon-user"></span> {{ user?.displayName }}</a></li>
       <li><button class="btn btn-primary" (click)="logout()">Logout</button></li>
     </ul>
     

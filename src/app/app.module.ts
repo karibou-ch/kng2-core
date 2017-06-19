@@ -34,7 +34,7 @@ const appRoutes: Routes = [
     HeaderComponent,
     RecoveryComponent,
     ConfigComponent,
-    DashboardComponent
+    DashboardComponent,
   ],
   imports: [
     BrowserModule,

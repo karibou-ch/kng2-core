@@ -35,7 +35,7 @@ export class HeaderComponent implements OnInit {
   }
 
   logout() {
-    this.userSrv.logout().subscribe();
+    this.userSrv.logout().subscribe(() => this._router.navigateByUrl('/login'));
   }
 
 }

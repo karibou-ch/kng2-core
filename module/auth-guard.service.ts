@@ -19,7 +19,6 @@ export class AuthGuardService implements CanActivate {
   canActivate() {
     this.loaderSrv.ready().subscribe(
       (loader) => {
-        console.log('dans auth guard', loader[1]);
         Object.assign(this.user, loader[1]);
       });
       if(!this.user.isAuthenticated()) this._router.navigate(['/login']);

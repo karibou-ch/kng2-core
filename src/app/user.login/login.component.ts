@@ -12,7 +12,7 @@ import { UserService } from '../../../module/user.service'
 })
 export class LoginComponent implements OnInit {
 
-  user: User;
+  user: User = new User();
   model: any = {};
   loading = false;
   status;
@@ -31,9 +31,10 @@ export class LoginComponent implements OnInit {
   ngOnInit() {
     this.loaderSrv.ready().subscribe((loader) => {
       console.log('user object', loader[1]);
-      this.user = loader[1];
+      Object.assign(this.user, loader[1]);
       this.isReady=true;
     })
+    if(this.user.isAuthenticated()) this._router.navigate(['/dashboard']);
   }
 
   login() {
