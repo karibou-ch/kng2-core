@@ -17,6 +17,7 @@ export class LoginComponent implements OnInit {
   loading = false;
   status;
   semaphore = true;
+  isReady:boolean=false;
 
 
   constructor(
@@ -31,48 +32,26 @@ export class LoginComponent implements OnInit {
     this.loaderSrv.ready().subscribe((loader) => {
       console.log('user object', loader[1]);
       this.user = loader[1];
+      this.isReady=true;
     })
   }
 
   login() {
     this.loading = true;  //to hide submit button after submitting
-    let sub = this.loaderSrv.ready()
-      .take(1)
-      .flatMap(e =>
-        this.userSrv.login({
-          email: this.model.email,
-          password: this.model.password,
-          provider: "local"
-        })
-      )
-      .subscribe(
-      user => {
-        this.status = "logged";
-        console.log("logged", user);
-        this.loading = false;
-        //this.router.navigate([this.returnUrl]);
-
-      },
-      error => {
-        console.log(error);
-        this.status = "error";
-        this.loading = false;
-      });
+    this.userSrv.login({
+      email: this.model.email,
+      password: this.model.password,
+      provider: "local"
+    }).subscribe(
+    () => this._router.navigate(['/dashboard'])
+    );  
 
   }
 
   logout() {
-    this.loaderSrv.ready()
-      .take(1)
-      .flatMap(e =>
-        this.userSrv.logout()
-      )
-      .subscribe(() => {
-        this.model = {};
-        this.loading = false;
-        //this._router.navigate(['Login']);
-      });
-
+    this.userSrv.logout().subscribe(
+      () => this._router.navigate(['/login'])
+    );
   }
 
 

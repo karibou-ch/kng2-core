@@ -1,6 +1,7 @@
 import { NgModule} from '@angular/core';
 import { CommonModule } from '@angular/common';
 
+import { AuthGuardService }  from './auth-guard.service';
 import { UserPipe } from './user.pipe';
 import { UserService } from './user.service';
 import { ConfigService }  from './config.service';
@@ -22,10 +23,11 @@ import {CategoryService } from './category.service'
     LoaderService,
     UserService,
     ConfigService,
-    CategoryService
+    CategoryService,
+    AuthGuardService
   ],
   exports:[
-    UserPipe    
+    UserPipe  
   ]
 })
 export class Kng2CoreModule { 

@@ -13,8 +13,9 @@ import { User, UserService } from '../../../module/user.service'
   styleUrls: ['./header.component.css']
 })
 export class HeaderComponent implements OnInit {
-  user: User;
+  user: User = new User();
   config: Config;
+  isAuthenticated;
 
   constructor(
     private loaderSrv: LoaderService,
@@ -24,7 +25,8 @@ export class HeaderComponent implements OnInit {
 
     loaderSrv.ready().subscribe((loader) => {
       this.config = loader[0];
-      this.user = loader[1];
+      Object.assign(this.user, loader[1]);
+      this.isAuthenticated = this.user.isAuthenticated();
     })
 
   }
@@ -33,16 +35,7 @@ export class HeaderComponent implements OnInit {
   }
 
   logout() {
-    this.loaderSrv.ready()
-      .take(1)
-      .flatMap(e =>
-        this.userSrv.logout()
-      )
-      .subscribe(() => {
-        console.log('logging out');
-        this._router.navigate(['/login']);
-      });
-
+    this.userSrv.logout().subscribe();
   }
 
 }

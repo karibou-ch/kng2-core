@@ -6,16 +6,21 @@ import { RouterModule, Routes } from '@angular/router';
 
 import { AppComponent } from './app.component';
 import { ConfigComponent }  from './config.component';
-import { Kng2CoreModule } from '../../module/kng2-core.module';
+import { Kng2CoreModule} from '../../module/kng2-core.module';
 import { LoginComponent } from './user.login/login.component';
 import { HeaderComponent } from './header/header.component';
 import { RecoveryComponent } from './user.recovery/recovery.component';
+import { DashboardComponent } from './user.dashboard/dashboard.component';
+
+import { AuthGuardService }  from '../../module/auth-guard.service';
 
 const appRoutes: Routes = [
   { path: 'login', component: LoginComponent },
+  { path: 'config', component: ConfigComponent },
   { path: 'recovery', component: RecoveryComponent },
+  { path: 'dashboard', component: DashboardComponent, canActivate: [AuthGuardService]},
   { path: '',
-    redirectTo: '/login',
+    redirectTo: '/config',
     pathMatch: 'full'
   },
   // { path: '**', component: PageNotFoundComponent }
@@ -28,7 +33,8 @@ const appRoutes: Routes = [
     LoginComponent,
     HeaderComponent,
     RecoveryComponent,
-    ConfigComponent
+    ConfigComponent,
+    DashboardComponent
   ],
   imports: [
     BrowserModule,

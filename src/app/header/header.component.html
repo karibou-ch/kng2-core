@@ -23,13 +23,13 @@
       <a class="navbar-brand" routerLink="/">karibou.ch</a>
     </div>
     <!-- AUTH -->
-    <ul class="nav navbar-nav navbar-right" [hidden]="user?.isAuthenticated">
+    <ul class="nav navbar-nav navbar-right" *ngIf="isAuthenticated">
       <li><a><span class="glyphicon glyphicon-user"></span> {{ user?.displayName }}</a></li>
       <li><button class="btn btn-primary" (click)="logout()">Logout</button></li>
     </ul>
     
     <!-- ANONYMOUS -->
-    <ul class="nav navbar-nav navbar-right" [hidden]="!user?.isAuthenticated">
+    <ul class="nav navbar-nav navbar-right" *ngIf="!isAuthenticated">
       <li><a><span class="glyphicon glyphicon-user"></span> {{ user?.displayName }}</a></li>
       <li><a routerLink="/login"><span class="glyphicon glyphicon-log-in"></span> Login</a></li>
     </ul>
