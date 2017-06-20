@@ -8,7 +8,6 @@ import { User, UserService } from './user.service'
 @Injectable()
 export class AuthGuardService implements CanActivate {
 
-  user:User = new User();
 
   constructor(
     private loaderSrv: LoaderService,
