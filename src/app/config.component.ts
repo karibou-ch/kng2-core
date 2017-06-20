@@ -3,6 +3,7 @@ import { Observable } from 'rxjs/Observable';
 
 import { ConfigService } from '../../module/config.service';
 import { UserService } from '../../module/user.service';
+import { LoaderService } from '../../module/loader.service'
 
 
 @Component({
@@ -48,23 +49,28 @@ import { UserService } from '../../module/user.service';
 })
 export class ConfigComponent {
 
-    private config={};
+    private config = {};
 
     constructor(
         private configSrv: ConfigService,
-        private userSrv:UserService
+        private userSrv: UserService,
+        private loaderSrv: LoaderService
     ) { }
 
-    ngOnInit() { 
-        this.getConfig(); 
+    ngOnInit() {
+        this.getConfig();
     }
 
     getConfig() {
-        this.configSrv.getConfig()
-            .subscribe(config => {
-                this.config=config
-            });
-        // this.config=this.configSrv.getConfig();
+        return this.loaderSrv.ready().subscribe(
+            res => {
+                if (res) {
+                    this.config = res[0];
+                    //console.log("config-comp", res);
+                }
+            }
+        );
+
     }
 
 
