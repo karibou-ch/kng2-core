@@ -19,13 +19,10 @@ export class DashboardComponent implements OnInit {
   ) { }
 
   ngOnInit() {
-    if(!this.userSrv.currentUser.isAuthenticated()) this._router.navigateByUrl('/login');
-    Object.assign(this.user, this.userSrv.currentUser);
-    
-    // this.loaderSrv.ready().subscribe(
-    //   (loader) => {
-    //     Object.assign(this.user, loader[1]);
-    //   })
+     this.loaderSrv.ready().subscribe(
+       (loader) => {
+         Object.assign(this.user, loader[1]);
+       })
   }
 
 }
