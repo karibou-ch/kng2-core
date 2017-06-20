@@ -305,6 +305,7 @@ export class UserService {
 
   defaultUser: User = new User();
   config:any;
+  currentUser: User = new User();
 
 
   private cache = {
@@ -324,11 +325,13 @@ export class UserService {
 
 
 
-  private updateCache(user: User): User {
+  private updateCache(user: User) {
     //
     // notify 
     this.user$.next(user);
+    Object.assign(this.currentUser, user);
 
+    
     //
     //check if already exist on cache and add in it if not the case
     if (!this.cache.map[user.id]) {
@@ -338,6 +341,7 @@ export class UserService {
     }
     //update existing entry
     return Object.assign(this.cache.map[user.id], user);
+    
   }
 
   private headers: Headers;
@@ -350,7 +354,7 @@ export class UserService {
     this.config = configSrv.defaultConfig;
     this.headers = new Headers();
     this.headers.append('Content-Type', 'application/json');
-
+    Object.assign(this.currentUser, this.defaultUser);
     this.user$ = new ReplaySubject(1);
   }
 

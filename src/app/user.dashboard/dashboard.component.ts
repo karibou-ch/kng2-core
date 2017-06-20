@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { LoaderService } from '../../../module/loader.service'
 import { Router } from '@angular/router';
-import { User } from '../../../module/user.service'
+import { User, UserService } from '../../../module/user.service'
 
 @Component({
   selector: 'app-dashboard',
@@ -14,14 +14,18 @@ export class DashboardComponent implements OnInit {
 
   constructor(
     private loaderSrv: LoaderService,
-    private _router: Router
+    private _router: Router,
+    private userSrv: UserService
   ) { }
 
   ngOnInit() {
-    this.loaderSrv.ready().subscribe(
-      (loader) => {
-        Object.assign(this.user, loader[1]);
-      })
+    if(!this.userSrv.currentUser.isAuthenticated()) this._router.navigateByUrl('/login');
+    Object.assign(this.user, this.userSrv.currentUser);
+    
+    // this.loaderSrv.ready().subscribe(
+    //   (loader) => {
+    //     Object.assign(this.user, loader[1]);
+    //   })
   }
 
 }
