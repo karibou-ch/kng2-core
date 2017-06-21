@@ -34,6 +34,9 @@ export class CategoryService {
     description: "",
     group: ""
   };
+  
+  // TODO make observable content !!
+  config:any;
 
   //
   // 
@@ -71,7 +74,11 @@ export class CategoryService {
 
   private headers: Headers;
 
-  constructor(private http: Http, private configSrv: ConfigService) {
+  constructor(
+    private http: Http, 
+    private configSrv: ConfigService
+  ) {
+    this.config=configSrv.config;    
     this.headers = new Headers();
     this.headers.append('Content-Type', 'application/json');
     this.config = configSrv.config;

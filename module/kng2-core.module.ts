@@ -8,9 +8,16 @@ import { ConfigService }  from './config.service';
 import { LoaderService }  from './loader.service';
 import {CategoryService } from './category.service'
 
+<<<<<<< HEAD
+import { OrderService } from './order/order.service';
+
+import { ConfigService } from './config.service';
+
+=======
 /*export function loaderServiceFactory(loader: LoaderService): Function {
     return () => loader.load();
 }*/
+>>>>>>> master
 
 @NgModule({
   imports: [
@@ -20,11 +27,17 @@ import {CategoryService } from './category.service'
     UserPipe
   ],
   providers:[
+<<<<<<< HEAD
+    ConfigService,
+    UserService,
+    OrderService
+=======
     LoaderService,
     UserService,
     ConfigService,
     CategoryService,
     AuthGuardService
+>>>>>>> master
   ],
   exports:[
     UserPipe  
