@@ -438,12 +438,12 @@ export class Order {
 
 
   getShippingLabels(){
-      throw new Error("Not implemented");
-      // var when=new Date(this.shipping.when);
-      // var time=cart.shippingTimeLabel(this.shipping.hours);
-      // var date=moment(when).format('dddd DD MMM YYYY', 'fr');
+       throw new Error("Not implemented");
+      //  var when=new Date(this.shipping.when);
+      //  var time=cart.shippingTimeLabel(this.shipping.hours);
+      //  var date=moment(when).format('dddd DD MMM YYYY', 'fr');
 
-      // return {date:date,time:time};
+      //  return {date:date,time:time};
   };
 
   getProgress(){
@@ -484,29 +484,29 @@ export class Order {
 
   };
 
-  getTitle(){
+  // getTitle(){
 
-    //
-    // failure,
-    if(this.fulfillments.status===EnumFulfillments.failure){
-      return "Commande annulée";
-    }
+  //   //
+  //   // failure,
+  //   if(this.fulfillments.status===EnumFulfillments.failure){
+  //     return "Commande annulée";
+  //   }
 
-    //
-    // pending, paid, voided, refunded
-    if(this.payment.status===EnumFinancialStatus.pending){
-      return "Commande en attente de paiement";
-    }
+  //   //
+  //   // pending, paid, voided, refunded
+  //   if(this.payment.status===EnumFinancialStatus.pending){
+  //     return "Commande en attente de paiement";
+  //   }
 
-    //
-    // partial
-    if(this.fulfillments.status===EnumFulfillments.partial){
-      return "La commande est en attente de traitement";
-    }
-    var labels=this.getShippingLabels();
-    return "Livrée le "+labels.date +' entre '+labels.time;
+  //   //
+  //   // partial
+  //   if(this.fulfillments.status===EnumFulfillments.partial){
+  //     return "La commande est en attente de traitement";
+  //   }
+  //   var labels=this.getShippingLabels();
+  //   return "Livrée le "+labels.date +' entre '+labels.time;
 
-  };
+  // };
   
 }
 

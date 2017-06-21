@@ -6,11 +6,13 @@ import { HttpModule } from '@angular/http';
 import { AppComponent } from './app.component';
 import { ConfigComponent }  from './config.component';
 import { Kng2CoreModule } from '../../module/kng2-core.module';
+import { OrderComponent } from './order/order.component';
 
 @NgModule({
   declarations: [
     AppComponent,
-    ConfigComponent
+    ConfigComponent,
+    OrderComponent
   ],
   imports: [
     BrowserModule,
