@@ -1,6 +1,6 @@
 import { Http, Headers } from '@angular/http';
-import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs/Rx';
+import { EventEmitter, Injectable } from '@angular/core';
+import { Observable, BehaviorSubject, ReplaySubject } from 'rxjs/Rx';
 import 'rxjs/add/observable/from';
 
 import * as moment from 'moment';
@@ -307,12 +307,13 @@ export class UserService {
   
   // TODO make observable content !!
   config:any;
+  currentUser: User = new User();
 
 
-  private cache: {
-    list: User[];
-    map: Map<string, User>;
-  }
+  private cache = {
+    list: [],
+    map: new Map<string, User>()
+  };
 
   private deleteCache(user: User) {
     if (this.cache.map[user.id]) {
@@ -324,7 +325,15 @@ export class UserService {
     }
   }
 
-  private updateCache(user: User): User {
+
+
+  private updateCache(user: User) {
+    //
+    // notify 
+    this.user$.next(user);
+    Object.assign(this.currentUser, user);
+
+    
     //
     //check if already exist on cache and add in it if not the case
     if (!this.cache.map[user.id]) {
@@ -334,17 +343,21 @@ export class UserService {
     }
     //update existing entry
     return Object.assign(this.cache.map[user.id], user);
+    
   }
 
   private headers: Headers;
+  private user$: ReplaySubject<User>;   
 
   constructor(
     public configSrv:ConfigService,
     public http: Http
   ) {
-    this.config=configSrv.config;
+    this.config = configSrv.defaultConfig;
     this.headers = new Headers();
     this.headers.append('Content-Type', 'application/json');
+    Object.assign(this.currentUser, this.defaultUser);
+    this.user$ = new ReplaySubject(1);
   }
 
   // token
@@ -354,6 +367,7 @@ export class UserService {
   // How to build Angular apps using Observable Data Services
   // http://blog.angular-university.io/how-to-build-angular2-apps-using-rxjs-observable-data-services-pitfalls-to-avoid/
 
+  //get user data by his id
   get(id: number): Observable<User> {
 
     if (this.cache.map[id]) {
@@ -386,8 +400,10 @@ export class UserService {
       withCredentials: true
     })
       .map(res => res.json() as User)
+      .catch(err => Observable.of(this.defaultUser))
       .map(user => this.updateCache(user))
-      .catch(err => Observable.of(this.defaultUser));
+      .flatMap(() => this.user$.asObservable());
+      
 
     //     // angular.extend(self,defaultUser);
     //     self.wrap(_u);
@@ -478,7 +494,9 @@ export class UserService {
       withCredentials: true
     })
       .map(res => this.defaultUser)
-      .catch(err => Observable.of(this.defaultUser));
+      .catch(err => Observable.of(this.defaultUser))
+      .map(user => this.updateCache(user));
+      
     // TODO inform consumers of user change
     // $rootScope.$broadcast("user.update",_user);
 
@@ -518,8 +536,10 @@ export class UserService {
       withCredentials: true
     })
       .map(res => res.json() as User)
-      .map(user => this.updateCache(user))
-      .catch(err => Observable.of(this.defaultUser));
+      .catch(err => Observable.of(this.defaultUser))
+      .map(user => this.updateCache(user));
+      
+      
     /*
     _user.copy(u);
     _user.updateGeoCode();
