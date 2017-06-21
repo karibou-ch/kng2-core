@@ -35,7 +35,7 @@ export class OrderService {
   ) {
     //
     // TODO wait for observale!
-    this.config = configSrv.config;
+    this.config = configSrv.defaultConfig;
     this.headers = new Headers();
     this.headers.append('Content-Type', 'application/json');
   }
@@ -90,7 +90,7 @@ export class OrderService {
       withCredentials: true
     })
       .map(res => res.json() as Order)
-      .map(order => this.updateCache(order))
+      //.map(order => this.updateCache(order))
       .catch(err => Observable.of(this.defaultOrder));
   }
 
@@ -284,7 +284,7 @@ export class OrderService {
       withCredentials: true
     })
       .map(res => res.json() as Order[])
-      .map(orders => orders.map(order => this.updateCache(order)));
+      //.map(orders => orders.map(order => this.updateCache(order)));
   }
 
   // find all order for one user shop
@@ -299,7 +299,7 @@ export class OrderService {
       withCredentials: true
     })
       .map(res => res.json() as Order[])
-      .map(orders => orders.map(order => this.updateCache(order)));
+      //.map(orders => orders.map(order => this.updateCache(order)));
   }
 
   // find all repport 
