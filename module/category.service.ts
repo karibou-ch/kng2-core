@@ -26,6 +26,8 @@ export class Category {
 @Injectable()
 export class CategoryService {
 
+  config:any;
+
   private defaultCategory = {
     name: '',
     weight: 0,
@@ -79,6 +81,7 @@ export class CategoryService {
     this.config=configSrv.config;    
     this.headers = new Headers();
     this.headers.append('Content-Type', 'application/json');
+    this.config = configSrv.config;
   }
 
   getCurrent() {
