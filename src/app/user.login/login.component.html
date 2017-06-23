@@ -10,7 +10,7 @@
       <input [(ngModel)]="model.password" type="password" class="form-control validate" id="password" name="password" required>
       <a routerLink="/recovery">mot de passe oublié?</a>
     </div>
-    <button [disabled]="!loginForm.form.valid || !isReady" type="submit" class="btn btn-success">Soumettre</button>
+    <button [disabled]="!loginForm.form.valid || !isReady" type="submit" class="btn btn-info">Soumettre</button>
   </form>
 </div>
 

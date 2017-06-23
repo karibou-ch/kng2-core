@@ -6,9 +6,13 @@ import { RouterModule, Routes } from '@angular/router';
 
 import { AppComponent } from './app.component';
 import { ConfigComponent }  from './config.component';
+
+
+
 import { Kng2CoreModule} from '../../module/kng2-core.module';
 import { LoginComponent } from './user.login/login.component';
 import { HeaderComponent } from './header/header.component';
+import { OrderComponent } from './order/order.component';
 import { RecoveryComponent } from './user.recovery/recovery.component';
 import { DashboardComponent } from './user.dashboard/dashboard.component';
 
@@ -30,11 +34,12 @@ const appRoutes: Routes = [
 @NgModule({
   declarations: [
     AppComponent,
-    LoginComponent,
-    HeaderComponent,
-    RecoveryComponent,
     ConfigComponent,
-    DashboardComponent,
+    HeaderComponent,
+    LoginComponent,
+    OrderComponent,
+    RecoveryComponent,
+    DashboardComponent
   ],
   imports: [
     BrowserModule,

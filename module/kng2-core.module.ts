@@ -1,23 +1,16 @@
-import { NgModule} from '@angular/core';
+import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
-import { AuthGuardService }  from './auth-guard.service';
+import { AuthGuardService } from './auth-guard.service';
+
+import { CategoryService } from './category.service';
+import { ConfigService } from './config.service';
+import { LoaderService } from './loader.service';
+import { OrderService } from './order/order.service';
 import { UserPipe } from './user.pipe';
 import { UserService } from './user.service';
-import { ConfigService }  from './config.service';
-import { LoaderService }  from './loader.service';
-import {CategoryService } from './category.service'
 
-<<<<<<< HEAD
-import { OrderService } from './order/order.service';
 
-import { ConfigService } from './config.service';
-
-=======
-/*export function loaderServiceFactory(loader: LoaderService): Function {
-    return () => loader.load();
-}*/
->>>>>>> master
 
 @NgModule({
   imports: [
@@ -26,24 +19,19 @@ import { ConfigService } from './config.service';
   declarations: [
     UserPipe
   ],
-  providers:[
-<<<<<<< HEAD
-    ConfigService,
-    UserService,
-    OrderService
-=======
-    LoaderService,
-    UserService,
-    ConfigService,
+  providers: [
+    AuthGuardService,
     CategoryService,
-    AuthGuardService
->>>>>>> master
+    ConfigService,
+    LoaderService,
+    OrderService,
+    UserService
   ],
-  exports:[
-    UserPipe  
+  exports: [
+    UserPipe
   ]
 })
-export class Kng2CoreModule { 
+export class Kng2CoreModule {
 
 }
 
