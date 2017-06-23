@@ -1,9 +1,7 @@
 import { Component } from '@angular/core';
 import { Observable } from 'rxjs/Observable';
 
-import { ConfigService } from '../../module/config.service';
-import { UserService } from '../../module/user.service';
-import { LoaderService } from '../../module/loader.service'
+import { ConfigService, LoaderService, UserService } from '../../';
 
 
 @Component({

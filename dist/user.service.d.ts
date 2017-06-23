@@ -1,5 +1,6 @@
 import { Http } from '@angular/http';
 import { Observable } from 'rxjs/Rx';
+import 'rxjs/add/observable/from';
 import 'moment/locale/fr';
 import { ConfigService } from './config.service';
 export declare class Shop {
@@ -7,6 +8,7 @@ export declare class Shop {
     constructor();
 }
 export declare class User {
+    constructor();
     id: string;
     provider: string;
     email: {
@@ -71,37 +73,40 @@ export declare class User {
     hasLike(product: any): boolean;
     hasPrimaryAddress(): string | false | 0;
     getEmailStatus(): string | boolean;
-    populateAdresseName(user?: any): void;
+    populateAdresseName(): void;
     getBVR(): void;
     init(): void;
 }
 export declare class UserService {
-    config: ConfigService;
+    configSrv: ConfigService;
     http: Http;
-    defaultUser: {
-        id: string;
-        name: {
-            givenName: string;
-            familyName: string;
-        };
-        email: {};
-        reminder: {
-            weekdays: any[];
-        };
-        roles: any[];
-        shops: any[];
-        provider: string;
-        url: string;
-        phoneNumbers: {
-            what: string;
-        }[];
-        addresses: any[];
-        logistic: {
-            postalCode: any[];
-        };
-    };
+    defaultUser: User;
+    config: any;
+    currentUser: User;
+    private cache;
+    private deleteCache(user);
+    private updateCache(user);
     private headers;
-    constructor(config: ConfigService, http: Http);
-    ge(id: number): Observable<any>;
-    me(cb: any): void;
+    private user$;
+    constructor(configSrv: ConfigService, http: Http);
+    get(id: number): Observable<User>;
+    me(): Observable<User>;
+    query(filter?: any): Observable<User[]>;
+    validate(id: any, email: any): Observable<any>;
+    validateEmail(email: any): Observable<any>;
+    recover(token: any, email: any, recover: any): Observable<any>;
+    save(user: any): Observable<User>;
+    logout(): Observable<User>;
+    register(user: any): Observable<User>;
+    newpassword(id: any, change: any): Observable<any>;
+    login(data: any): Observable<User>;
+    createShop(shop: any): Observable<Shop>;
+    remove(id: any, password: any): Observable<any>;
+    love(id: any, product: any): Observable<User>;
+    geocode(street: any, postal: any, region: any): Observable<any>;
+    updateGeoCode(user: User): Observable<any>;
+    checkPaymentMethod(user: any): Observable<User>;
+    addPaymentMethod(payment: any, uid: any): Observable<User>;
+    deletePaymentMethod(alias: any, uid: any): Observable<User>;
+    updateStatus(id: any, status: any): Observable<User>;
 }

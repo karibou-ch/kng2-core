@@ -9,14 +9,13 @@ import { ConfigComponent }  from './config.component';
 
 
 
-import { Kng2CoreModule} from '../../module/kng2-core.module';
 import { LoginComponent } from './user.login/login.component';
 import { HeaderComponent } from './header/header.component';
 import { OrderComponent } from './order/order.component';
 import { RecoveryComponent } from './user.recovery/recovery.component';
 import { DashboardComponent } from './user.dashboard/dashboard.component';
 
-import { AuthGuardService }  from '../../module/auth-guard.service';
+import { AuthGuardService, Kng2CoreModule }  from '../..';
 
 const appRoutes: Routes = [
   { path: 'login', component: LoginComponent },

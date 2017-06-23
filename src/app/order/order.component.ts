@@ -1,9 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { Http } from '@angular/http';
-import { LoaderService }  from '../../../module/loader.service'
 import { Observable } from 'rxjs/Rx';
-import { Order }  from '../../../module/order/order'
-import { OrderService } from '../../../module/order/order.service'
+import { LoaderService, Order, OrderService, User, UserService }  from '../../../'
 
 @Component({
   selector: 'app-order',
@@ -13,18 +11,22 @@ import { OrderService } from '../../../module/order/order.service'
 export class OrderComponent implements OnInit {
 
   isReady:boolean = false;
-  results:Observable<any>;
+  results
   date;
+  // user:User;
+  // users:User[];
 
   constructor(
     private loaderSrv: LoaderService,
-    private orderSrv: OrderService
+    private orderSrv: OrderService,
+    private userSrv: UserService
   ) { }
 
   ngOnInit() {
     this.loaderSrv.ready().subscribe((loader) => {
       //console.log('user object', loader[1]);
       this.isReady=true;
+      
     })
   }
 
@@ -39,5 +41,11 @@ export class OrderComponent implements OnInit {
     let month = date.getMonth();
     this.results = this.orderSrv.findAllOrders({fulfillments:'fulfilled,partial', month:month+1});
   }
+  /*
+  findOrdersByUser(){
+    let user = this.user;
+    this.results = this.orderSrv.findOrdersByUser(user);
+  }
+  */
 
 }
