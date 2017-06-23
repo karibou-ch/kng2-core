@@ -1,8 +1,6 @@
 import { Component, OnInit } from '@angular/core';
-import { Config } from '../../../module/config'
-import { LoaderService } from '../../../module/loader.service'
 import { Router } from '@angular/router';
-import { User, UserService } from '../../../module/user.service'
+import { Config, LoaderService, User, UserService } from '../../../';
 
 
 
