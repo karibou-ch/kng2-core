@@ -13,7 +13,8 @@ import { OrderService } from '../../../module/order/order.service'
 export class OrderComponent implements OnInit {
 
   isReady:boolean = false;
-  result:Observable<any>;
+  results:Observable<any>;
+  date;
 
   constructor(
     private loaderSrv: LoaderService,
@@ -27,8 +28,16 @@ export class OrderComponent implements OnInit {
     })
   }
 
-  findAllOrders(){
-    this.result = this.orderSrv.findAllOrders(null);
+  collectOf(){
+    let date = new Date(this.date);
+    let month = date.getMonth();
+    this.results = this.orderSrv.findAllOrders({groupby:'shop', month:month+1});
+  }
+
+  findAllOrdersForShipping(){
+    let date = new Date(this.date);
+    let month = date.getMonth();
+    this.results = this.orderSrv.findAllOrders({fulfillments:'fulfilled,partial', month:month+1});
   }
 
 }

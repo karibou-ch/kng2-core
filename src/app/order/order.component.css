@@ -1,0 +1,9 @@
+table {
+    table-layout: auto;
+    border-collapse: collapse;
+    width: 100%;
+}
+
+.rank + td {
+    width: 100%;
+}

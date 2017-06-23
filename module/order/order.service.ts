@@ -71,7 +71,7 @@ export class OrderService {
       return order;
     }
     //update existing entry
-    return Object.assign(this.cache.map[order.oid], Order);
+    return Object.assign(this.cache.map[order.oid], order);
   }
 
 

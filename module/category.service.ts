@@ -25,7 +25,7 @@ export class Category {
 
 @Injectable()
 export class CategoryService {
-
+  // TODO make observable content !!
   config:any;
 
   private defaultCategory = {
@@ -35,11 +35,7 @@ export class CategoryService {
     group: ""
   };
   
-  // TODO make observable content !!
-  config:any;
 
-  //
-  // 
   private cache: {
     list: Category[];
     map: Map<string, Category>; //key is a slug
