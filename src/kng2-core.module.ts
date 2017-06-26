@@ -3,13 +3,13 @@ import { CommonModule } from '@angular/common';
 
 import { AuthGuardService } from './auth-guard.service';
 
-import { CategoryService } from './category.service';
+import { Category, CategoryService } from './category.service';
 import { ConfigService } from './config.service';
 import { LoaderService } from './loader.service';
 import { OrderService } from './order/order.service';
+import { Order }  from './order/order';
 import { UserPipe } from './user.pipe';
-import { UserService } from './user.service';
-
+import { User, Shop, UserService } from './user.service';
 
 
 @NgModule({
@@ -32,7 +32,19 @@ import { UserService } from './user.service';
   ]
 })
 export class Kng2CoreModule {
-
 }
 
+//
+//
+export {
+  AuthGuardService,
+  CategoryService,Category,
+  ConfigService,
+  LoaderService,
+  OrderService, Order,
+  UserPipe,
+  UserService, User, Shop
+}
 
+export * from './order/order.enum';
+export { Config } from './config';

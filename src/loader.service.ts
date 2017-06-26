@@ -29,20 +29,28 @@ export class LoaderService {
     private categorySrv: CategoryService
   ) {
 
-
+    //
     //create a multicast Observable with the caching property of BehaviorSubject (publishbehavior)
     //every subscribing component will be connected to the same request and get the last item received
     this.loader = this.configSrv.getConfig()
       .flatMap(config =>
+        //
         //combineLatest to get array with last item of each when one emits an item
         Observable.combineLatest(
           Observable.of(config),
           this.userSrv.me()
         )
       )
-      .do(x => console.log("debug loader",x))
-      .publishReplay(1)  // transform observable to ConnectableObservable (multicasting)
-      .refCount();            // used to auto-connect to the source when there is >= 1 subscribers
+      //
+      // transform observable to ConnectableObservable (multicasting)
+      .publishReplay(1)  
+      //
+      // used to auto-connect to the source when there is >= 1 subscribers
+      .refCount()
+      .catch(error=>{
+        console.log('--------------- NO API',error.status===0)
+        return error;
+      });            
   }
 
 

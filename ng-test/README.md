@@ -6,7 +6,12 @@ The module goal mainly provide a kickstart kit to make every new idea/motivation
 [![Build Status](https://travis-ci.org/karibou-ch/kng-core.svg?branch=master)](https://travis-ci.org/karibou-ch/kng-core)
 [![Gitter](https://badges.gitter.im/karibou-ch/kng2-core.svg)](https://gitter.im/karibou-ch/kng2-core?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 
-# Authors & spcial thanks :heart:
+# TODO
+1. [readme](module/README.md)
+2. [tasks]()
+
+
+## Authors & spcial thanks :heart:
 
 - David Gonzalez, https://github.com/GonzalD
 - Evalet Olivier, https://github.com/evaletolab
@@ -19,23 +24,23 @@ Clone the repository and do:
 
     npm install
 
-## Building & watch the library
+# Building the library
 
-    npm run watch
+    npm run module
     
 # Application example
-    cd ng-test
-    npm install
-    ng serve
-    chromium `http://localhost:4200/`
+Run `ng serve` for a dev server. Navigate to `http://localhost:4200/`. The app will automatically reload if you change any of the source files.
 
 
-## Unit tests
+# Unit tests
 
 Run `ng test` to execute the unit tests via [Karma](https://karma-runner.github.io).
 
-## End-to-end tests
+# End-to-end tests
 
 Run `ng e2e` to execute the end-to-end tests via [Protractor](http://www.protractortest.org/).
 Before running the tests make sure you are serving the app via `ng serve`.
 
+## Code scaffolding
+
+Run `ng generate component component-name` to generate a new component. You can also use `ng generate directive/pipe/service/class/module`.

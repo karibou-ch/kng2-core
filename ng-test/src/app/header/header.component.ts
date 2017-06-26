@@ -1,8 +1,6 @@
 import { Component, OnInit } from '@angular/core';
-import { Config } from '../../../module/config'
-import { LoaderService } from '../../../module/loader.service'
 import { Router } from '@angular/router';
-import { User, UserService } from '../../../module/user.service'
+import { Config, LoaderService, User, UserService } from '../../../../dist';
 
 
 
@@ -23,15 +21,21 @@ export class HeaderComponent implements OnInit {
     private _router: Router
   ) {
 
-    loaderSrv.ready().subscribe((loader) => {
-      this.config = loader[0];
-      Object.assign(this.user, loader[1]);
-      this.isAuthenticated = this.user.isAuthenticated();
-    })
 
   }
 
   ngOnInit() {
+    this.loaderSrv.ready().subscribe(
+    loader => {
+      this.config = loader[0];
+      Object.assign(this.user, loader[1]);
+      this.isAuthenticated = this.user.isAuthenticated();
+    },
+    error => {
+      //
+      // error.status===0 means no api access!!
+    })
+
   }
 
   logout() {
