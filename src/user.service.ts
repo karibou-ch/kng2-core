@@ -1,5 +1,5 @@
 import { Http, Headers } from '@angular/http';
-import { EventEmitter, Injectable } from '@angular/core';
+import { Injectable } from '@angular/core';
 import { Observable, BehaviorSubject, ReplaySubject } from 'rxjs/Rx';
 import 'rxjs/add/observable/from';
 
@@ -9,13 +9,8 @@ import 'moment/locale/fr';
 
 //
 import { ConfigService } from './config.service';
+import { Shop } from './shop.service';
 
-
-// TEMP CLASS TO AVOID IMPORT ERROR
-export class Shop {
-  name: string;
-  constructor() { }
-};
 
 export class User {
 
