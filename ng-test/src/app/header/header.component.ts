@@ -25,6 +25,7 @@ export class HeaderComponent implements OnInit {
   }
 
   ngOnInit() {
+    
     this.loaderSrv.ready().subscribe(
     loader => {
       this.config = loader[0];

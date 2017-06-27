@@ -138,7 +138,6 @@ export class CategoryService {
 
   //   app.post('/v1/category/:category', auth.ensureAdmin, categories.update);
   save(slug, cat:Category):Observable<Category> {
-    //console.log("model",this.photo)
     
     return this.http.post(this.config.API_SERVER + '/v1/category/'+slug, cat, {
       headers: this.headers,

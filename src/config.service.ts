@@ -11,6 +11,7 @@ import { Config } from './config';
 export class ConfigService {
 
   public defaultConfig={
+    isAvailable:true,
     API_SERVER:'http://localhost:4000',
 
     API_VERSION:'/v1',
@@ -87,7 +88,8 @@ export class ConfigService {
         Object.assign(config,this.defaultConfig)
         Object.assign(config.shared, res.json());
         return config;
-      });
+      })
+      //.catch(err => Observable.of(new Config()));
   }
 
   getConfig(): Observable<Config> {
