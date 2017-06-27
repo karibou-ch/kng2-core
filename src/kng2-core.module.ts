@@ -1,5 +1,7 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { HttpModule } from '@angular/http';
+
 
 import { AuthGuardService } from './auth-guard.service';
 
@@ -14,7 +16,8 @@ import { User, Shop, UserService } from './user.service';
 
 @NgModule({
   imports: [
-    CommonModule
+    CommonModule,
+    HttpModule
   ],
   declarations: [
     UserPipe
