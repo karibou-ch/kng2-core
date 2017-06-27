@@ -64,7 +64,6 @@ export class ConfigComponent {
             res => {
                 if (res) {
                     this.config = res[0];
-                    //console.log("config-comp", res);
                 }
             }
         );
