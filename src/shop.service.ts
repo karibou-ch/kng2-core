@@ -278,8 +278,9 @@ export class ShopService {
       withCredentials: true
     })
       .map(res => res.json() as Shop)
-      .map(this.updateCache)
-      .do(this.shop$.next)
+      .map(this.deleteCache)
+      // TODO what to callback on delete
+      .do(()=>this.shop$.next(new Shop()))
   };    
 
 }
