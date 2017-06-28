@@ -28,7 +28,6 @@ export class LoginComponent implements OnInit {
 
   ngOnInit() {
     this.loaderSrv.ready().subscribe((loader) => {
-      console.log('user object', loader[1]);
       Object.assign(this.user, loader[1]);
       this.isReady=true;
     })
