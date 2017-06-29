@@ -542,18 +542,6 @@ export class UserService {
     */
   };
 
-  //
-  // TODO move this action to the shop service
-  // app.post('/v1/shops', auth.ensureUserValid, shops.ensureShopLimit, shops.create);
-  createShop(shop): Observable<Shop> {
-    return this.http.post(this.config.API_SERVER + '/v1/shops', shop, {
-      headers: this.headers,
-      withCredentials: true
-    })
-      .map(res => res.json as Shop);
-    // _user.shops.push(s);
-
-  };
 
   // app.put('/v1/users/:id', auth.ensureAdmin, auth.checkPassword, users.remove);
   remove(id, password): Observable<any> {
