@@ -1,17 +1,14 @@
-import { CanActivate }    from '@angular/router';
 import { Injectable } from '@angular/core';
 import { LoaderService } from './loader.service'
 import { Observable } from "rxjs/Rx";
-import { Router } from '@angular/router';
 import { User, UserService } from './user.service'
 
 @Injectable()
-export class AuthGuardService implements CanActivate {
+export class AuthGuardService {
 
 
   constructor(
     private loaderSrv: LoaderService,
-    private _router: Router,
     private userSrv:UserService
     ) {
 

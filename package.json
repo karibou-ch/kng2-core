@@ -3,6 +3,9 @@
   "version": "0.0.6",
   "description": "Component wizard to angular 2",
   "main": "dist/index.js",
+  "files":[
+    "dist"
+  ],
   "dependencies": {
     "@angular/common": "^4.0.0",
     "moment": "^2.18.1",
@@ -28,7 +31,6 @@
   },
   "scripts": {
     "prepublish": "tsc",
-    "publish":"tsc",
     "watch":"./node_modules/.bin/tsc -w"
   },
   "repository": {
@@ -44,7 +46,7 @@
   "maintainers": [
     {
       "name": "David",
-      "email": "david@tonmail.ici"
+      "email": "d.gonzalez@outlook.fr"
     }
   ],
   

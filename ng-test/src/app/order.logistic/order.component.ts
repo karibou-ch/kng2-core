@@ -24,7 +24,6 @@ export class OrderComponent implements OnInit {
 
   ngOnInit() {
     this.loaderSrv.ready().subscribe((loader) => {
-      //console.log('user object', loader[1]);
       this.isReady=true;
       
     })

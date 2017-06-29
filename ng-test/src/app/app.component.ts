@@ -9,8 +9,10 @@ export class AppComponent {
   title = 'app works!';
 
   constructor(private loaderSrv: LoaderService) {
-    this.loaderSrv.ready().subscribe(() =>
-      null// if (e) console.log('app ready!',e[1]
-      );
+
+  }
+
+  ngOnInit(){
+    this.loaderSrv.ready().subscribe();
   }
 }
