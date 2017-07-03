@@ -11,7 +11,8 @@ import { LoaderService } from './loader.service';
 import { OrderService } from './order/order.service';
 import { Order } from './order/order';
 import { UserPipe } from './user.pipe';
-import { User, Shop, UserService } from './user.service';
+import { User, UserService } from './user.service';
+import { Shop } from './shop.service'
 
 
 @NgModule({
