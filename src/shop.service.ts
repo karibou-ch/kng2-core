@@ -196,7 +196,7 @@ export class ShopService {
   };
 
   findByCatalog(cat, filter):Observable<Shop[]> {
-    return this.http.get(this.config.API_SERVER + '/v1/users/category/'+ cat, {
+    return this.http.get(this.config.API_SERVER + '/v1/shops/category/'+ cat, {
       headers: this.headers,
       withCredentials: true
     })
