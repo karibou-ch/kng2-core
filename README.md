@@ -1,4 +1,4 @@
-# Kng2Core means karibou.ch Angular 2 core Library :rocket:
+# Kng2Core (AKA King Kong II) means karibou.ch Angular 2 kore Library :rocket:
 This project will provide a standalone angular2 library that implement all core features (API mapping) of karibou.ch. 
 The module goal mainly provide a kickstart kit to make every new idea/motivation web application/ionic declinaison without friction.
 
