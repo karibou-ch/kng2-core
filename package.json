@@ -1,6 +1,6 @@
 {
   "name": "kng2-core",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "description": "Component wizard to angular 2",
   "main": "dist/index.js",
   "files":[
