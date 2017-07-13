@@ -1,6 +1,6 @@
 {
   "name": "kng2-core",
-  "version": "0.0.9",
+  "version": "0.9",
   "description": "The module goal mainly provide a kickstart kit to make every new idea/motivation web application/ionic declinaison for karibou.ch without friction!",
   "main": "dist/index.js",
   "files":[
