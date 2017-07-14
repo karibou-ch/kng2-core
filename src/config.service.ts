@@ -21,53 +21,15 @@ export class ConfigService {
     AUTH_SUCCESS_REDIRECT_URL:'/',
     AUTH_ERROR_REDIRECT_URL:'/login',
 
-
-    uploadcare:'b51a13e6bd44bf76e263',
-
-    staticMapKey:"AIzaSyD5w46BmWX6hX-uJ2yMycS_cRb2HRvDXQU",
-
-    disqus:'7e23b8cfd1ba48cdb5a3487efcbcdc56', /*karibou dev*/
-    // disqus:'a0602093a94647cd948e95fadb9b9e38'; /*karibou prod*/
-
-    github:{
-      repo: 'evaletolab/karibou-doc',
-      token: '7b24b8ec909903ad91d4548fc6025badaf1501bc'
-    },
-
-    cover:'',
-    // cover:'img/home-site.jpg';
-
-    postfinance:{
-      url: 'https://e-payment.postfinance.ch/ncol/test/orderstandard_utf8.asp'
-    },
-
     user:{
-      photo: '//placehold.it/80x80',
     },
 
     shared:{
-      photo: {
-        fg: "//placehold.it/400x300",
-        owner: "//placehold.it/80x80&text=owner",
-        bg: ''
-      }
     },
     loginPath:['/admin', '/account'],
     readonlyPath:['/wallet/create'],
-    avoidShopUIIn:['/admin', '/login', '/signup', '/page'],
+    avoidShopUIIn:['/admin', '/login', '/signup', '/content']    
 
-    // providers:[
-    //   { name: 'twitter', url: this.config.API_SERVER + '/auth/twitter' },
-    //   { name: 'google+', url: this.config.API_SERVER + '/auth/google' },
-    //   { name: 'persona', url: this.config.API_SERVER + '/auth/browserid' },
-    // ],
-
-    // otherproviders:[
-    //   { name: 'google+', url: this.config.API_SERVER + '/auth/google' },
-    //   { name: 'facebook', url: this.config.API_SERVER + '/auth/facebook' },
-    //   { name: 'linkedin', url: this.config.API_SERVER + '/auth/linkedin' },
-    //   { name: 'github', url: this.config.API_SERVER + '/auth/github' }
-    // ]
   };
 
   private headers: Headers;
@@ -90,6 +52,10 @@ export class ConfigService {
         return config;
       })
       //.catch(err => Observable.of(new Config()));
+  }
+
+  setDefaultConfig(settings:any){
+    Object.assign(this.defaultConfig,settings);
   }
 
   getConfig(): Observable<Config> {
