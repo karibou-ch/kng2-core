@@ -3,9 +3,9 @@ import { Injectable } from '@angular/core';
 import { Observable, BehaviorSubject, ReplaySubject } from 'rxjs/Rx';
 import 'rxjs/add/observable/from';
 
-//import * as moment from 'moment';
+import * as moment from 'moment';
 //import Moment from 'moment';
-//import 'moment/locale/fr';
+import 'moment/locale/fr';
 
 //
 import { ConfigService } from './config.service';
@@ -244,7 +244,7 @@ export class User {
     if (this.email.status === true)
       return true;
 
-    //return moment(this.email.status).format('ddd DD MMM YYYY');
+    return moment(this.email.status).format('ddd DD MMM YYYY');
     return;
 
   }
