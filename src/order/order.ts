@@ -6,6 +6,11 @@ import {
   EnumShippingMode 
 } from './order.enum';
 
+//
+// get global configuration
+import { config } from '../config';
+
+//
 // load utils API
 import '../util';
 
@@ -55,10 +60,6 @@ export interface OrderItem{
 
 
 export class Order {
-  //
-  // TODO init static field when observable is ready
-  static config:any;
-
   /** order identifier */
   oid:number;
 
@@ -153,54 +154,56 @@ export class Order {
   //
   // Compute the next potential shipping day. 
   // It depends on the hours needed to harvest/prepare a placed order
-  potentialShippingDay():Date{
+  static potentialShippingDay():Date{
     var now=new Date(), 
-        potential=new Date(now.getTime()+3600000*(Order.config.shared.order.timelimit));
+        potential=new Date(now.getTime()+3600000*(config.shared.order.timelimit));
 
     //
     // timelimitH is hour limit to place an order
-    if (potential.getHours()>=Order.config.shared.order.timelimitH){
+    if (potential.getHours()>=config.shared.order.timelimitH){
       //
       // set shipping time to fix the printed countdown (eg. 'dans un jour') 16:00 vs. 12:00 
-      potential.setHours(Order.config.shared.order.timelimitH,0,0,0);
+      potential.setHours(config.shared.order.timelimitH,0,0,0);
       return potential.plusDays(1);
     }
 
     //
     // set shipping time to fix the printed countdown (eg. 'dans un jour') 16:00 vs. 12:00 
-    potential.setHours(Order.config.shared.order.timelimitH,0,0,0);
+    potential.setHours(config.shared.order.timelimitH,0,0,0);
 
     // next date depends on the hours needed to prepare a placed order
     return potential;        
 
   };
 
-  potentialShippingWeek(){
-    let potential=this.potentialShippingDay();
+  //
+  // Compute the next potential shipping days in one week. 
+  static potentialShippingWeek(){
+    let potential=Order.potentialShippingDay();
     return potential.dayToDates(
-        Order.config.shared.order.weekdays
+        config.shared.order.weekdays
       );
   };
 
   //  
   // the current shipping day is short date for the placed orders
-  currentShippingDay(){
-    return (new Date()).dayToDates(Order.config.shared.order.weekdays)[0];
+  static currentShippingDay(){
+    return (new Date()).dayToDates(config.shared.order.weekdays)[0];
   };
 
   //
   // the next shipping day
-  nextShippingDay() {
-    let potential=this.potentialShippingDay();
+  static nextShippingDay() {
+    let potential=Order.potentialShippingDay();
     let noshipping;
     let next=potential.dayToDates(
-          Order.config.shared.order.weekdays         
+          config.shared.order.weekdays         
         );
 
 
     //
     // no closed date
-    if(!Order.config.shared.noshipping||!Order.config.shared.noshipping.length){
+    if(!config.shared.noshipping||!config.shared.noshipping.length){
       return next[0];
     }
 
@@ -208,8 +211,8 @@ export class Order {
     // next contains the potentials shipping days,
     // we must return the first date available for shipping
     for (var j = 0; j <next.length; j++) {
-      for (var i = 0; i<Order.config.shared.noshipping.length; i++) {
-        noshipping=Order.config.shared.noshipping[i];
+      for (var i = 0; i<config.shared.noshipping.length; i++) {
+        noshipping=config.shared.noshipping[i];
         if(!next[j].in(noshipping.from,noshipping.to)) return next[j];
       }
     }
@@ -222,12 +225,12 @@ export class Order {
   //
   // a full week of available shipping days 
   // limit to nb days (default is <7) 
-  fullWeekShippingDays(limit?) {
-    var next=this.potentialShippingWeek(), lst=[], find=false, today=new Date();
+  static fullWeekShippingDays(limit?) {
+    var next=Order.potentialShippingWeek(), lst=[], find=false, today=new Date();
 
     //
     // default date limit is defined by
-    limit=limit||Order.config.shared.order.uncapturedTimeLimit;
+    limit=limit||config.shared.order.uncapturedTimeLimit;
     limit=limit&&today.plusDays(limit+0);
 
     function format(lst) {
@@ -248,7 +251,7 @@ export class Order {
 
     //
     // no closed date
-    if(!Order.config.shared.noshipping||!Order.config.shared.noshipping.length){
+    if(!config.shared.noshipping||!config.shared.noshipping.length){
       return format(next);
     }
 
@@ -256,7 +259,7 @@ export class Order {
     // next contains the potentials shipping days,
     // we must return the first date available for shipping
     next.forEach(function(shippingday) {
-      let find=Order.config.shared.noshipping.find(noshipping=>shippingday.in(noshipping.from,noshipping.to))
+      let find=config.shared.noshipping.find(noshipping=>shippingday.in(noshipping.from,noshipping.to))
       if(!find) lst.push(shippingday)
     });
 
@@ -267,17 +270,17 @@ export class Order {
   }
 
 
-  findPastWeekOfShippingDay(when){
+  static findPastWeekOfShippingDay(when){
     // init the date at begin of the week
     var next=new Date(when.getTime()-(when.getDay()*86400000)), all=[], nextDate, nextDay;
 
     // jump one week past
     next=new Date(next.getTime()-86400000*7);
 
-    Order.config.shared.order.weekdays.forEach(function(day){
+    config.shared.order.weekdays.forEach(function(day){
       nextDay=(day>=next.getDay())? (day-next.getDay()):(7-next.getDay()+day);
       nextDate=new Date(nextDay*86400000+next.getTime());
-      if(Order.config.shared.order.weekdays.indexOf(nextDate.getDay())!=-1)
+      if(config.shared.order.weekdays.indexOf(nextDate.getDay())!=-1)
         {all.push(nextDate);}
 
     });
@@ -288,13 +291,16 @@ export class Order {
   };
 
 
-  /* return the next shipping day available for customers*/
+  //
+  // return the next shipping day available for customers
   findNextShippingDay(){
-    return this.nextShippingDay();
+    return Order.nextShippingDay();
   };
 
+  //
+  // return the next shipping day available for Logistic
   findCurrentShippingDay(){
-    return this.currentShippingDay();
+    return Order.currentShippingDay();
   };
 
   //
