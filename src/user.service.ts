@@ -245,7 +245,6 @@ export class User {
       return true;
 
     return moment(this.email.status).format('ddd DD MMM YYYY');
-    return;
 
   }
 
