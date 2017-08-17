@@ -3,7 +3,7 @@ import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs/Rx';
 import 'rxjs/add/operator/map'
 
-import { Config } from './config';
+import { Config, config } from './config';
 
 
 
@@ -46,7 +46,6 @@ export class ConfigService {
       withCredentials: true,
     })
       .map(res => {
-        let config={shared:{}};
         Object.assign(config,this.defaultConfig)
         Object.assign(config.shared, res.json());
         return config;

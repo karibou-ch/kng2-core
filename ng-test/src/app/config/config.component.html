@@ -1,0 +1,32 @@
+<div class="container">
+  <h1>Config introspection</h1>
+  <div >
+      <table>
+          <tr>
+              <th>Menu</th>
+          </tr>
+          <tr *ngFor="let sub of config.shared?.menu">
+              <td>{{sub.name.fr}} </td>
+          </tr>
+      </table> <br>
+      <table>
+          <tr>
+              <th>Market places</th>
+              <th>lat/lng</th>
+          </tr>
+          
+          <tr *ngFor="let sub of config.shared?.marketplace.list">
+              <td>{{sub.name}} </td>
+              <td>{{sub.lat}}/{{sub.lng}}</td>
+          </tr>
+      </table><br>
+      <table>
+          <tr>
+              <th>Shipping Week</th>
+          </tr>
+          <tr *ngFor="let sub of config.shared?.shippingweek">
+              <td>{{sub | date:'medium'}} </td>
+          </tr>
+      </table>
+  </div>
+</div>

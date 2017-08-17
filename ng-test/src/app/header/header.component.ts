@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
-import { Config, LoaderService, User, UserService } from '../../../../dist';
+import { config, LoaderService, User, UserService } from '../../../../dist';
 
 
 
@@ -8,11 +8,11 @@ import { Config, LoaderService, User, UserService } from '../../../../dist';
 @Component({
   selector: 'app-header',
   templateUrl: './header.component.html',
-  styleUrls: ['./header.component.css']
+  styleUrls: ['./header.component.scss']
 })
 export class HeaderComponent implements OnInit {
   user: User = new User();
-  config: Config;
+  config;
   isAuthenticated;
 
   constructor(
@@ -28,7 +28,7 @@ export class HeaderComponent implements OnInit {
     
     this.loaderSrv.ready().subscribe(
     loader => {
-      this.config = loader[0];
+      this.config = config;
       Object.assign(this.user, loader[1]);
       this.isAuthenticated = this.user.isAuthenticated();
     },

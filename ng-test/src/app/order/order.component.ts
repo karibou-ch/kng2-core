@@ -4,15 +4,17 @@ import { Observable } from 'rxjs/Rx';
 import { LoaderService, Order, OrderService, User, UserService }  from '../../../../dist'
 
 @Component({
-  selector: 'app-order',
+  selector: 'order-app',
   templateUrl: './order.component.html',
-  styleUrls: ['./order.component.css']
+  styleUrls: ['./order.component.scss']
 })
 export class OrderComponent implements OnInit {
 
   isReady:boolean = false;
   results
   date;
+  next:Date;
+  current:Date;
   // user:User;
   // users:User[];
 
@@ -25,7 +27,9 @@ export class OrderComponent implements OnInit {
   ngOnInit() {
     this.loaderSrv.ready().subscribe((loader) => {
       this.isReady=true;
-      
+      this.next=Order.nextShippingDay();
+      this.current=Order.currentShippingDay();
+
     })
   }
 

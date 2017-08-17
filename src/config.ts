@@ -1,5 +1,6 @@
 
 
+
 export class Config{
   constructor(){
     this.shared={};
@@ -8,3 +9,5 @@ export class Config{
   isAvailable:boolean;
   shared:any;
 }
+
+export var config:Config = new Config();

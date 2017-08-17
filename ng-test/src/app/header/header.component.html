@@ -19,15 +19,17 @@
   <div class="container-fluid" [hidden]="!config">
     
     <ul class="nav navbar-nav">
-      <li class="active"><a routerLink="/">Home</a></li>
+      <li ><a routerLink="/">kio2-test</a></li>
+      <li [routerLinkActive]="['active']"><a routerLink="/config">config</a></li>
+      <li [routerLinkActive]="['active']"><a routerLink="/dashboard">user</a></li>
+      <li [routerLinkActive]="['active']"><a routerLink="/order">order</a></li>
     </ul>
     <div class="navbar-header">
-      <a class="navbar-brand" routerLink="/">karibou.ch</a>
     </div>
     <!-- AUTH -->
     <ul class="nav navbar-nav navbar-right" *ngIf="isAuthenticated">
       <li><a routerLink="/dashboard"><span class="glyphicon glyphicon-user"></span> {{ user?.displayName }}</a></li>
-      <li><button class="btn btn-primary" (click)="logout()">Logout</button></li>
+      <li><button type="button" class="btn btn-default navbar-btn" (click)="logout()">Logout</button></li>
     </ul>
     
     <!-- ANONYMOUS -->

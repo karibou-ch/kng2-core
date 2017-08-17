@@ -7,6 +7,7 @@ import { AuthGuardService } from './auth-guard.service';
 
 import { Category, CategoryService } from './category.service';
 import { ConfigService } from './config.service';
+import { config } from './config';
 import { LoaderService } from './loader.service';
 import { OrderService } from './order/order.service';
 import { Order } from './order/order';
@@ -61,7 +62,7 @@ export class Kng2CoreModule {
 export {
   AuthGuardService,
   CategoryService, Category,
-  ConfigService,
+  ConfigService, config,
   LoaderService,
   OrderService, Order, OrderEnum,
   UserPipe,
@@ -69,4 +70,3 @@ export {
 }
 
 export * from './order/order.enum';
-export { Config } from './config';
