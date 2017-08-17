@@ -12,7 +12,8 @@ import { OrderService } from './order/order.service';
 import { Order } from './order/order';
 import { UserPipe } from './user.pipe';
 import { User, UserService } from './user.service';
-import { Shop } from './shop.service'
+import { Shop } from './shop.service';
+import *  as OrderEnum from './order/order.enum';
 
 
 @NgModule({
@@ -62,7 +63,7 @@ export {
   CategoryService, Category,
   ConfigService,
   LoaderService,
-  OrderService, Order,
+  OrderService, Order, OrderEnum,
   UserPipe,
   UserService, User, Shop
 }

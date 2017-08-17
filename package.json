@@ -1,6 +1,6 @@
 {
   "name": "kng2-core",
-  "version": "0.9.0",
+  "version": "0.10.0",
   "description": "The module goal mainly provide a kickstart kit to make every new idea/motivation web application/ionic declinaison for karibou.ch without friction!",
   "main": "dist/index.js",
   "files":[
@@ -23,17 +23,18 @@
     "@angular/platform-browser-dynamic": "^4.0.0",
     "@angular/router": "^4.0.0",
     "core-js": "^2.4.1",
+    "moment": "^2.18.1",
     "zone.js": "^0.8.4",
     "@types/core-js": "^0.9.35",
     "@types/jasmine": "2.5.38",
     "@types/node": "~6.0.60",
     "ts-node": "~2.0.0",
     "tslint": "~4.5.0",
-    "typescript": "~2.2.0"    
+    "typescript": "~2.2.0"
   },
   "scripts": {
     "prepublish": "tsc",
-    "watch":"./node_modules/.bin/tsc -w"
+    "watch": "./node_modules/.bin/tsc -w"
   },
   "repository": {
     "type": "git",
@@ -51,7 +52,6 @@
       "email": "d.gonzalez@outlook.fr"
     }
   ],
-  
   "homepage": "https://github.com/karibou-ch/kng2-core",
   "license": "MIT",
   "bugs": {
