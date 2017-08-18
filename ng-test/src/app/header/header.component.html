@@ -27,13 +27,13 @@
     <div class="navbar-header">
     </div>
     <!-- AUTH -->
-    <ul class="nav navbar-nav navbar-right" *ngIf="isAuthenticated">
+    <ul class="nav navbar-nav navbar-right" *ngIf="user.isAuthenticated()">
       <li><a routerLink="/dashboard"><span class="glyphicon glyphicon-user"></span> {{ user?.displayName }}</a></li>
       <li><button type="button" class="btn btn-default navbar-btn" (click)="logout()">Logout</button></li>
     </ul>
     
     <!-- ANONYMOUS -->
-    <ul class="nav navbar-nav navbar-right" *ngIf="!isAuthenticated">
+    <ul class="nav navbar-nav navbar-right" *ngIf="!user.isAuthenticated()">
       <li><a><span class="glyphicon glyphicon-user"></span> {{ user?.displayName }}</a></li>
       <li><a routerLink="/login"><span class="glyphicon glyphicon-log-in"></span> Login</a></li>
     </ul>

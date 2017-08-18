@@ -348,7 +348,7 @@ export class UserService {
     public configSrv:ConfigService,
     public http: Http
   ) {
-    this.config = configSrv.defaultConfig;
+    this.config = ConfigService.defaultConfig;
     this.headers = new Headers();
     this.headers.append('Content-Type', 'application/json');
     Object.assign(this.currentUser, this.defaultUser);
