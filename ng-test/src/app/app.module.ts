@@ -18,6 +18,8 @@ import { DashboardComponent } from './user.dashboard/dashboard.component';
 import { AuthGuardService, Kng2CoreModule }  from '../../../dist';
 
 import { appRoutes } from './app.routes';
+import { AddressComponent } from './user.address/address.component';
+import { CardComponent } from './user.card/card.component';
 
 @NgModule({
   declarations: [
@@ -27,7 +29,9 @@ import { appRoutes } from './app.routes';
     LoginComponent,
     OrderComponent,
     RecoveryComponent,
-    DashboardComponent
+    DashboardComponent,
+    AddressComponent,
+    CardComponent
   ],
   imports: [
     BrowserModule,
