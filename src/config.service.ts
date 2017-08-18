@@ -59,7 +59,6 @@ export class ConfigService {
   }
 
   static setDefaultConfig(settings:any){
-    console.log('---------------------- setDefault')
     Object.assign(ConfigService.defaultConfig,settings);
   }
 
