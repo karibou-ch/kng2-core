@@ -34,6 +34,16 @@ Get sources
     ng serve
     chromium `http://localhost:4200/`
 
+Before using the library, you must check or set your default config in bootstrap application, `app.component.ts` in our example
+```javascript
+    this.config.setDefaultConfig({
+       API_SERVER:'http://you.api.point.here',
+       others....
+    });
+```
+
+
+
 
 ## Unit tests
 
