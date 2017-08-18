@@ -2,7 +2,7 @@ import { Component } from '@angular/core';
 import { ConfigService, LoaderService } from '../../../dist';
 
 ConfigService.setDefaultConfig({
-    API_SERVER:'http://api.panierlocal.evaletolab.ch'
+    API_SERVER:'http://localhost:4000'
 });
 
 @Component({
