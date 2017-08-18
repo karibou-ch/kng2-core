@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { LoaderService } from '../../../dist';
+import { ConfigService, LoaderService } from '../../../dist';
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
@@ -7,11 +7,17 @@ import { LoaderService } from '../../../dist';
 })
 export class AppComponent {
 
-  constructor(private loaderSrv: LoaderService) {
+  constructor(
+    private config: ConfigService,
+    private loader: LoaderService
+  ) {
 
   }
 
   ngOnInit(){
-    this.loaderSrv.ready().subscribe();
+    this.config.setDefaultConfig({
+       API_SERVER:'http://localhost:4000'
+    });
+    this.loader.ready().subscribe();
   }
 }
