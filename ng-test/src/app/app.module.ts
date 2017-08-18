@@ -20,6 +20,9 @@ import { AuthGuardService, Kng2CoreModule }  from '../../../dist';
 import { appRoutes } from './app.routes';
 import { AddressComponent } from './user.address/address.component';
 import { CardComponent } from './user.card/card.component';
+import { CategoryComponent } from './category/category.component';
+import { ProductComponent } from './product/product.component';
+import { ShopComponent } from './shop/shop.component';
 
 @NgModule({
   declarations: [
@@ -31,7 +34,10 @@ import { CardComponent } from './user.card/card.component';
     RecoveryComponent,
     DashboardComponent,
     AddressComponent,
-    CardComponent
+    CardComponent,
+    CategoryComponent,
+    ProductComponent,
+    ShopComponent
   ],
   imports: [
     BrowserModule,
