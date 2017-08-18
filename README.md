@@ -12,15 +12,20 @@ The module goal mainly provide a kickstart kit to make every new idea/motivation
 - Evalet Olivier, https://github.com/evaletolab
 - Noria Foukia Enseignante en mathématiques @HEPIA 
 
+## Installation as library
+    npm install kng2-core
 
-# Project installation
+## Prerequisites for development 
+install node.js with [NVM](https://github.com/creationix/nvm) (required). 
 
-Clone the repository and do:
+    nvm install v6.9.5
+    nvm use v6.9.5
 
+Get sources
+
+    git clone https://github.com/karibou-ch/kng2-core
+    cd kng2-core
     npm install
-
-## Building & watch the library
-
     npm run watch
     
 # Application example
