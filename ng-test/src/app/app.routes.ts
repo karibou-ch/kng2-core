@@ -6,6 +6,9 @@ import { DashboardComponent } from './user.dashboard/dashboard.component';
 import { HeaderComponent } from './header/header.component';
 import { LoginComponent } from './user.login/login.component';
 import { OrderComponent } from './order/order.component';
+import { CategoryComponent } from './category/category.component';
+import { ProductComponent } from './product/product.component';
+import { ShopComponent } from './shop/shop.component';
 import { RecoveryComponent } from './user.recovery/recovery.component';
 
 
@@ -13,6 +16,9 @@ export const appRoutes: Routes = [
   { path: 'login', component: LoginComponent },
   { path: 'config', component: ConfigComponent },
   { path: 'order', component: OrderComponent },
+  { path: 'category', component: CategoryComponent },
+  { path: 'product', component: ProductComponent },
+  { path: 'shop', component: ShopComponent },
   { path: 'recovery', component: RecoveryComponent },
   { path: 'dashboard', component: DashboardComponent, canActivate: [AuthGuardService]},
   { path: '',
@@ -21,5 +27,3 @@ export const appRoutes: Routes = [
   },
   // { path: '**', component: PageNotFoundComponent }
 ];
-
-

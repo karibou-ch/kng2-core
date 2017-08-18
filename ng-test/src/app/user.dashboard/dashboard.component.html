@@ -2,6 +2,25 @@
   <h1>User introspection</h1>
   <div class="row">
     <div class="col-xs-3">User object</div>
-    <div class="col-xs-9  pull-left">{{ user?.displayName }}</div>
+    <div class="col-xs-9  pull-left">{{ user.displayName }}</div>
+  </div>
+  <div class="row">
+    <div class="col-xs-3">Address mail</div>
+    <div class="col-xs-9  pull-left">{{ user.email.address }}</div>
+  </div>
+  <div class="row">
+    <div class="col-xs-3">Téléphone</div>
+    <tr class="col-xs-9 " *ngFor="let tel of user.phoneNumbers ">
+      <p>
+        <b>Number: </b> {{tel.number}}
+        <b>What: </b> {{tel.what}}
+      </p>
+    </tr>
+  </div>
+  <div class="row">
+    <app-address></app-address>
+  </div>
+  <div class="row">
+    <app-card></app-card>
   </div>
 </div>
