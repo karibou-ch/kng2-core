@@ -13,7 +13,6 @@ import { config, LoaderService, User, UserService } from '../../../../dist';
 export class HeaderComponent implements OnInit {
   user: User = new User();
   config;
-  isAuthenticated;
 
   constructor(
     private loaderSrv: LoaderService,
@@ -26,16 +25,10 @@ export class HeaderComponent implements OnInit {
 
   ngOnInit() {
     
-    this.loaderSrv.ready().subscribe(
-    loader => {
+    this.loaderSrv.ready().subscribe(loader =>{
       this.config = config;
       Object.assign(this.user, loader[1]);
-      this.isAuthenticated = this.user.isAuthenticated();
-    },
-    error => {
-      //
-      // error.status===0 means no api access!!
-    })
+    });
 
   }
 

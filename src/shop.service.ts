@@ -149,7 +149,7 @@ export class ShopService {
     private configSrv:ConfigService,
     private http: Http
   ){
-    this.config = configSrv.defaultConfig;
+    this.config = ConfigService.defaultConfig;
     this.headers = new Headers();
     this.headers.append('Content-Type', 'application/json');
 

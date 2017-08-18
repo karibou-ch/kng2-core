@@ -35,7 +35,7 @@ export class OrderService {
   ) {
     //
     // TODO wait for observale!
-    this.config = configSrv.defaultConfig;
+    this.config = ConfigService.defaultConfig;
     this.headers = new Headers();
     this.headers.append('Content-Type', 'application/json');
   }

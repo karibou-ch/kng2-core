@@ -1,10 +1,16 @@
 import { Component } from '@angular/core';
 import { ConfigService, LoaderService } from '../../../dist';
+
+ConfigService.setDefaultConfig({
+    API_SERVER:'http://localhost:4000'
+});
+
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss']
 })
+
 export class AppComponent {
 
   constructor(
@@ -15,9 +21,6 @@ export class AppComponent {
   }
 
   ngOnInit(){
-    this.config.setDefaultConfig({
-       API_SERVER:'http://localhost:4000'
-    });
     this.loader.ready().subscribe();
   }
 }

@@ -24,8 +24,8 @@ export class LoaderService {
 
   constructor(
     private http: Http,
-    private configSrv: ConfigService,
-    private userSrv: UserService,
+    private config: ConfigService,
+    private user: UserService,
     private categorySrv: CategoryService
   ) {
 
@@ -34,13 +34,13 @@ export class LoaderService {
     //every subscribing component will be connected to the same request and get the last item received
 
     
-    this.loader = this.configSrv.getConfig()
+    this.loader = this.config.init()
       .flatMap(config =>
         //
         //combineLatest to get array with last item of each when one emits an item
         Observable.combineLatest(
           Observable.of(config),
-          this.userSrv.me()
+          this.user.me()
         )
       )
       //
