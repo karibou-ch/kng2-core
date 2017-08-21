@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, Input } from '@angular/core';
 import { LoaderService, User, UserService } from '../../../../dist'
 
 @Component({
@@ -6,20 +6,8 @@ import { LoaderService, User, UserService } from '../../../../dist'
   templateUrl: './card.component.html',
   styleUrls: ['./card.component.scss']
 })
-export class CardComponent implements OnInit {
+export class CardComponent {
 
-  user: User = new User();
-
-  constructor(
-    private loaderSrv: LoaderService,
-    private userSrv: UserService
-  ) { }
-
-  ngOnInit() {
-     this.loaderSrv.ready().subscribe(
-       (loader) => {
-         Object.assign(this.user, loader[1]);
-       })
-  }
+  @Input() card: String[];
 
 }

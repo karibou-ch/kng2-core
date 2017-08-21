@@ -17,10 +17,10 @@
       </p>
     </tr>
   </div>
-  <div class="row">
-    <app-address></app-address>
-  </div>
-  <div class="row">
-    <app-card></app-card>
-  </div>
+  <h1>User Adress</h1>
+  <app-address *ngFor="let add of user.addresses" [address]="add">
+  </app-address>
+  <h1>User Card</h1>
+  <app-card *ngFor="let card of user.payments" [card]="card">
+  </app-card>
 </div>
