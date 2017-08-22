@@ -58,14 +58,66 @@ export class ProductService {
         })
             .map(res => res.json() as Product[])
             // TODO manage cache!
-            .map(categories => categories.map(this.updateCache.bind(this)))
+            .map(product => product.map(this.updateCache.bind(this)))
             .catch(this.handleError);
+    };
+
+    findByLocationCategoryAndDetail(category, detail): Observable<Product[]> {
+        return this.http.get(this.config.API_SERVER + '/v1/product/location/' + location + '/category/' + category + '/details/' + detail, {
+            headers: this.headers,
+            withCredentials: true
+        }).map(res => res.json() as Product[]);
+        // TODO manage cache!
+    }
+
+    findByCategoryAndDetail(category, detail): Observable<Product[]> {
+        return this.http.get(this.config.API_SERVER + '/v1/product/category/' + category + '/details/' + detail, {
+            headers: this.headers,
+            withCredentials: true
+        }).map(res => res.json() as Product[]);
+        // TODO manage cache!
+    }
+
+    findByLocationAndCategory(location, category): Observable<Product[]> {
+        return this.http.get(this.config.API_SERVER + '/v1/product/location/' + location + '/category/' + category, {
+            headers: this.headers,
+            withCredentials: true
+        }).map(res => res.json() as Product[]);
+        // TODO manage cache!
+    }
+
+    findLove(): Observable<Product[]> {
+        return this.http.get(this.config.API_SERVER + '/v1/product/love', {
+            headers: this.headers,
+            withCredentials: true
+        }).map(res => res.json() as Product[]);
+        // TODO manage cache!
+    }
+
+    findByLocation(location): Observable<Product[]> {
+        return this.http.get(this.config.API_SERVER + '/v1/product/location/' + location, {
+            headers: this.headers,
+            withCredentials: true
+        }).map(res => res.json() as Product[]);
+        // TODO manage cache!
+    }
+
+    findByCategory(category): Observable<Product[]> {
+        return this.http.get(this.config.API_SERVER + '/v1/product/category/' + category, {
+            headers: this.headers,
+            withCredentials: true
+        }).map(res => res.json() as Product[]);
+        // TODO manage cache!
+    }
+
+    findBySku(sku): Observable<Product> {
+        return this.get(sku)
     };
 
     //
     // get product based on its sku
     get(sku): Observable<Product> {
-        let cached: Observable<Product>; //????
+        let cached: Observable<Product>; //???? 
 
         // check if in the cache
         if (this.cache.map[sku]) {
@@ -82,6 +134,8 @@ export class ProductService {
             //.do(this.product$.next)      
             .catch(this.handleError);
     }
+
+
 
     private handleError(error: Response | any) {
         //
