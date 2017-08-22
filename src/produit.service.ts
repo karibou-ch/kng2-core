@@ -1,7 +1,7 @@
 import { Http, Headers, RequestOptions } from '@angular/http';
 import { Injectable } from '@angular/core';
 import { Observable, BehaviorSubject, ReplaySubject } from 'rxjs/Rx';
-import { ConfigService } from './config.service';
+import { config } from './config';
 
 @Injectable()
 export class ProductService {
@@ -9,17 +9,12 @@ export class ProductService {
     public product$: ReplaySubject<Product>;
     private headers: Headers;
     config: any;
-
-    private cache: {
-        list: Product[];
-        map: Map<string, Product>;
-    }
+    private cache: Cache = new Cache();
 
     constructor(
-        private configSrv: ConfigService,
         private http: Http
     ) {
-        this.config = ConfigService.defaultConfig;
+        this.config = config;
         this.headers = new Headers();
         this.headers.append('Content-Type', 'application/json');
 
@@ -28,10 +23,10 @@ export class ProductService {
         this.product$ = new ReplaySubject(1);
     }
 
-    private deleteCache(cat: Product) {
-        if (this.cache.map[cat.slug]) {
-            this.cache.map.delete(cat.slug);
-            let index = this.cache.list.indexOf(cat)
+    private deleteCache(product: Product) {
+        if (this.cache.map[product.sku]) {
+            this.cache.map.delete(product.sku);
+            let index = this.cache.list.indexOf(product)
             if (index > -1)
                 this.cache.list.splice(index, 1);
         }
@@ -40,13 +35,13 @@ export class ProductService {
     private updateCache(product: Product) {
         //
         //check if already exist on cache and add in it if not the case
-        if (!this.cache.map[product.slug]) {
-            this.cache.map[product.slug] = product;
+        if (!this.cache.map[product.sku]) {
+            this.cache.map[product.sku] = product;
             this.cache.list.push(product);
-            return;
+            return product;
         }
         //update existing entry
-        return Object.assign(this.cache.map[category.slug], category);
+        return Object.assign(this.cache.map[product.sku], product);
     }
 
 
@@ -54,20 +49,39 @@ export class ProductService {
     // REST api wrapper
     //
 
-    query(filter): Observable<Product[]> {
+    select(filter?: any): Observable<Product[]> {
+        filter = filter || {};
         return this.http.get(this.config.API_SERVER + '/v1/products', {
+            search: filter,
             headers: this.headers,
             withCredentials: true
         })
             .map(res => res.json() as Product[])
-            .map(products => products.map(this.updateCache))
-            .do(this.product$.next)
+            // TODO manage cache!
+            .map(categories => categories.map(this.updateCache.bind(this)))
             .catch(this.handleError);
     };
 
+    //
+    // get product based on its sku
+    get(sku): Observable<Product> {
+        let cached: Observable<Product>; //????
 
+        // check if in the cache
+        if (this.cache.map[sku]) {
+            return Observable.of(this.cache.map[sku]);
+        }
 
-
+        return this.http.get(this.config.API_SERVER + '/v1/product/' + sku, {
+            headers: this.headers,
+            withCredentials: true
+        })
+            .map(res => res.json() as Product)
+            .map(product => this.updateCache(product))
+            //TODO should run next here!
+            //.do(this.product$.next)      
+            .catch(this.handleError);
+    }
 
     private handleError(error: Response | any) {
         //
@@ -82,6 +96,15 @@ export class ProductService {
         }
         console.error(errMsg);
         return Observable.throw(errMsg);
+    }
+}
+
+class Cache {
+    list: Product[];
+    map: Map<number, Product>
+    constructor() {
+        this.list = [];
+        this.map = new Map();
     }
 }
 
