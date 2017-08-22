@@ -18,6 +18,8 @@ import { DashboardComponent } from './user.dashboard/dashboard.component';
 import { AuthGuardService, Kng2CoreModule }  from '../../../dist';
 
 import { appRoutes } from './app.routes';
+import { CategoryComponent } from './category/category.component';
+import { CategoryEditComponent } from './category.edit/category-edit.component';
 
 @NgModule({
   declarations: [
@@ -27,7 +29,9 @@ import { appRoutes } from './app.routes';
     LoginComponent,
     OrderComponent,
     RecoveryComponent,
-    DashboardComponent
+    DashboardComponent,
+    CategoryComponent,
+    CategoryEditComponent
   ],
   imports: [
     BrowserModule,
