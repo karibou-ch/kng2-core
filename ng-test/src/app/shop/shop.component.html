@@ -1,0 +1,116 @@
+<div class="container">
+  <h1>Shop</h1>
+  <div class="row">
+    <div class="col-xs-3">Urlpath</div>
+    <div class="col-xs-9  pull-left">{{shop?.urlpath}}</div>
+  </div>
+  <div class="row">
+    <div class="col-xs-3">Name</div>
+    <div class="col-xs-9  pull-left">{{shop?.name}}</div>
+  </div>
+  <div class="row">
+    <div class="col-xs-3">Description</div>
+    <div class="col-xs-9  pull-left">{{shop?.description}}</div>
+  </div>
+  <div class="row">
+    <div class="col-xs-3">Photo</div>
+    <div class="col-xs-9  pull-left">{{shop?.photo}}</div>
+  </div>
+  <div class="row">
+    <div class="col-xs-3">Details</div>
+    <div class="col-xs-9  pull-left">
+      bio: {{shop?.details.bio}}
+      gluten: {{shop?.details.gluten}}
+      lactose: {{shop?.details.lactose}}
+      vegetarian: {{shop?.details.vegetarian}}
+      local: {{shop?.details.local}}
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-xs-3">Collect</div>
+    <div class="col-xs-9  pull-left">
+      {{shop?.collect?.streetAdress}}
+      {{shop?.collect?.postalCode}}
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-xs-3">address</div>
+    <div class="col-xs-9 pull-left">
+      {{shop?.address.depository}}
+      {{shop?.address.name}}
+      {{shop?.address.floor}}
+      {{shop?.address.phone}}
+      {{shop?.address.streetAdress}}
+      {{shop?.address.region}}
+      {{shop?.address.postalCode}}
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-xs-3">Catalog</div>
+    <div class="col-xs-9  pull-left">{{shop?.catalog.name}}</div>
+  </div>
+  <div class="row">
+    <div class="col-xs-3">Faq</div>
+    <div *ngFor="let f of shop?.faq" class="col-xs-9  pull-left">
+      question:{{f.q}}
+      answer:{{f.a}}
+      update:{{f.updated}}
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-xs-3">Available</div>
+    <div class="col-xs-9  pull-left">
+      active: {{shop?.available.active}}
+      from {{shop?.available.from}} to
+      {{shop?.available.to}}
+      weekdays: {{shop?.available.weekdays}}
+      comment: {{shop?.available.comment}}
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-xs-3">Discount</div>
+    <div class="col-xs-9  pull-left">
+      {{shop?.discount.amount}}
+      {{shop?.discount.threshold}}
+      {{shop?.discount.active}}
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-xs-3">Info</div>
+    <div class="col-xs-9  pull-left">
+      {{shop?.info.detailledOrder}}
+      {{shop?.info.active}}
+      {{shop?.info.comment}}
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-xs-3">Status</div>
+    <div class="col-xs-9  pull-left">{{shop?.status}}</div>
+  </div>
+  <div class="row">
+    <div class="col-xs-3">Account</div>
+    <div class="col-xs-9  pull-left">
+    {{shop?.account.fee}}
+    {{shop?.tva?.number}}
+    {{shop?.tva?.fees}}
+    {{shop?.updated}}
+  </div>
+  </div>
+  <div class="row">
+    <div class="col-xs-3">Owner</div>
+    <div class="col-xs-9  pull-left">{{shop?.owner.displayName}}</div>
+  </div>
+  <div class="row">
+    <div class="col-xs-3">Scoring</div>
+    <div class="col-xs-9  pull-left">
+      weight: {{shop?.scoring.weight}}
+      orders: {{shop?.scoring.orders}}
+      issues: {{shop?.scoring.issues}}
+      score: {{shop?.scoring.score}}
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-xs-3">Created</div>
+    <div class="col-xs-9  pull-left">{{shop?.created}}</div>
+  </div>
+</div>

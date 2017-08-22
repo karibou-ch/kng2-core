@@ -7,8 +7,6 @@ import { RouterModule, Routes } from '@angular/router';
 import { AppComponent } from './app.component';
 import { ConfigComponent }  from './config/config.component';
 
-
-
 import { LoginComponent } from './user.login/login.component';
 import { HeaderComponent } from './header/header.component';
 import { OrderComponent } from './order/order.component';
@@ -18,6 +16,7 @@ import { DashboardComponent } from './user.dashboard/dashboard.component';
 import { AuthGuardService, Kng2CoreModule }  from '../../../dist';
 
 import { appRoutes } from './app.routes';
+import { ShopComponent } from './shop/shop.component';
 
 @NgModule({
   declarations: [
@@ -27,7 +26,8 @@ import { appRoutes } from './app.routes';
     LoginComponent,
     OrderComponent,
     RecoveryComponent,
-    DashboardComponent
+    DashboardComponent,
+    ShopComponent
   ],
   imports: [
     BrowserModule,

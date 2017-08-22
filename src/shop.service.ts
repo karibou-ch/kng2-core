@@ -17,7 +17,7 @@ export class Shop {
     gallery:string[];
     source:string;
   };
-  
+
   details:{
     bio:boolean;
     gluten:boolean;
@@ -37,7 +37,7 @@ export class Shop {
       lng:number;
     }
   }
-  
+
   //
   // where shop is located
   address:{
@@ -58,7 +58,7 @@ export class Shop {
   //
   // this shop belongsTo a category
   catalog:any;
-  
+
   //
   // answer question about your shop
   faq?:[{
@@ -66,7 +66,7 @@ export class Shop {
     a:string;
     updated:Date;
   }];
-  
+
   available:{
     active:boolean;
     from:Date,
@@ -88,13 +88,13 @@ export class Shop {
     active:boolean;
     comment:{type: String}
   };
-  
+
   //
   // type Date on pending, set true on active, false on deleted
   status:any;
   // secret value for the business model
   // - > is available/displayed for shop owner and admin ONLY
-  // - > is saved on each order to compute bill 
+  // - > is saved on each order to compute bill
   account:{
     fees?:number;
     tva:{
@@ -114,7 +114,7 @@ export class Shop {
 
   //
   // Object methods
-  constructor() { 
+  constructor() {
     let defaultShop = {
       url:'',
       photo:{fg:''},
@@ -126,16 +126,16 @@ export class Shop {
       account:{},
       faq:[]
     }
-    Object.assign(this,defaultShop); 
+    Object.assign(this,defaultShop);
   }
-  
+
 };
 
 @Injectable()
 export class ShopService {
   //
   // common multicast to update UX when one shop on the list is modified
-  public  shop$: ReplaySubject<Shop>;   
+  public  shop$: ReplaySubject<Shop>;
 
   private config:any;
   private headers:Headers;
@@ -178,7 +178,7 @@ export class ShopService {
     }
     //
     //update existing entry
-    return Object.assign(this.cache.map[shop.urlpath],shop);    
+    return Object.assign(this.cache.map[shop.urlpath],shop);
   }
 
 
@@ -213,8 +213,9 @@ export class ShopService {
       withCredentials: true
     })
       .map(res => res.json() as Shop)
-      .map(this.updateCache)
-      .do(this.shop$.next)
+      //.map(shop => this.updateCache(shop))
+      //.map(this.updateCache)
+      //.do(this.shop$.next)
   };
 
 
@@ -228,7 +229,7 @@ export class ShopService {
       .map(res => res.json() as Shop)
       .map(this.updateCache)
       .do(this.shop$.next)
-  };    
+  };
 
   //
   // send question to a shop
@@ -241,7 +242,7 @@ export class ShopService {
       withCredentials: true
     });
 
-  };    
+  };
 
   save(shop:Shop):Observable<Shop>{
     return this.http.post(this.config.API_SERVER + '/v1/shops/'+shop.urlpath, shop, {
@@ -265,7 +266,7 @@ export class ShopService {
       .map(this.updateCache)
       .do(this.shop$.next)
       // TODO shop.create => user.shops.push(shop);
-  };    
+  };
 
   //
   // delete shop for the current user
@@ -281,6 +282,6 @@ export class ShopService {
       .map(this.deleteCache)
       // TODO what to callback on delete
       .do(()=>this.shop$.next(new Shop()))
-  };    
+  };
 
 }
