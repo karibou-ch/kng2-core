@@ -18,6 +18,8 @@ import { ShopListComponent } from './shop.list/shop-list.component';
 import { AuthGuardService, Kng2CoreModule }  from '../../../dist';
 
 import { appRoutes } from './app.routes';
+import { CategoryComponent } from './category/category.component';
+import { CategoryEditComponent } from './category.edit/category-edit.component';
 
 
 @NgModule({
@@ -29,8 +31,13 @@ import { appRoutes } from './app.routes';
     OrderComponent,
     RecoveryComponent,
     DashboardComponent,
+<<<<<<< HEAD
     ShopComponent,
     ShopListComponent
+=======
+    CategoryComponent,
+    CategoryEditComponent
+>>>>>>> refs/remotes/origin/master
   ],
   imports: [
     BrowserModule,

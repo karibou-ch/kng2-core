@@ -1,0 +1,11 @@
+<div class="container">
+  <table class="table">
+    <tr *ngFor="let category of categories">
+      <td class="bold">{{category.name}}</td>
+      <td><a [routerLink]="['/category',category.slug]">{{category.slug}}</a></td>
+      <td>{{category.group}}</td>
+      <td>{{category.image}}</td>
+      <td>{{category.weight}}</td>
+    </tr>
+  </table>
+</div>
