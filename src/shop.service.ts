@@ -192,7 +192,7 @@ export class ShopService {
       withCredentials: true
     })
       .map(res => res.json() as Shop[])
-      .map(shops => shops.map(this.updateCache));
+      //.map(shops => shops.map(this.updateCache.bind(this)));
   };
 
   findByCatalog(cat, filter):Observable<Shop[]> {
@@ -213,7 +213,7 @@ export class ShopService {
       withCredentials: true
     })
       .map(res => res.json() as Shop)
-      //.map(shop => this.updateCache(shop))
+      //.map(shop => this.updateCache(shop));
       //.map(this.updateCache)
       //.do(this.shop$.next)
   };

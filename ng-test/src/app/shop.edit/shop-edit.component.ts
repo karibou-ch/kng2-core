@@ -4,11 +4,11 @@ import { Router, ActivatedRoute, ParamMap } from '@angular/router';
 import { LoaderService, ShopService, Shop } from '../../../../dist';
 
 @Component({
-  selector: 'app-shop',
-  templateUrl: './shop.component.html',
-  styleUrls: ['./shop.component.scss']
+  selector: 'app-shop-edit',
+  templateUrl: './shop-edit.component.html',
+  styleUrls: ['./shop-edit.component.scss']
 })
-export class ShopComponent implements OnInit {
+export class ShopEditComponent implements OnInit {
 
   private shop: Shop;
 
@@ -20,8 +20,10 @@ export class ShopComponent implements OnInit {
   ) { }
 
   ngOnInit() {
+    console.log(this.route.snapshot.params['url']);
     this.shopSrv.get(this.route.snapshot.params['url'])
     .subscribe(res => {
+       console.log(res);
        this.shop = res;
     });
   }

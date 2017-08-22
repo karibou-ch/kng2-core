@@ -12,11 +12,13 @@ import { HeaderComponent } from './header/header.component';
 import { OrderComponent } from './order/order.component';
 import { RecoveryComponent } from './user.recovery/recovery.component';
 import { DashboardComponent } from './user.dashboard/dashboard.component';
+import { ShopComponent } from './shop/shop.component';
+import { ShopListComponent } from './shop.list/shop-list.component';
 
 import { AuthGuardService, Kng2CoreModule }  from '../../../dist';
 
 import { appRoutes } from './app.routes';
-import { ShopComponent } from './shop/shop.component';
+
 
 @NgModule({
   declarations: [
@@ -27,7 +29,8 @@ import { ShopComponent } from './shop/shop.component';
     OrderComponent,
     RecoveryComponent,
     DashboardComponent,
-    ShopComponent
+    ShopComponent,
+    ShopListComponent
   ],
   imports: [
     BrowserModule,
