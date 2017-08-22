@@ -19,6 +19,7 @@ import { AuthGuardService, Kng2CoreModule }  from '../../../dist';
 
 import { appRoutes } from './app.routes';
 import { CategoryComponent } from './category/category.component';
+import { CategoryEditComponent } from './category.edit/category-edit.component';
 
 @NgModule({
   declarations: [
@@ -29,7 +30,8 @@ import { CategoryComponent } from './category/category.component';
     OrderComponent,
     RecoveryComponent,
     DashboardComponent,
-    CategoryComponent
+    CategoryComponent,
+    CategoryEditComponent
   ],
   imports: [
     BrowserModule,
