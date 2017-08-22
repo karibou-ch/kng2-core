@@ -94,11 +94,12 @@ export class CategoryService {
     // if (cat) {return cat.name;} else {return "Inconnu";}      
   };
 
-  findBySlug(slug) {
-    return this.cache.map[slug];
+  findBySlug(slug):Observable<Category> {
+    return this.get(slug)
   };
 
-  findByGroup(name) {
+  findByGroup(name):Category[] {
+    // TODO load if `this.cache.list` is empty?
     return this.cache.list.filter(category => category.group === name);
   }
 
@@ -124,9 +125,8 @@ export class CategoryService {
 
     // check if in the cache
     if (this.cache.map[slug]){
-      return Observable.from(this.cache.map[slug]);
+      return Observable.of(this.cache.map[slug]);
     }
-
 
     return this.http.get(this.config.API_SERVER + '/v1/category/'+slug, {
       headers: this.headers,
@@ -134,7 +134,8 @@ export class CategoryService {
     })
       .map(res => res.json() as Category)
       .map(category => this.updateCache(category))
-      .do(this.category$.next)      
+      //TODO should run next here!
+      //.do(this.category$.next)      
       .catch(this.handleError);
 
   }
