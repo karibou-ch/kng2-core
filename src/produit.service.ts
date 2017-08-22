@@ -63,7 +63,7 @@ export class ProductService {
     };
 
     findByLocationCategoryAndDetail(category, detail): Observable<Product[]> {
-        return this.http.get(this.config.API_SERVER + '/v1/product/location/' + location + '/category/' + category + '/details/' + detail, {
+        return this.http.get(this.config.API_SERVER + '/v1/products/location/' + location + '/category/' + category + '/details/' + detail, {
             headers: this.headers,
             withCredentials: true
         }).map(res => res.json() as Product[]);
@@ -71,7 +71,7 @@ export class ProductService {
     }
 
     findByCategoryAndDetail(category, detail): Observable<Product[]> {
-        return this.http.get(this.config.API_SERVER + '/v1/product/category/' + category + '/details/' + detail, {
+        return this.http.get(this.config.API_SERVER + '/v1/products/category/' + category + '/details/' + detail, {
             headers: this.headers,
             withCredentials: true
         }).map(res => res.json() as Product[]);
@@ -79,7 +79,7 @@ export class ProductService {
     }
 
     findByLocationAndCategory(location, category): Observable<Product[]> {
-        return this.http.get(this.config.API_SERVER + '/v1/product/location/' + location + '/category/' + category, {
+        return this.http.get(this.config.API_SERVER + '/v1/products/location/' + location + '/category/' + category, {
             headers: this.headers,
             withCredentials: true
         }).map(res => res.json() as Product[]);
@@ -87,7 +87,7 @@ export class ProductService {
     }
 
     findLove(): Observable<Product[]> {
-        return this.http.get(this.config.API_SERVER + '/v1/product/love', {
+        return this.http.get(this.config.API_SERVER + '/v1/products/love', {
             headers: this.headers,
             withCredentials: true
         }).map(res => res.json() as Product[]);
@@ -95,7 +95,7 @@ export class ProductService {
     }
 
     findByLocation(location): Observable<Product[]> {
-        return this.http.get(this.config.API_SERVER + '/v1/product/location/' + location, {
+        return this.http.get(this.config.API_SERVER + '/v1/products/location/' + location, {
             headers: this.headers,
             withCredentials: true
         }).map(res => res.json() as Product[]);
@@ -103,7 +103,7 @@ export class ProductService {
     }
 
     findByCategory(category): Observable<Product[]> {
-        return this.http.get(this.config.API_SERVER + '/v1/product/category/' + category, {
+        return this.http.get(this.config.API_SERVER + '/v1/products/category/' + category, {
             headers: this.headers,
             withCredentials: true
         }).map(res => res.json() as Product[]);
@@ -124,7 +124,7 @@ export class ProductService {
             return Observable.of(this.cache.map[sku]);
         }
 
-        return this.http.get(this.config.API_SERVER + '/v1/product/' + sku, {
+        return this.http.get(this.config.API_SERVER + '/v1/products/' + sku, {
             headers: this.headers,
             withCredentials: true
         })
@@ -135,7 +135,41 @@ export class ProductService {
             .catch(this.handleError);
     }
 
+    remove(sku, password) {
+        return this.http.put(this.config.API_SERVER + '/v1/products/' + sku, {
+            headers: this.headers,
+            withCredentials: true,
+            password: password
+        })
+            .map(res => res.json() as Product)
+            .do(this.product$.next)
+            .map(product => this.deleteCache(product))
+            .catch(this.handleError);
+    }
 
+    create(prod: Product): Observable<Category> {
+        return this.http.post(this.config.API_SERVER + '/v1/products/', prod, {
+            headers: this.headers,
+            withCredentials: true
+        })
+            .map(res => res.json() as Product)
+            .map(product => this.updateCache(product))
+            .do(this.product$.next)
+            .catch(this.handleError);
+    }
+
+    save(sku, prod: Product): Observable<Product> {
+
+        return this.http.post(this.config.API_SERVER + '/v1/products/' + sku, prod, {
+            headers: this.headers,
+            withCredentials: true
+        })
+            .map(res => res.json() as Product)
+            .map(product => this.updateCache(product))
+            //TODO should run next here!
+            //.do(this.category$.next)      
+            .catch(this.handleError);
+    }
 
     private handleError(error: Response | any) {
         //
