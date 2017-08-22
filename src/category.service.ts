@@ -150,7 +150,8 @@ export class CategoryService {
     })
     .map(res => res.json() as Category)
     .map(category => this.updateCache(category))
-    .do(this.category$.next)      
+    //TODO should run next here!
+    //.do(this.category$.next)      
     .catch(this.handleError);
 
   }

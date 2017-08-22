@@ -61,4 +61,9 @@ export class CategoryEditComponent implements OnInit {
     });
   }
 
+
+  onSave(){
+    // TODO use error feedback for user!
+    this.$category.save(this.slug,this.category).subscribe()
+  }
 }
