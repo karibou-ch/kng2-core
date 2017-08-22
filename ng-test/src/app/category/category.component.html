@@ -1,3 +1,6 @@
+<div *ngIf="errors" class="alert alert-danger"> 
+    {{ errors }} 
+</div>
 <div class="container">
   <table class="table">
     <tr *ngFor="let category of categories">
@@ -8,4 +11,7 @@
       <td>{{category.weight}}</td>
     </tr>
   </table>
+  <div>
+    <button (click)="onNewCategory(['category','create'])">Créer une catégorie</button>
+  </div>
 </div>
