@@ -4,6 +4,7 @@ import { AuthGuardService, Kng2CoreModule }  from '../../../dist';
 import { ConfigComponent }  from './config/config.component';
 import { CategoryComponent }  from './category/category.component';
 import { ProduitListComponent }  from './produit.list/produit-list.component';
+import { ProduitEditComponent }  from './produit.edit/produit-edit.component';
 import { ProduitComponent }  from './produit/produit.component';
 import { CategoryEditComponent }  from './category.edit/category-edit.component';
 import { DashboardComponent } from './user.dashboard/dashboard.component';
@@ -18,6 +19,7 @@ export const appRoutes: Routes = [
   { path: 'category', component: CategoryComponent },
   { path: 'produit', component: ProduitListComponent },
   { path: 'produit/:sku', component: ProduitComponent },
+  { path: 'produit/edit/:sku', component: ProduitEditComponent },
   { path: 'category/:slug', component: CategoryEditComponent },
   { path: 'login', component: LoginComponent },
   { path: 'order', component: OrderComponent },

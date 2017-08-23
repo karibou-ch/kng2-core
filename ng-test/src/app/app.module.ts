@@ -22,6 +22,7 @@ import { CategoryComponent } from './category/category.component';
 import { CategoryEditComponent } from './category.edit/category-edit.component';
 import { ProduitListComponent } from './produit.list/produit-list.component';
 import { ProduitComponent } from './produit/produit.component';
+import { ProduitEditComponent } from './produit.edit/produit-edit.component';
 
 @NgModule({
   declarations: [
@@ -35,7 +36,8 @@ import { ProduitComponent } from './produit/produit.component';
     CategoryComponent,
     CategoryEditComponent,
     ProduitListComponent,
-    ProduitComponent
+    ProduitComponent,
+    ProduitEditComponent
   ],
   imports: [
     BrowserModule,
