@@ -13,23 +13,16 @@ export class ConfigComponent implements OnInit {
   constructor(
       private configSrv: ConfigService,
       private userSrv: UserService,
-      private loaderSrv: LoaderService
+      private loader: LoaderService
   ) { }
 
   ngOnInit() {
-      this.getConfig();
+      this.loader.ready().subscribe(result=>{
+        this.config = result[0];
+        // console.log('--------------------',this.config)
+      });
   }
 
-  getConfig() {
-      return this.loaderSrv.ready().subscribe(
-          res => {
-              if (res) {
-                  this.config = res[0];
-              }
-          }
-      );
-
-  }
 
 
 }
