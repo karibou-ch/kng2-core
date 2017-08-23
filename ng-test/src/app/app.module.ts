@@ -21,6 +21,7 @@ import { appRoutes } from './app.routes';
 import { CategoryComponent } from './category/category.component';
 import { CategoryEditComponent } from './category.edit/category-edit.component';
 import { ProduitListComponent } from './produit.list/produit-list.component';
+import { ProduitComponent } from './produit/produit.component';
 
 @NgModule({
   declarations: [
@@ -33,7 +34,8 @@ import { ProduitListComponent } from './produit.list/produit-list.component';
     DashboardComponent,
     CategoryComponent,
     CategoryEditComponent,
-    ProduitListComponent
+    ProduitListComponent,
+    ProduitComponent
   ],
   imports: [
     BrowserModule,

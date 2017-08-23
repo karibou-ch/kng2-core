@@ -21,7 +21,7 @@ export class ProduitListComponent implements OnInit {
 
     constructor(
         private loader: LoaderService,
-        private productSrv: ProductService
+        private $product: ProductService
     ) {
 
     }
@@ -30,12 +30,19 @@ export class ProduitListComponent implements OnInit {
         this.loader.ready().subscribe((loader) => {
             this.isReady = true;
             this.config = loader[0];
+            //this.loadLovedProduct(); //pout un test
             this.loadProducts()
         });
     }
 
     loadProducts() {
-        this.productSrv.select().subscribe((products: Product[]) => {
+        this.$product.select().subscribe((products: Product[]) => {
+            this.products = products.sort();
+        });
+    }
+
+    loadLovedProduct() {
+        this.$product.findLove().subscribe((products: Product[]) => {
             this.products = products.sort();
         });
     }

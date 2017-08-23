@@ -1,13 +1,8 @@
 <div class="container">
-  <table class="table">
-    <tr *ngFor="let product of products">
-      <td class="bold">{{product.title}}</td>
-      <td>price : {{product.pricing.price}}</td>
-      <td>part : {{product.pricing.part}}</td>
-      <td>tva : {{product.pricing.tva}}</td>
-      <td>stock : {{product.pricing.stock}}</td>
-      <td>vendor : {{product.vendor.name}}</td>
-      <td>category : {{product.categories.name}}</td>
-    </tr>
-  </table>
+	<h2>Product list</h2>
+	<table class="table">
+		<tr *ngFor="let product of products">
+			<td><a [routerLink]="['/produit',product.sku]">{{product.title}}</a></td>
+		</tr>
+	</table>
 </div>
