@@ -1,7 +1,7 @@
 import { Http, Headers, RequestOptions } from '@angular/http';
 import { Injectable } from '@angular/core';
 import { Observable, BehaviorSubject, ReplaySubject } from 'rxjs/Rx';
-import { ConfigService } from './config.service'
+import { config } from './config';
 
 
 export class Category {
@@ -19,10 +19,23 @@ export class Category {
 
 }
 
+//
+// Internal cache of request
+// TODO check if ServiceWorker is the best solution for caching JSON request
+class Cache{
+  list: Category[];
+  map: Map<string, Category> //key is a slug
+  constructor(){
+    this.list=[];
+    this.map=new Map();
+  }  
+}
+
 @Injectable()
 export class CategoryService {
   //
   // common multicast to update UX when one shop on the list is modified
+  // use it for singleton usage of category
   public  category$: ReplaySubject<Category>;   
 
   config:any;
@@ -35,21 +48,15 @@ export class CategoryService {
   };
   
 
-  private cache: {
-    list: Category[];
-    map: Map<string, Category>; //key is a slug
-  }
-
+  private cache:Cache=new Cache();
   private headers: Headers;
 
   constructor(
-    private http: Http, 
-    private configSrv: ConfigService
-  ) {
-    this.config=configSrv.config;    
+    private http: Http  
+    ) {
     this.headers = new Headers();
     this.headers.append('Content-Type', 'application/json');
-    this.config = configSrv.config;
+    this.config = config;
   }
 
   private deleteCache(cat: Category) {
@@ -62,15 +69,16 @@ export class CategoryService {
   }
 
   private updateCache(category:Category){
-    //
+    
     //check if already exist on cache and add in it if not the case
     if (!this.cache.map[category.slug]){
       this.cache.map[category.slug] = category;
       this.cache.list.push(category);
-      return;
+      return category;
     }
     //update existing entry
     return Object.assign(this.cache.map[category.slug],category);    
+    //return category;
   }
 
 
@@ -86,11 +94,12 @@ export class CategoryService {
     // if (cat) {return cat.name;} else {return "Inconnu";}      
   };
 
-  findBySlug(slug) {
-    return this.cache.map[slug];
+  findBySlug(slug):Observable<Category> {
+    return this.get(slug)
   };
 
-  findByGroup(name) {
+  findByGroup(name):Category[] {
+    // TODO load if `this.cache.list` is empty?
     return this.cache.list.filter(category => category.group === name);
   }
 
@@ -105,7 +114,8 @@ export class CategoryService {
       withCredentials: true
     })
       .map(res => res.json() as Category[])
-      .map(categories => categories.map(category=>this.updateCache(category)));
+      // TODO manage cache!
+      .map(categories => categories.map(this.updateCache.bind(this)));
     //.catch;
   }
 
@@ -115,9 +125,8 @@ export class CategoryService {
 
     // check if in the cache
     if (this.cache.map[slug]){
-      return Observable.from(this.cache.map[slug]);
+      return Observable.of(this.cache.map[slug]);
     }
-
 
     return this.http.get(this.config.API_SERVER + '/v1/category/'+slug, {
       headers: this.headers,
@@ -125,7 +134,8 @@ export class CategoryService {
     })
       .map(res => res.json() as Category)
       .map(category => this.updateCache(category))
-      .do(this.category$.next)      
+      //TODO should run next here!
+      //.do(this.category$.next)      
       .catch(this.handleError);
 
   }
@@ -140,7 +150,8 @@ export class CategoryService {
     })
     .map(res => res.json() as Category)
     .map(category => this.updateCache(category))
-    .do(this.category$.next)      
+    //TODO should run next here!
+    //.do(this.category$.next)      
     .catch(this.handleError);
 
   }
