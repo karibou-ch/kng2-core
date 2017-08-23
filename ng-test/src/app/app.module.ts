@@ -21,6 +21,8 @@ import { appRoutes } from './app.routes';
 import { AddressComponent } from './user.address/address.component';
 import { CardComponent } from './user.card/card.component';
 import { ShopComponent } from './shop/shop.component';
+import { CategoryComponent } from './category/category.component';
+import { CategoryEditComponent } from './category.edit/category-edit.component';
 
 @NgModule({
   declarations: [
@@ -33,7 +35,9 @@ import { ShopComponent } from './shop/shop.component';
     DashboardComponent,
     AddressComponent,
     CardComponent,
-    ShopComponent
+    ShopComponent,
+    CategoryComponent,
+    CategoryEditComponent
   ],
   imports: [
     BrowserModule,
