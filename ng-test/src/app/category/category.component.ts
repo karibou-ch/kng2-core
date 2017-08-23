@@ -1,9 +1,9 @@
 import { Component, OnInit } from '@angular/core';
-import { 
-  CategoryService, 
-  Category, 
-  LoaderService, 
-  User, 
+import {
+  CategoryService,
+  Category,
+  LoaderService,
+  User,
   UserService,
   config
 }  from '../../../../dist'
@@ -21,7 +21,7 @@ export class CategoryComponent implements OnInit {
   constructor(
     private loader: LoaderService,
     private categorySrv: CategoryService
-  ){ 
+  ){
 
   }
 

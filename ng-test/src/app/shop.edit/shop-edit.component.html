@@ -1,72 +1,168 @@
 <div class="container">
   <form>
     <div>
-      <div>
-        <i class="fa-6 fa fa-finefood"></i>&nbsp;&nbsp;
-      </div>
-      <h1>
-        fa fa-finefood
-        <small>color:gray, sort weight:40</small>
-        <span class="pull-right">
-          <label>Active
-          <input type="checkbox" [(ngModel)]="category.active" class="form-control" name="active"></label>
-        </span>
-        <span class="pull-right">
-          <label>Home
-          <input type="checkbox" [(ngModel)]="category.home" class="form-control" name="home"></label>
-        </span>
-      </h1>
+      <h1>{{shop?.name}}</h1>
     </div>
 
     <hr>
 
+    <h1>Infos</h1>
     <div class="form-group ">
-      <label class="control-label" for="i0">Specify the name</label>
-      <input type="text" [(ngModel)]="category.name" name="name" class="form-control" placeholder="Label" autofocus="autofocus"
-        required="" id="i0">
+      <label class="control-label">Specify the name</label>
+      <input type="text" [ngModel]="shop?.name" (ngModelChange)="shop.name = $event" name="shopName" class="form-control" placeholder="Name" autofocus="autofocus" required="">
+    </div>
+    <div class="form-group ">
+      <label class="control-label">Specify the description</label>
+      <input type="text" [ngModel]="shop?.description" (ngModelChange)="shop.description = $event" name="shopDescription" class="form-control" placeholder="Description" autofocus="autofocus" required="">
+    </div>
+    <div class="form-group ">
+      <label class="control-label">Specify the url</label>
+      <input type="text" [ngModel]="shop?.urlpath" (ngModelChange)="shop.urlpath = $event" name="shopUrlpath" class="form-control" placeholder="Path" autofocus="autofocus" required="">
+    </div>
+    <div class="form-group ">
+      <label class="control-label">Url of your website</label>
+      <input type="text" [ngModel]="shop?.url" (ngModelChange)="shop.url = $event" name="url" class="form-control" placeholder="Url" autofocus="autofocus" required="">
     </div>
 
-    <div class="radio form-group">
-      <label>
-        <input type="radio" name="cattype" value="Category" [(ngModel)]="category.type"  name="type_product">Épicerie fine is used to organise items
-      </label>
-    </div>
-    <div class="radio form-group">
-      <label>
-        <input type="radio" name="cattype" value="Catalog" [(ngModel)]="category.type"  name="type_shop">Épicerie fine is used to organise shops
-      </label>
+    <div class="form-group ">
+      <label class="control-label">Catégorie de la boutique</label>
+      <select [ngModel]="shop?.catalog.name" (ngModelChange)="shop.catalog.name = $event" [ngModelOptions]="{standalone: true}">
+        <option>Artisan</option>
+        <option>Producteur</option>
+        <option>Détaillant</option>
+      </select>
     </div>
 
     <div class="form-group">
-      <label class="control-label" for="i2">Specify a sort weight</label>
-      <input type="text" class="form-control" id="i2" [(ngModel)]="category.weight" placeholder="0..N" name="weight">
+      <label class="control-label">Specify if bio
+      <input type="checkbox" [ngModel]="shop?.details.bio" (ngModelChange)="shop.details.bio = $event" class="form-control" name="bio"></label>
+      <label class="control-label">Specify if gluten
+      <input type="checkbox" [ngModel]="shop?.details.gluten" (ngModelChange)="shop.details.gluten = $event" class="form-control" name="gluten"></label>
+      <label class="control-label">Specify if lactose
+      <input type="checkbox" [ngModel]="shop?.details.lactose" (ngModelChange)="shop.details.lactose = $event" class="form-control" name="lactose"></label>
+      <label class="control-label">Specify if vegetarian
+      <input type="checkbox" [ngModel]="shop?.details.vegetarian" (ngModelChange)="shop.details.vegetarian = $event" class="form-control" name="vegetarian"></label>
+      <label class="control-label">Specify if local
+      <input type="checkbox" [ngModel]="shop?.details.local" (ngModelChange)="shop.details.local = $event" class="form-control" name="local"></label>
     </div>
+
+    <h1>Address</h1>
+    <div class="form-group ">
+      <label class="control-label">Depository</label>
+      <input type="text" [ngModel]="shop?.address.depository" (ngModelChange)="shop.address.depository = $event" name="depository" class="form-control" placeholder="Depository" autofocus="autofocus" required="">
+    </div>
+    <div class="form-group ">
+      <label class="control-label">Name</label>
+      <input type="text" [ngModel]="shop?.address.name" (ngModelChange)="shop.address.name = $event" name="name" class="form-control" placeholder="Name" autofocus="autofocus" required="">
+    </div>
+    <div class="form-group ">
+      <label class="control-label">Floor</label>
+      <input type="text" [ngModel]="shop?.address.floor" (ngModelChange)="shop.address.floor = $event" name="floor" class="form-control" placeholder="Floor" autofocus="autofocus" required="">
+    </div>
+    <div class="form-group ">
+      <label class="control-label">Phone</label>
+      <input type="text" [ngModel]="shop?.address.phone" (ngModelChange)="shop.address.phone = $event" name="phone" class="form-control" placeholder="Phone" autofocus="autofocus" required="">
+    </div>
+    <div class="form-group ">
+      <label class="control-label">Street</label>
+      <input type="text" [ngModel]="shop?.address.streetAdress" (ngModelChange)="shop.address.streetAdress = $event" name="streetAdress" class="form-control" placeholder="Street" autofocus="autofocus" required="">
+    </div>
+    <div class="form-group ">
+      <label class="control-label">Region</label>
+      <input type="text" [ngModel]="shop?.address.region" (ngModelChange)="shop.address.region = $event" name="region" class="form-control" placeholder="Region" autofocus="autofocus" required="">
+    </div>
+    <div class="form-group ">
+      <label class="control-label">Postal Code</label>
+      <input type="text" [ngModel]="shop?.address.postalCode" (ngModelChange)="shop.address.postalCode = $event" name="postalCode" class="form-control" placeholder="postalCode" autofocus="autofocus" required="">
+    </div>
+
+    <h1>Business</h1>
     <div class="form-group">
-      <label class="control-label" for="i3">Specify a group</label>
-      <input type="text" class="form-control" id="i3" [(ngModel)]="category.group" name="group">
+      <label class="control-label">TVA number</label>
+      <input type="text" [ngModel]="shop?.account.tva?.number" (ngModelChange)="shop.account.tva.number = $event" name="tva" class="form-control" placeholder="Tva number" autofocus="autofocus" required="">
     </div>
-
     <div class="form-group ">
-      <label class="control-label" for="i3">Define an icon</label>
-      <input type="text" class="form-control" id="i3" [(ngModel)]="category.image" placeholder="one of the awesome icon" name="image">
-      <p class="help-block">Complete list of icons here <a href="http://fortawesome.github.io/Font-Awesome/3.2.1/icons/" target="_new">fontawesome.io 3.2.1</a></p>
+      <label class="control-label">TVA fee</label>
+      <input type="text" [ngModel]="shop?.account.tva?.fees" (ngModelChange)="shop.account.tva.fees = $event" name="tva" class="form-control" placeholder="Tva" autofocus="autofocus" required="">
     </div>
-
     <div class="form-group ">
-      <label class="control-label">Define a cover</label>
-      <div [hidden]="!category.cover">
-        <img title="" class="img-thumbnail" [src]="category.cover" *ngIf="category.cover">
+      <label class="control-label">Fee</label>
+      <input type="text" [ngModel]="shop?.account.fees" (ngModelChange)="shop.account.fees = $event" name="fee" class="form-control" placeholder="Fee" autofocus="autofocus" required="">
+    </div>
+    <label class="control-label">Updated the</label>
+    <p>{{shop?.account.updated}}
+
+      <h1>Availability</h1>
+      <div class="form-group ">
+        <label class="control-label">Actif
+        <input type="checkbox" [ngModel]="shop?.available.active" (ngModelChange)="shop.available.active = $event" class="form-control" name="active">
+      </label>
       </div>
-      <!-- COVER -->
-      <button [hidden]="!category.cover" (click)="category.cover=null" class="btn btn-block">clear this cover image</button>
-    </div>
+      <div class="form-group ">
+        <label class="control-label">Weekdays
+        <input type="text" [ngModel]="shop?.available.weekdays" (ngModelChange)="shop.available.weekdays = $event" class="form-control" name="weekdays">
+      </label>
+      </div>
+      <div class="form-group ">
+        <label class="control-label">From
+        <input type="date" [ngModel]="shop?.available.from" (ngModelChange)="shop.available.from = $event" class="form-control" name="from">
+      </label>
+      </div>
+      <div class="form-group ">
+        <label class="control-label">To
+        <input type="date" [ngModel]="shop?.available.to" (ngModelChange)="shop.available.to = $event" class="form-control" name="to">
+      </label>
+      </div>
 
-    <div class="form-group ">
-      <label class="control-label" for="i4">Define a color</label>
-      <input type="text" class="form-control" id="i4" [(ngModel)]="category.color" name="color" placeholder="color: #ddd, blue">
-    </div>
-    <div>
-      <button name="save" (click)="onSave();" >Save</button>
-    </div>
+      <h1>Faq</h1>
+      <div class="form-group ">
+        <div *ngFor="let f of shop?.faq; let i = index" class="col-xs-9  pull-left">
+          <input type="text" [(ngModel)]="f.q" name="q-{{i}}" class="form-control" placeholder="question" autofocus="autofocus" required="">
+          <input type="text" [(ngModel)]="f.a" name="a-{{i}}" class="form-control" placeholder="answer" autofocus="autofocus" required="">
+          <button [hidden]="!f" (click)="delFaq(f)" class="btn btn-block">delete this faq</button>
+        </div>
+      </div>
+
+      <div>
+        <button name="addFaq" (click)="addFaq();" class="btn btn-block">Add Faq</button>
+      </div>
+
+      <h1>Pics</h1>
+      <div class="form-group ">
+        <label class="control-label">Define a logo</label>
+        <div [hidden]="!shop?.photo.logo">
+          <img title="" class="img-thumbnail" [src]="shop?.photo.logo" *ngIf="shop?.photo.logo">
+        </div>
+        <button [hidden]="!shop?.photo.logo" (click)="shop?.photo.logo=null" class="btn btn-block">clear this image</button>
+      </div>
+
+      <div class="form-group ">
+        <label class="control-label">Define a background</label>
+        <div [hidden]="!shop?.photo.bg">
+          <img title="" class="img-thumbnail" [src]="shop?.photo.bg" *ngIf="shop?.photo.bg">
+        </div>
+        <button [hidden]="!shop?.photo.bg" (click)="shop?.photo.bg=null" class="btn btn-block">clear this image</button>
+      </div>
+
+      <div class="form-group ">
+        <label class="control-label">Define a forground</label>
+        <div [hidden]="!shop?.photo.fg">
+          <img title="" class="img-thumbnail" [src]="shop?.photo.fg" *ngIf="shop?.photo.fg">
+        </div>
+        <button [hidden]="!shop?.photo.fg" (click)="shop?.photo.fg=null" class="btn btn-block">clear this image</button>
+      </div>
+
+      <div class="form-group ">
+        <label class="control-label">Gallery</label>
+        <div [hidden]="!shop?.photo.gallery[0]" *ngFor="let im of shop?.photo.gallery">
+          <img title="" class="img-thumbnail" [src]="im" *ngIf="im">
+        </div>
+        <button [hidden]="!im" (click)="im=null" class="btn btn-block">clear this image</button>
+      </div>
+
+
+      <div>
+        <button name="save" (click)="onSave();" class="btn btn-block">Save</button>
+      </div>
   </form>
 </div>

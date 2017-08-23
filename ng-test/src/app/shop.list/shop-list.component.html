@@ -1,6 +1,7 @@
 <div class="container">
   <h1>Shops</h1>
   <div *ngFor="let s of shops" class="col-xs-9  pull-left">
-    name:<a href="/shop/{{s?.urlpath}}">{{s?.name}}</a> what:{{s?.catalog.name}}
+    <hr>
+    <td><a [routerLink]="['/shop',s?.urlpath]">{{s?.name}}</a> what:{{s?.catalog.name}}</td>
   </div>
 </div>

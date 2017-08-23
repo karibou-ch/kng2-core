@@ -5,17 +5,19 @@ import { HttpModule } from '@angular/http';
 import { RouterModule, Routes } from '@angular/router';
 
 import { AppComponent } from './app.component';
-import { ConfigComponent }  from './config/config.component';
+import { ConfigComponent } from './config/config.component';
 
 import { LoginComponent } from './user.login/login.component';
 import { HeaderComponent } from './header/header.component';
 import { OrderComponent } from './order/order.component';
 import { RecoveryComponent } from './user.recovery/recovery.component';
 import { DashboardComponent } from './user.dashboard/dashboard.component';
+
 import { ShopComponent } from './shop/shop.component';
 import { ShopListComponent } from './shop.list/shop-list.component';
+import { ShopEditComponent } from './shop.edit/shop-edit.component';
 
-import { AuthGuardService, Kng2CoreModule }  from '../../../dist';
+import { AuthGuardService, Kng2CoreModule } from '../../../dist';
 
 import { appRoutes } from './app.routes';
 import { CategoryComponent } from './category/category.component';
@@ -31,13 +33,11 @@ import { CategoryEditComponent } from './category.edit/category-edit.component';
     OrderComponent,
     RecoveryComponent,
     DashboardComponent,
-<<<<<<< HEAD
-    ShopComponent,
-    ShopListComponent
-=======
     CategoryComponent,
-    CategoryEditComponent
->>>>>>> refs/remotes/origin/master
+    CategoryEditComponent,
+    ShopComponent,
+    ShopListComponent,
+    ShopEditComponent
   ],
   imports: [
     BrowserModule,

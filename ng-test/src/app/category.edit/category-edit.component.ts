@@ -2,11 +2,11 @@ import { Component, OnInit, Input } from '@angular/core';
 import {ActivatedRoute} from '@angular/router';
 
 import { Observable } from 'rxjs/Rx';
-import { 
-  CategoryService, 
-  Category, 
-  LoaderService, 
-  User, 
+import {
+  CategoryService,
+  Category,
+  LoaderService,
+  User,
   UserService,
   config
 }  from '../../../../dist'
@@ -18,15 +18,13 @@ import {
 })
 export class CategoryEditComponent implements OnInit {
 
-  // TODO, note, je propose que tous les instances des services Kng2-core 
+  // TODO, note, je propose que tous les instances des services Kng2-core
   // soient préfixés par $ (c'est pour éviter le suffix Srv)
   constructor(
     private $loader: LoaderService,
     private $category: CategoryService,
     private route:ActivatedRoute
-  ){ 
-
-  }
+  ){ }
 
   //
   // optional input (instance of Category, or )
@@ -38,12 +36,12 @@ export class CategoryEditComponent implements OnInit {
 
 
   ngOnInit() {
-    // TIPS: If you expect users to navigate from bank to bank directly, 
-    // without navigating to another component first, you ought 
+    // TIPS: If you expect users to navigate from bank to bank directly,
+    // without navigating to another component first, you ought
     // to access the parameter through an observable:
     // this.route.params.subscribe( params =>
     //     this.slug = params['slug'];
-    // )    
+    // )
     this.$loader.ready().subscribe(ready=>{
       this.isReady=true;
       this.config=ready[0];

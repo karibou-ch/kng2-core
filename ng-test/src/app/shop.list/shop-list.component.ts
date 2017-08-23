@@ -1,7 +1,7 @@
-import { Component, OnInit} from '@angular/core';
-import {Observable} from 'rxjs/Rx';
+import { Component, OnInit } from '@angular/core';
+import { Observable } from 'rxjs/Rx';
 import { Router, ActivatedRoute, ParamMap } from '@angular/router';
-import { LoaderService, ShopService, Shop } from '../../../../dist';
+import { LoaderService, ShopService, Shop, User, UserService, config } from '../../../../dist';
 
 @Component({
   selector: 'app-shop-list',
@@ -10,20 +10,30 @@ import { LoaderService, ShopService, Shop } from '../../../../dist';
 })
 export class ShopListComponent implements OnInit {
 
-  private shops: Shop[];
+
 
   constructor(
-    private loaderSrv: LoaderService,
-    private _router: Router,
+    private $loader: LoaderService,
     private route: ActivatedRoute,
-    private shopSrv: ShopService
+    private $shop: ShopService
   ) { }
 
+  private currentUser: User;
+  private isReady: boolean;
+  private config: any;
+  private shops: Shop[];
+
   ngOnInit() {
-    this.shopSrv.query("")
-    .subscribe(res => {
-       this.shops = res;
-       console.log(res);
+    this.$loader.ready().subscribe(ready => {
+      this.isReady = true;
+      this.config = ready[0];
+      this.currentUser = ready[1];
+
+      this.$shop.query("")
+        .subscribe(res => {
+          this.shops = res;
+          console.log(res);
+        });
     });
   }
 }
