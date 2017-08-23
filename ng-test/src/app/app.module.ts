@@ -18,10 +18,9 @@ import { DashboardComponent } from './user.dashboard/dashboard.component';
 import { AuthGuardService, Kng2CoreModule }  from '../../../dist';
 
 import { appRoutes } from './app.routes';
-<<<<<<< HEAD
 import { CategoryComponent } from './category/category.component';
 import { CategoryEditComponent } from './category.edit/category-edit.component';
->>>>>>> produit.service almost done, need to test to detect errors
+import { ProduitListComponent } from './produit.list/produit-list.component';
 
 @NgModule({
   declarations: [
@@ -32,12 +31,9 @@ import { CategoryEditComponent } from './category.edit/category-edit.component';
     OrderComponent,
     RecoveryComponent,
     DashboardComponent,
-<<<<<<< HEAD
     CategoryComponent,
-    CategoryEditComponent
-=======
+    CategoryEditComponent,
     ProduitListComponent
->>>>>>> produit.service almost done, need to test to detect errors
   ],
   imports: [
     BrowserModule,

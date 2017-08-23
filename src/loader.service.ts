@@ -12,7 +12,8 @@ import { Category } from './category.service';
 
 import { ConfigService } from './config.service';
 import { UserService } from './user.service';
-import { CategoryService } from './category.service'
+import { CategoryService } from './category.service';
+import { ProductService } from './produit.service'
 
 //manage the first requests needed when bootstrapping the application. Used by the components.
 @Injectable()

@@ -147,7 +147,7 @@ export class ProductService {
             .catch(this.handleError);
     }
 
-    create(prod: Product): Observable<Category> {
+    create(prod: Product): Observable<Product> {
         return this.http.post(this.config.API_SERVER + '/v1/products/', prod, {
             headers: this.headers,
             withCredentials: true
@@ -200,7 +200,7 @@ class Cache {
 export class Product {
     _id;
     title: string;
-    category: {
+    categories: {
         _id;
         name: string;
         weight: number;
