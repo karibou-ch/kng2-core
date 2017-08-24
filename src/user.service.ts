@@ -22,8 +22,8 @@ export class Address {
       this.region = "";
       this.postalCode = "";
       this.primary = false;
-      this.geo.lat = 0;
-      this.geo.lng = 0;
+      this.geo.lat = null;
+      this.geo.lng = null;
     }
     name: string;
     note: string;
@@ -95,19 +95,7 @@ export class User {
 
     this.photo = '';
 
-    this.addresses = [{
-      name: '',
-      note: '',
-      floor: '',
-      streetAdress: '',
-      region: '',
-      postalCode: '',
-      primary: false,
-      geo: {
-        lat: null,
-        lng: null
-      }
-    }];
+    this.addresses = [new Address];
 
     this.logistic = {
       postalCode: ''
@@ -146,19 +134,7 @@ export class User {
 
   photo: string;
 
-  addresses: [{
-    name: string;
-    note: string;
-    floor: string;
-    streetAdress: string;
-    region: string;
-    postalCode: string;
-    primary: boolean;
-    geo: {
-      lat: number;
-      lng: number;
-    }
-  }];
+  addresses: [Address];
 
   /* preferred postalCode*/
   logistic: {
@@ -176,7 +152,8 @@ export class User {
   context: any;
 
   /* payments methods */
-  payments: any[];
+  payments: [Card];
+  //payments: any[];
   // payments:[{
   //   type:{type:String},
   //   name:{type:String},
