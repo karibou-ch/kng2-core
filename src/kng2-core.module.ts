@@ -14,6 +14,7 @@ import { Order } from './order/order';
 import { UserPipe } from './user.pipe';
 import { User, UserService } from './user.service';
 import { Shop } from './shop.service';
+import { SerializationService } from './serialization.service';
 import *  as OrderEnum from './order/order.enum';
 
 
@@ -34,11 +35,12 @@ import *  as OrderEnum from './order/order.enum';
         ConfigService,
         LoaderService,
         OrderService,
-        UserService
+        UserService,
+        SerializationService
       ]
 })
 export class Kng2CoreModule {
-  
+
   // in root module : import Kng2CoreModule.forRoot() to have only one instance of services when lazy loaded
   //https://angular-2-training-book.rangle.io/handout/modules/feature-modules.html
 
@@ -66,7 +68,8 @@ export {
   LoaderService,
   OrderService, Order, OrderEnum,
   UserPipe,
-  UserService, User, Shop
+  UserService, User, Shop,
+  SerializationService
 }
 
 export * from './order/order.enum';

@@ -1,9 +1,9 @@
-import { 
-  EnumCancelReason, 
-  EnumFinancialStatus, 
-  EnumFulfillments, 
-  EnumOrderIssue, 
-  EnumShippingMode 
+import {
+  EnumCancelReason,
+  EnumFinancialStatus,
+  EnumFulfillments,
+  EnumOrderIssue,
+  EnumShippingMode
 } from './order.enum';
 
 //
@@ -124,7 +124,7 @@ export class Order {
     collected:boolean,
     collected_timestamp:Date,
     //
-    // you can see values only when uid is order.owner, shop.owner, or admin 
+    // you can see values only when uid is order.owner, shop.owner, or admin
     // amount & threshold & finalAmount & are saved for security reason
     discount:{
       amount:number,
@@ -151,33 +151,34 @@ export class Order {
   }
 
 
+
   //
-  // Compute the next potential shipping day. 
+  // Compute the next potential shipping day.
   // It depends on the hours needed to harvest/prepare a placed order
   static potentialShippingDay():Date{
-    var now=new Date(), 
+    var now=new Date(),
         potential=new Date(now.getTime()+3600000*(config.shared.order.timelimit));
 
     //
     // timelimitH is hour limit to place an order
     if (potential.getHours()>=config.shared.order.timelimitH){
       //
-      // set shipping time to fix the printed countdown (eg. 'dans un jour') 16:00 vs. 12:00 
+      // set shipping time to fix the printed countdown (eg. 'dans un jour') 16:00 vs. 12:00
       potential.setHours(config.shared.order.timelimitH,0,0,0);
       return potential.plusDays(1);
     }
 
     //
-    // set shipping time to fix the printed countdown (eg. 'dans un jour') 16:00 vs. 12:00 
+    // set shipping time to fix the printed countdown (eg. 'dans un jour') 16:00 vs. 12:00
     potential.setHours(config.shared.order.timelimitH,0,0,0);
 
     // next date depends on the hours needed to prepare a placed order
-    return potential;        
+    return potential;
 
   };
 
   //
-  // Compute the next potential shipping days in one week. 
+  // Compute the next potential shipping days in one week.
   static potentialShippingWeek(){
     let potential=Order.potentialShippingDay();
     return potential.dayToDates(
@@ -185,7 +186,7 @@ export class Order {
       );
   };
 
-  //  
+  //
   // the current shipping day is short date for the placed orders
   static currentShippingDay(){
     return (new Date()).dayToDates(config.shared.order.weekdays)[0];
@@ -197,7 +198,7 @@ export class Order {
     let potential=Order.potentialShippingDay();
     let noshipping;
     let next=potential.dayToDates(
-          config.shared.order.weekdays         
+          config.shared.order.weekdays
         );
 
 
@@ -217,14 +218,14 @@ export class Order {
       }
     }
 
-    // else 
+    // else
     // after 7 days we cant order anyway!
     return;
   }
 
   //
-  // a full week of available shipping days 
-  // limit to nb days (default is <7) 
+  // a full week of available shipping days
+  // limit to nb days (default is <7)
   static fullWeekShippingDays(limit?) {
     var next=Order.potentialShippingWeek(), lst=[], find=false, today=new Date();
 
@@ -308,7 +309,7 @@ export class Order {
   getExtraDiscount(){
     var total=this.getTotalPrice();
     var subtotal=this.getSubTotal();
-    return subtotal-total;    
+    return subtotal-total;
   };
 
   //
@@ -316,7 +317,7 @@ export class Order {
   getTotalDiscount() {
     var amount=0;
 
-    
+
     this.vendors.forEach(function(vendor) {
       amount+=(vendor.discount&&vendor.discount.finalAmount||0);
     });
@@ -349,7 +350,7 @@ export class Order {
   //
   // stotal = items + shipping - total discount
   //  total = stotal + stotal*payment.fees
-  // WARNNG -- WARNNG -- WARNNG -- edit in all places 
+  // WARNNG -- WARNNG -- WARNNG -- edit in all places
   getTotalPrice(factor?:number){
     var total=0.0;
     if(this.items){
@@ -361,11 +362,11 @@ export class Order {
         }
       });
     }
-    // before the payment fees! 
-    // add shipping fees 
+    // before the payment fees!
+    // add shipping fees
     total+=this.getShippingPrice();
 
-    // 
+    //
     // remove discout offer by shop
     total-=this.getTotalDiscount();
 
@@ -381,7 +382,7 @@ export class Order {
 
   getShippingPrice(){
 
-    // check if value exist, (after creation) 
+    // check if value exist, (after creation)
     if(this.payment.fees &&
        this.payment.fees.shipping!==null){
       return this.payment.fees.shipping;
@@ -407,12 +408,12 @@ export class Order {
       });
     }
 
-    // before the payment fees! 
+    // before the payment fees!
     // add shipping fees (10CHF)
     total+=this.getShippingPrice();
 
     //
-    // add gateway fees    
+    // add gateway fees
     total+=this.payment.fees.charge*total;
 
     // add mul factor
@@ -436,7 +437,7 @@ export class Order {
       });
     }else if(item){
       original=(item.price*item.quantity);
-      validated=parseFloat(item.finalprice);      
+      validated=parseFloat(item.finalprice);
     }
 
     return ((validated/original*100)-100);
@@ -513,6 +514,5 @@ export class Order {
   //   return "Livrée le "+labels.date +' entre '+labels.time;
 
   // };
-  
-}
 
+}

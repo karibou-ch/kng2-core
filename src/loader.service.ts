@@ -12,7 +12,8 @@ import { Category } from './category.service';
 
 import { ConfigService } from './config.service';
 import { UserService } from './user.service';
-import { CategoryService } from './category.service'
+import { CategoryService } from './category.service';
+import { SerializationService } from './serialization.service';
 
 //manage the first requests needed when bootstrapping the application. Used by the components.
 @Injectable()
@@ -26,14 +27,15 @@ export class LoaderService {
     private http: Http,
     private config: ConfigService,
     private user: UserService,
-    private categorySrv: CategoryService
+    private categorySrv: CategoryService,
+    private serializationSrv: SerializationService
   ) {
 
     //
     //create a multicast Observable with the caching property of BehaviorSubject (publishbehavior)
     //every subscribing component will be connected to the same request and get the last item received
 
-    
+
     this.loader = this.config.init()
       .flatMap(config =>
         //
@@ -45,10 +47,10 @@ export class LoaderService {
       )
       //
       // transform observable to ConnectableObservable (multicasting)
-      .publishReplay(1)  
+      .publishReplay(1)
       //
       // used to auto-connect to the source when there is >= 1 subscribers
-      .refCount();       
+      .refCount();
   }
 
 

@@ -20,7 +20,8 @@ import { AuthGuardService, Kng2CoreModule }  from '../../../dist';
 import { appRoutes } from './app.routes';
 import { CategoryComponent } from './category/category.component';
 import { CategoryEditComponent } from './category.edit/category-edit.component';
-import { OrderWriteComponent } from './order.write/order-write.component';
+import { OrderEditComponent } from './order.edit/order-edit.component';
+import { UserOrdersComponent } from './user.orders/user-orders.component';
 
 @NgModule({
   declarations: [
@@ -33,7 +34,8 @@ import { OrderWriteComponent } from './order.write/order-write.component';
     DashboardComponent,
     CategoryComponent,
     CategoryEditComponent,
-    OrderWriteComponent
+    OrderEditComponent,
+    UserOrdersComponent
   ],
   imports: [
     BrowserModule,
