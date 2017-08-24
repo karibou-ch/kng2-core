@@ -1,3 +1,217 @@
-<p>
-  produit-edit works!
-</p>
+<div class="container">
+	<form>
+		<h1>{{product.title}}</h1>
+		<div class="form-group ">
+			<label
+				class="control-label"
+				for="i0">Specify the name</label>
+			<input
+				type="text"
+				[(ngModel)]="product.title"
+				name="title"
+				class="form-control"
+				placeholder="Label"
+				autofocus="autofocus"
+				required=""
+				id="i0">
+		</div>
+		<h3>Category</h3>
+		<div class="form-group ">
+			<label
+				class="control-label"
+				for="i0">Specify the category's name</label>
+			<input
+				type="text"
+				[(ngModel)]="product.categories.name"
+				name="catName"
+				class="form-control"
+				placeholder="Label"
+				autofocus="autofocus"
+				required=""
+				id="i0">
+			<label
+				class="control-label"
+				for="i0">Specify the category's sort weight</label>
+			<input
+				type="text"
+				[(ngModel)]="product.categories.weight"
+				name="catWeight"
+				class="form-control"
+				placeholder="Label"
+				autofocus="autofocus"
+				required=""
+				id="i0">
+		</div>
+
+		<h3>Pricing</h3>
+		<div class="form-group ">
+			<label
+				class="control-label"
+				for="i0">Specify the Price</label>
+			<input
+				type="text"
+				[(ngModel)]="product.pricing.price"
+				name="price"
+				class="form-control"
+				placeholder="Label"
+				autofocus="autofocus"
+				required=""
+				id="i0">
+			<label
+				class="control-label"
+				for="i0">Specify the TVA</label>
+			<input
+				type="text"
+				[(ngModel)]="product.pricing.tva"
+				name="tva"
+				class="form-control"
+				placeholder="Label"
+				autofocus="autofocus"
+				required=""
+				id="i0">
+			<label
+				class="control-label"
+				for="i0">Specify the stock</label>
+			<input
+				type="text"
+				[(ngModel)]="product.pricing.stock"
+				name="stock"
+				class="form-control"
+				placeholder="Label"
+				autofocus="autofocus"
+				required=""
+				id="i0">
+			<span class="pull-right"> <label>Display quantity ? <input
+						type="checkbox"
+						[(ngModel)]="product.quantity.display"
+						class="form-control"
+						name="quantityDisplay">
+			</label>
+			</span>
+		</div>
+		<div class="form-group ">
+			<label class="control-label">Define a cover</label>
+			<div [hidden]="!product.photo.url">
+				<img
+					title=""
+					class="img-thumbnail"
+					[src]="product.photo.url"
+					*ngIf="product.photo.url">
+			</div>
+			<button
+				[hidden]="!product.photo.url"
+				(click)="product.photo.url=null"
+				class="btn btn-block">clear this cover image</button>
+		</div>
+		<h3>Details</h3>
+		<div class="form-group ">
+			<label
+				class="control-label"
+				for="i0">Specify the keywords</label>
+			<input
+				type="text"
+				[(ngModel)]="product.details.keywords"
+				name="detKeywords"
+				class="form-control"
+				placeholder="Label"
+				autofocus="autofocus"
+				required=""
+				id="i0">
+			<label
+				class="control-label"
+				for="i0">Description </label>
+			<input
+				type="text"
+				[(ngModel)]="product.details.description"
+				name="detDesc"
+				class="form-control"
+				placeholder="Label"
+				autofocus="autofocus"
+				required=""
+				id="i0">
+			<label
+				class="control-label"
+				for="i0">Specify the origin </label>
+			<input
+				type="text"
+				[(ngModel)]="product.details.origin"
+				name="vendorUrl"
+				class="form-control"
+				placeholder="Label"
+				autofocus="autofocus"
+				required=""
+				id="i0">
+		</div>
+		<div>
+			<h5>
+				<span> <label>Biodegradable <input
+							type="checkbox"
+							[(ngModel)]="product.details.biodegradable"
+							class="form-control"
+							name="biodegradable"></label>
+				</span> <span> <label>Vegetarian <input
+							type="checkbox"
+							[(ngModel)]="product.details.vegetarian"
+							class="form-control"
+							name="vegetarian"></label>
+				</span> <span> <label>Bioconvertion <input
+							type="checkbox"
+							[(ngModel)]="product.details.bioconvertion"
+							class="form-control"
+							name="bioconvertion"></label>
+				</span> <span> <label>Biodynamic <input
+							type="checkbox"
+							[(ngModel)]="product.details.biodynamic"
+							class="form-control"
+							name="biodynamic"></label>
+				</span> <span> <label>Grta <input
+							type="checkbox"
+							[(ngModel)]="product.details.grta"
+							class="form-control"
+							name="grta"></label>
+				</span> <span> <label>Bio <input
+							type="checkbox"
+							[(ngModel)]="product.details.bio"
+							class="form-control"
+							name="bio"></label>
+				</span> <span> <label>Local <input
+							type="checkbox"
+							[(ngModel)]="product.details.local"
+							class="form-control"
+							name="local"></label>
+				</span> <span> <label>Natural <input
+							type="checkbox"
+							[(ngModel)]="product.details.natural"
+							class="form-control"
+							name="natural"></label>
+				</span> <span> <label>Homemade <input
+							type="checkbox"
+							[(ngModel)]="product.details.homemade"
+							class="form-control"
+							name="homemade"></label>
+				</span> <span> <label>Cold <input
+							type="checkbox"
+							[(ngModel)]="product.details.cold"
+							class="form-control"
+							name="cold"></label>
+				</span> <span> <label>Gluten <input
+							type="checkbox"
+							[(ngModel)]="product.details.gluten"
+							class="form-control"
+							name="gluten"></label>
+				</span> <span> <label>Lactose <input
+							type="checkbox"
+							[(ngModel)]="product.details.lactose"
+							class="form-control"
+							name="lactose"></label>
+				</span>
+			</h5>
+		</div>
+		<div>
+			<button
+				name ="save"
+				(click)="onSave();"
+				class="btn btn-block">Save</button>
+		</div>
+	</form>
+</div>

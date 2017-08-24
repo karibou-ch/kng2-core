@@ -160,12 +160,12 @@ export class ProductService {
 
     save(sku, prod: Product): Observable<Product> {
 
-        return this.http.post(this.config.API_SERVER + '/v1/products/' + sku, prod, {
+        return this.http.post(this.config.API_SERVER + '/v1/products/' + sku , prod, {
             headers: this.headers,
             withCredentials: true
         })
             .map(res => res.json() as Product)
-            .map(product => this.updateCache(product))
+            //.map(product => this.updateCache(product))
             //TODO should run next here!
             //.do(this.category$.next)      
             .catch(this.handleError);
