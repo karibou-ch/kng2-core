@@ -7,7 +7,7 @@ import { ConnectableObservable } from 'rxjs/observable/ConnectableObservable'
 import 'rxjs/Rx';
 
 import { Config } from './config';
-import { User } from './user.service';
+import { User, Card, Address } from './user.service';
 import { Category } from './category.service';
 
 import { ConfigService } from './config.service';
@@ -33,7 +33,7 @@ export class LoaderService {
     //create a multicast Observable with the caching property of BehaviorSubject (publishbehavior)
     //every subscribing component will be connected to the same request and get the last item received
 
-    
+
     this.loader = this.config.init()
       .flatMap(config =>
         //
@@ -45,10 +45,10 @@ export class LoaderService {
       )
       //
       // transform observable to ConnectableObservable (multicasting)
-      .publishReplay(1)  
+      .publishReplay(1)
       //
       // used to auto-connect to the source when there is >= 1 subscribers
-      .refCount();       
+      .refCount();
   }
 
 

@@ -12,6 +12,51 @@ import { ConfigService } from './config.service';
 import { Shop } from './shop.service';
 
 
+export class Address {
+
+    constructor() {
+      this.name = "";
+      this.note = "";
+      this.floor = "";
+      this.streetAdress = "";
+      this.region = "";
+      this.postalCode = "";
+      this.primary = false;
+      this.geo.lat = 0;
+      this.geo.lng = 0;
+    }
+    name: string;
+    note: string;
+    floor: string;
+    streetAdress: string;
+    region: string;
+    postalCode: string;
+    primary: boolean;
+    geo: {
+      lat: number;
+      lng: number;
+    }
+}
+
+export class Card {
+
+    constructor() {
+      this.type = "";
+      this.name = "";
+      this.number = "";
+      this.expiry = "";
+      this.provider = "";
+      this.alias = "";
+
+    }
+     type:string;
+     name:string;
+     number:string;
+     expiry:string;
+     provider:string;
+     alias:string;
+   }
+
 export class User {
 
   constructor() {
@@ -263,7 +308,7 @@ export class User {
 
 
   //
-  // init user 
+  // init user
   init() {
     var self = this;
 
@@ -275,7 +320,7 @@ export class User {
     //check address
     self.populateAdresseName();
 
-    // TODO get geo 
+    // TODO get geo
     // self.geo=new Map();
     self.addresses.forEach(function (address, i) {
       // address is correct
@@ -283,7 +328,7 @@ export class User {
         return;
       }
       //
-      //TODO setup marker 
+      //TODO setup marker
       // self.geo.addMarker(i,{
       //   lat:address.geo.lat,
       //   lng:address.geo.lng,
@@ -299,7 +344,7 @@ export class User {
 export class UserService {
 
   defaultUser: User = new User();
-  
+
   // TODO make observable content !!
   config:any;
   currentUser: User = new User();
@@ -324,11 +369,11 @@ export class UserService {
 
   private updateCache(user: User) {
     //
-    // notify 
+    // notify
     this.user$.next(user);
     Object.assign(this.currentUser, user);
 
-    
+
     //
     //check if already exist on cache and add in it if not the case
     if (!this.cache.map[user.id]) {
@@ -338,11 +383,11 @@ export class UserService {
     }
     //update existing entry
     return Object.assign(this.cache.map[user.id], user);
-    
+
   }
 
   private headers: Headers;
-  private user$: ReplaySubject<User>;   
+  private user$: ReplaySubject<User>;
 
   constructor(
     public configSrv:ConfigService,
@@ -398,7 +443,7 @@ export class UserService {
       .catch(err => Observable.of(this.defaultUser))
       .map(user => this.updateCache(user))
       .flatMap(() => this.user$.asObservable());
-      
+
 
     //     // angular.extend(self,defaultUser);
     //     self.wrap(_u);
@@ -491,7 +536,7 @@ export class UserService {
       .map(res => this.defaultUser)
       .catch(err => Observable.of(this.defaultUser))
       .map(user => this.updateCache(user));
-      
+
     // TODO inform consumers of user change
     // $rootScope.$broadcast("user.update",_user);
 
@@ -533,8 +578,8 @@ export class UserService {
       .map(res => res.json() as User)
       .catch(err => Observable.of(this.defaultUser))
       .map(user => this.updateCache(user));
-      
-      
+
+
     /*
     _user.copy(u);
     _user.updateGeoCode();
@@ -639,7 +684,7 @@ export class UserService {
           user.addresses[i].geo.lng = geo.results[0].geometry.location.lng;
       });
     */
-    
+
   }
 
   /**
@@ -693,7 +738,7 @@ export class UserService {
       .catch(err => Observable.of(this.defaultUser));
     /*
     var self = this, params = {};
-    // 
+    //
     // we can now update different user
     if (cb === undefined) { cb = uid; uid = this.id; }
     if (uid === undefined) uid = this.id;
@@ -718,7 +763,7 @@ export class UserService {
       .catch(err => Observable.of(this.defaultUser));
     /*
     var self = this, params = {};
-    // 
+    //
     // we can now update different user
     if (cb === undefined) { cb = uid; uid = self.id; }
     if (uid === undefined) uid = this.id;

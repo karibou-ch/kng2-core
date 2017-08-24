@@ -1,5 +1,5 @@
 import { Component, Input } from '@angular/core';
-import { LoaderService, User , UserService } from '../../../../dist'
+import { LoaderService, User, Address, UserService } from '../../../../dist'
 
 @Component({
   selector: 'app-address',
@@ -8,6 +8,6 @@ import { LoaderService, User , UserService } from '../../../../dist'
 })
 export class AddressComponent {
 
-  @Input() address: String[];
+  @Input() address: Address[];
 
 }
