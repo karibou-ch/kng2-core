@@ -158,18 +158,20 @@ export class ProductService {
             .catch(this.handleError);
     }
 
-    save(sku, prod: Product): Observable<Product> {
+    save(prod: Product): Observable<Product> {
 
-        return this.http.post(this.config.API_SERVER + '/v1/products/' + sku , prod, {
+        return this.http.post(this.config.API_SERVER + '/v1/products/' + prod.sku, prod, {
             headers: this.headers,
             withCredentials: true
         })
             .map(res => res.json() as Product)
-            .map(product => this.updateCache(product))
-            //TODO should run next here!
-            //.do(this.category$.next)      
-            .catch(this.handleError);
+        //.map(product => this.updateCache(product))
+        //TODO should run next here!
+        //.do(this.category$.next)      
+        //.catch(this.handleError);
     }
+
+
 
     private handleError(error: Response | any) {
         //

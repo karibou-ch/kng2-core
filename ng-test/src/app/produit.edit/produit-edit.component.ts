@@ -47,7 +47,7 @@ export class ProduitEditComponent implements OnInit {
 
     onSave() {
         // TODO use error feedback for user!
-        this.$product.save(this.sku, this.product).subscribe()
+        this.$product.save(this.product).subscribe()
     }
 
 }
