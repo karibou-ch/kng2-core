@@ -130,7 +130,7 @@
       <h1>Pics</h1>
       <div class="form-group ">
         <label class="control-label">Define a logo</label>
-        <div [hidden]="!shop?.photo.logo">
+        <div [hidden]="!shop?.photo?.logo">
           <img title="" class="img-thumbnail" [src]="shop?.photo.logo" *ngIf="shop?.photo.logo">
         </div>
         <button [hidden]="!shop?.photo.logo" (click)="shop?.photo.logo=null" class="btn btn-block">clear this image</button>
@@ -138,7 +138,7 @@
 
       <div class="form-group ">
         <label class="control-label">Define a background</label>
-        <div [hidden]="!shop?.photo.bg">
+        <div [hidden]="!shop?.photo?.bg">
           <img title="" class="img-thumbnail" [src]="shop?.photo.bg" *ngIf="shop?.photo.bg">
         </div>
         <button [hidden]="!shop?.photo.bg" (click)="shop?.photo.bg=null" class="btn btn-block">clear this image</button>
@@ -146,7 +146,7 @@
 
       <div class="form-group ">
         <label class="control-label">Define the team</label>
-        <div [hidden]="!shop?.photo.owner">
+        <div [hidden]="!shop?.photo?.owner">
           <img title="" class="img-thumbnail" [src]="shop?.photo.owner" *ngIf="shop?.photo.owner">
         </div>
         <button [hidden]="!shop?.photo.owner" (click)="shop?.photo.owner=null" class="btn btn-block">clear this image</button>
@@ -154,7 +154,7 @@
 
       <div class="form-group ">
         <label class="control-label">Define a foreground</label>
-        <div [hidden]="!shop?.photo.fg">
+        <div [hidden]="!shop?.photo?.fg">
           <img title="" class="img-thumbnail" [src]="shop?.photo.fg" *ngIf="shop?.photo.fg">
         </div>
         <button [hidden]="!shop?.photo.fg" (click)="shop?.photo.fg=null" class="btn btn-block">clear this image</button>
@@ -162,7 +162,7 @@
 
       <div class="form-group ">
         <label class="control-label">Gallery</label>
-        <div [hidden]="!shop?.photo.gallery[0]" *ngFor="let im of shop?.photo.gallery">
+        <div [hidden]="!shop?.photo?.gallery[0]" *ngFor="let im of shop?.photo.gallery">
           <img title="" class="img-thumbnail" [src]="im" *ngIf="im">
         </div>
         <button [hidden]="!im" (click)="im=null" class="btn btn-block">clear this image</button>

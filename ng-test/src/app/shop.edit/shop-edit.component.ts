@@ -28,7 +28,7 @@ export class ShopEditComponent implements OnInit {
   private currentUser: User;
   private isReady: boolean;
   private config: any;
-  private shop: Shop = new Shop();
+  private shop: Shop = new Shop(null);
   private newInstance:boolean=false;
   private errors:any;
 
