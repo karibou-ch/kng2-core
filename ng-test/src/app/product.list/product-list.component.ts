@@ -9,11 +9,11 @@ import {
 }  from '../../../../dist'
 
 @Component({
-    selector: 'app-produit-list',
-    templateUrl: './produit-list.component.html',
-    styleUrls: ['./produit-list.component.scss']
+    selector: 'app-product-list',
+    templateUrl: './product-list.component.html',
+    styleUrls: ['./product-list.component.scss']
 })
-export class ProduitListComponent implements OnInit {
+export class ProductListComponent implements OnInit {
 
     isReady: boolean = false;
     config: any;

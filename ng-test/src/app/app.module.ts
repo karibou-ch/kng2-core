@@ -20,9 +20,9 @@ import { AuthGuardService, Kng2CoreModule }  from '../../../dist';
 import { appRoutes } from './app.routes';
 import { CategoryComponent } from './category/category.component';
 import { CategoryEditComponent } from './category.edit/category-edit.component';
-import { ProduitListComponent } from './produit.list/produit-list.component';
-import { ProduitComponent } from './produit/produit.component';
-import { ProduitEditComponent } from './produit.edit/produit-edit.component';
+import { ProductListComponent } from './product.list/product-list.component';
+import { ProductComponent } from './product/product.component';
+import { ProductEditComponent } from './product.edit/product-edit.component';
 
 @NgModule({
   declarations: [
@@ -35,9 +35,9 @@ import { ProduitEditComponent } from './produit.edit/produit-edit.component';
     DashboardComponent,
     CategoryComponent,
     CategoryEditComponent,
-    ProduitListComponent,
-    ProduitComponent,
-    ProduitEditComponent
+    ProductListComponent,
+    ProductComponent,
+    ProductEditComponent
   ],
   imports: [
     BrowserModule,

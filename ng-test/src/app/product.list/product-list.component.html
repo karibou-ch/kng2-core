@@ -2,7 +2,7 @@
 	<h2>Product list</h2>
 	<table class="table">
 		<tr *ngFor="let product of products">
-			<td><a [routerLink]="['/produit',product.sku]">{{product.title}}</a></td>
+			<td><a [routerLink]="['/product',product.sku]">{{product.title}}</a></td>
 		</tr>
 	</table>
 </div>
