@@ -15,15 +15,6 @@ import { Shop } from './shop.service';
 export class UserAddress {
 
     constructor() {
-      this.name = "";
-      this.note = "";
-      this.floor = "";
-      this.streetAdress = "";
-      this.region = "";
-      this.postalCode = "";
-      this.primary = false;
-      this.geo.lat = null;
-      this.geo.lng = null;
     }
     name: string;
     note: string;
@@ -41,13 +32,6 @@ export class UserAddress {
 export class UserCard {
 
     constructor() {
-      this.type = "";
-      this.name = "";
-      this.number = "";
-      this.expiry = "";
-      this.provider = "";
-      this.alias = "";
-
     }
      type:string;
      name:string;

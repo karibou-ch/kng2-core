@@ -8,6 +8,6 @@ import { LoaderService, User, UserAddress, UserService } from '../../../../dist'
 })
 export class AddressComponent {
 
-  @Input() address: UserAddress[];
+  @Input() address: UserAddress;
 
 }
