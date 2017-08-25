@@ -1,5 +1,5 @@
 import { Component, Input } from '@angular/core';
-import { LoaderService, User, Card, UserService } from '../../../../dist'
+import { LoaderService, User, UserCard, UserService } from '../../../../dist'
 
 @Component({
   selector: 'app-card',
@@ -9,6 +9,6 @@ import { LoaderService, User, Card, UserService } from '../../../../dist'
 
 export class CardComponent {
 
-  @Input() card: Card[];
+  @Input() card: UserCard[];
 
 }
