@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, Input } from '@angular/core';
 import {ActivatedRoute} from '@angular/router';
 
 import {
@@ -18,6 +18,7 @@ import {
 })
 export class ProductComponent implements OnInit {
 
+    @Input()
     sku: number;
     currentUser: User;
     isReady: boolean;
@@ -37,11 +38,12 @@ export class ProductComponent implements OnInit {
             this.isReady = true;
             this.config = loader[0];
             this.currentUser = loader[1];
-
+            console.log("step 1");
             if (!this.sku) {
                 this.sku = this.route.snapshot.params['sku'];
             }
 
+            console.log(this.sku);
             this.$product.findBySku(this.sku).subscribe(prod => this.product = prod)
         });
     }

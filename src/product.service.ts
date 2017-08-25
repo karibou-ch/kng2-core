@@ -58,8 +58,8 @@ export class ProductService {
             withCredentials: true
         })
             .map(res => res.json().map(obj => new Product(obj)))
-            .map(products => products.map(this.updateCache.bind(this)))
-            .catch(this.handleError);
+            //.map(products => products.map(this.updateCache.bind(this)))
+            //.catch(this.handleError);
     };
 
     findByLocationCategoryAndDetail(category, detail): Observable<Product[]> {
@@ -68,8 +68,8 @@ export class ProductService {
             withCredentials: true
         })
             .map(res => res.json().map(obj => new Product(obj)))
-            .map(products => products.map(this.updateCache.bind(this)))
-            .catch(this.handleError);
+            //.map(products => products.map(this.updateCache.bind(this)))
+            //.catch(this.handleError);
     }
 
     findByCategoryAndDetail(category, detail): Observable<Product[]> {
@@ -78,8 +78,8 @@ export class ProductService {
             withCredentials: true
         })
             .map(res => res.json().map(obj => new Product(obj)))
-            .map(products => products.map(this.updateCache.bind(this)))
-            .catch(this.handleError);
+            //.map(products => products.map(this.updateCache.bind(this)))
+            //.catch(this.handleError);
     }
 
     findByLocationAndCategory(location, category): Observable<Product[]> {
@@ -88,8 +88,8 @@ export class ProductService {
             withCredentials: true
         })
             .map(res => res.json().map(obj => new Product(obj)))
-            .map(products => products.map(this.updateCache.bind(this)))
-            .catch(this.handleError);
+            //.map(products => products.map(this.updateCache.bind(this)))
+            //.catch(this.handleError);
     }
 
     findLove(): Observable<Product[]> {
@@ -98,8 +98,8 @@ export class ProductService {
             withCredentials: true
         })
             .map(res => res.json().map(obj => new Product(obj)))
-            .map(products => products.map(this.updateCache.bind(this)))
-            .catch(this.handleError);
+            //.map(products => products.map(this.updateCache.bind(this)))
+            //.catch(this.handleError);
     }
 
     findByLocation(location): Observable<Product[]> {
@@ -108,8 +108,8 @@ export class ProductService {
             withCredentials: true
         })
             .map(res => res.json().map(obj => new Product(obj)))
-            .map(products => products.map(this.updateCache.bind(this)))
-            .catch(this.handleError);
+            //.map(products => products.map(this.updateCache.bind(this)))
+            //.catch(this.handleError);
     }
 
     findByCategory(category): Observable<Product[]> {
@@ -118,8 +118,8 @@ export class ProductService {
             withCredentials: true
         })
             .map(res => res.json().map(obj => new Product(obj)))
-            .map(products => products.map(this.updateCache.bind(this)))
-            .catch(this.handleError);
+            //.map(products => products.map(this.updateCache.bind(this)))
+            //.catch(this.handleError);
     }
 
     findBySku(sku): Observable<Product> {
@@ -143,8 +143,8 @@ export class ProductService {
             //.map(res => res.json() as Product[])
             //.map(res => res.json() as Product)
             .map(res => new Product(res.json()))
-            .map(this.updateCache)
-            .do(this.product$.next)      
+            //.map(this.updateCache)
+            //.do(this.product$.next)    
             .catch(this.handleError);
     }
 
