@@ -46,6 +46,13 @@ export class CategoryEditComponent implements OnInit {
       this.isReady=true;
       this.config=ready[0];
       this.currentUser=ready[1];
+
+      //
+      // on category creation there is no slug available
+      this.newInstance=this.route.snapshot.data.newInstance;
+      if(this.newInstance){
+        return;
+      }
       //
       // two options for slug initialisation : 1) Input, 2) URL
       if(!this.slug){
@@ -62,6 +69,17 @@ export class CategoryEditComponent implements OnInit {
 
   onSave(){
     // TODO use error feedback for user!
-    this.$category.save(this.slug,this.category).subscribe()
+    if(this.newInstance){
+      return this.$category.create(this.category).subscribe();
+    }
+    this.$category.save(this.slug,this.category).subscribe(this.noop,this.processErrors);
+  }
+
+  //
+  // no operation function
+  noop(){}
+
+  processErrors(err){
+    this.errors=err;
   }
 }

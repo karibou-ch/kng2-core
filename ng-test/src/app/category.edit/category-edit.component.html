@@ -1,3 +1,6 @@
+<div *ngIf="errors" class="alert alert-danger"> 
+    {{ errors }} 
+</div>
 <div class="container">
   <form>
     <div>
@@ -69,7 +72,7 @@
       <input type="text" class="form-control" id="i4" [(ngModel)]="category.color" name="color" placeholder="color: #ddd, blue">
     </div>
     <div>
-      <button name="save" (click)="onSave();" >Save</button>
+      <button name="save" (click)="onSave();" >{{newInstance?'Créer':'Save'}}</button>
     </div>
   </form>
 </div>

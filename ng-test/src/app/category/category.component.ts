@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { Router } from '@angular/router';
 import {
   CategoryService,
   Category,
@@ -19,14 +20,15 @@ export class CategoryComponent implements OnInit {
   categories:Category[]=[];
 
   constructor(
-    private loader: LoaderService,
-    private categorySrv: CategoryService
+    private $loader: LoaderService,
+    private $categorySrv: CategoryService,
+    private router: Router
   ){
 
   }
 
   ngOnInit() {
-    this.loader.ready().subscribe((loader) => {
+    this.$loader.ready().subscribe((loader) => {
       this.isReady=true;
       this.config=loader[0];
       this.loadCategories()
@@ -34,9 +36,12 @@ export class CategoryComponent implements OnInit {
   }
 
   loadCategories(){
-    this.categorySrv.select().subscribe((categories:Category[])=>{
+    this.$categorySrv.select().subscribe((categories:Category[])=>{
       this.categories=categories.sort((a,b)=>a.weight-b.weight);
     });
   }
 
+  onNewCategory(route){
+    this.router.navigate(route);
+  }
 }
