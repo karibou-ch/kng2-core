@@ -20,6 +20,9 @@ import { ShopEditComponent } from './shop.edit/shop-edit.component';
 import { AuthGuardService, Kng2CoreModule } from '../../../dist';
 
 import { appRoutes } from './app.routes';
+import { AddressComponent } from './user.address/address.component';
+import { CardComponent } from './user.card/card.component';
+import { ShopComponent } from './shop/shop.component';
 import { CategoryComponent } from './category/category.component';
 import { CategoryEditComponent } from './category.edit/category-edit.component';
 
@@ -33,6 +36,9 @@ import { CategoryEditComponent } from './category.edit/category-edit.component';
     OrderComponent,
     RecoveryComponent,
     DashboardComponent,
+    AddressComponent,
+    CardComponent,
+    ShopComponent,
     CategoryComponent,
     CategoryEditComponent,
     ShopComponent,
