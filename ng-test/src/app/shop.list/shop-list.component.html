@@ -3,5 +3,8 @@
   <div *ngFor="let s of shops" class="col-xs-9  pull-left">
     <hr>
     <td><a [routerLink]="['/shop',s?.urlpath]">{{s?.name}}</a> what:{{s?.catalog.name}}</td>
+    <div [hidden]="!s?.photo.logo">
+      <img title="" class="img-thumbnail-small" [src]="s?.photo.logo" *ngIf="s?.photo.logo">
+    </div>
   </div>
 </div>

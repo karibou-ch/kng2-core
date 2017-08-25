@@ -33,6 +33,7 @@ export class ShopComponent implements OnInit {
         .subscribe(res => {
           this.shop = res;
         });
+
     });
   }
 }

@@ -34,6 +34,7 @@ export class ShopListComponent implements OnInit {
           this.shops = res;
           console.log(res);
         });
+
     });
   }
 }

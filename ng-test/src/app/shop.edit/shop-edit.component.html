@@ -145,7 +145,15 @@
       </div>
 
       <div class="form-group ">
-        <label class="control-label">Define a forground</label>
+        <label class="control-label">Define the team</label>
+        <div [hidden]="!shop?.photo.owner">
+          <img title="" class="img-thumbnail" [src]="shop?.photo.owner" *ngIf="shop?.photo.owner">
+        </div>
+        <button [hidden]="!shop?.photo.owner" (click)="shop?.photo.owner=null" class="btn btn-block">clear this image</button>
+      </div>
+
+      <div class="form-group ">
+        <label class="control-label">Define a foreground</label>
         <div [hidden]="!shop?.photo.fg">
           <img title="" class="img-thumbnail" [src]="shop?.photo.fg" *ngIf="shop?.photo.fg">
         </div>

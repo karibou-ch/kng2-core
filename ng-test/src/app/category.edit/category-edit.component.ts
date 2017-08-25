@@ -18,13 +18,18 @@ import {
 })
 export class CategoryEditComponent implements OnInit {
 
+  newInstance:boolean=false;
+  errors:any;
+
   // TODO, note, je propose que tous les instances des services Kng2-core
   // soient préfixés par $ (c'est pour éviter le suffix Srv)
   constructor(
     private $loader: LoaderService,
     private $category: CategoryService,
     private route:ActivatedRoute
-  ){ }
+  ){
+
+  }
 
   //
   // optional input (instance of Category, or )
@@ -65,7 +70,6 @@ export class CategoryEditComponent implements OnInit {
 
     });
   }
-
 
   onSave(){
     // TODO use error feedback for user!

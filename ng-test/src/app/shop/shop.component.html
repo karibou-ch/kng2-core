@@ -1,6 +1,21 @@
 <div class="container">
   <h1>Shop</h1>
   <div class="row">
+    <div class="col-xs-12">Photo</div>
+    <div class="col-xs-3" [hidden]="!shop?.photo.bg">
+      <img title="" class="img-thumbnail" [src]="shop?.photo.bg" *ngIf="shop?.photo.bg">
+    </div>
+    <div class="col-xs-3" [hidden]="!shop?.photo.fg">
+      <img title="" class="img-thumbnail" [src]="shop?.photo.fg" *ngIf="shop?.photo.fg">
+    </div>
+    <div class="col-xs-3" [hidden]="!shop?.photo.logo">
+      <img title="" class="img-thumbnail" [src]="shop?.photo.logo" *ngIf="shop?.photo.logo">
+    </div>
+    <div class="col-xs-3" [hidden]="!shop?.photo.owner">
+      <img title="" class="img-thumbnail" [src]="shop?.photo.owner" *ngIf="shop?.photo.owner">
+    </div>
+  </div>
+  <div class="row">
     <div class="col-xs-3">Urlpath</div>
     <div class="col-xs-9  pull-left">{{shop?.urlpath}}</div>
   </div>
@@ -12,37 +27,23 @@
     <div class="col-xs-3">Description</div>
     <div class="col-xs-9  pull-left">{{shop?.description}}</div>
   </div>
-  <div class="row">
-    <div class="col-xs-3">Photo</div>
-    <div class="col-xs-9  pull-left">{{shop?.photo}}</div>
-  </div>
+
   <div class="row">
     <div class="col-xs-3">Details</div>
     <div class="col-xs-9  pull-left">
-      bio: {{shop?.details.bio}}
-      gluten: {{shop?.details.gluten}}
-      lactose: {{shop?.details.lactose}}
-      vegetarian: {{shop?.details.vegetarian}}
-      local: {{shop?.details.local}}
+      bio: {{shop?.details.bio}} gluten: {{shop?.details.gluten}} lactose: {{shop?.details.lactose}} vegetarian: {{shop?.details.vegetarian}} local: {{shop?.details.local}}
     </div>
   </div>
   <div class="row">
     <div class="col-xs-3">Collect</div>
     <div class="col-xs-9  pull-left">
-      {{shop?.collect?.streetAdress}}
-      {{shop?.collect?.postalCode}}
+      {{shop?.collect?.streetAdress}} {{shop?.collect?.postalCode}}
     </div>
   </div>
   <div class="row">
     <div class="col-xs-3">address</div>
     <div class="col-xs-9 pull-left">
-      {{shop?.address.depository}}
-      {{shop?.address.name}}
-      {{shop?.address.floor}}
-      {{shop?.address.phone}}
-      {{shop?.address.streetAdress}}
-      {{shop?.address.region}}
-      {{shop?.address.postalCode}}
+      {{shop?.address.depository}} {{shop?.address.name}} {{shop?.address.floor}} {{shop?.address.phone}} {{shop?.address.streetAdress}} {{shop?.address.region}} {{shop?.address.postalCode}}
     </div>
   </div>
   <div class="row">
@@ -52,35 +53,25 @@
   <div class="row">
     <div class="col-xs-3">Faq</div>
     <div *ngFor="let f of shop?.faq" class="col-xs-9  pull-left">
-      question:{{f.q}}
-      answer:{{f.a}}
-      update:{{f.updated}}
+      question:{{f?.q}} answer:{{f?.a}} update:{{f?.updated}}
     </div>
   </div>
   <div class="row">
     <div class="col-xs-3">Available</div>
     <div class="col-xs-9  pull-left">
-      active: {{shop?.available.active}}
-      from {{shop?.available.from}} to
-      {{shop?.available.to}}
-      weekdays: {{shop?.available.weekdays}}
-      comment: {{shop?.available.comment}}
+      active: {{shop?.available.active}} from {{shop?.available.from}} to {{shop?.available.to}} weekdays: {{shop?.available.weekdays}} comment: {{shop?.available.comment}}
     </div>
   </div>
   <div class="row">
     <div class="col-xs-3">Discount</div>
     <div class="col-xs-9  pull-left">
-      {{shop?.discount.amount}}
-      {{shop?.discount.threshold}}
-      {{shop?.discount.active}}
+      {{shop?.discount.amount}} {{shop?.discount.threshold}} {{shop?.discount.active}}
     </div>
   </div>
   <div class="row">
     <div class="col-xs-3">Info</div>
     <div class="col-xs-9  pull-left">
-      {{shop?.info.detailledOrder}}
-      {{shop?.info.active}}
-      {{shop?.info.comment}}
+      {{shop?.info.detailledOrder}} {{shop?.info.active}} {{shop?.info.comment}}
     </div>
   </div>
   <div class="row">
@@ -90,11 +81,8 @@
   <div class="row">
     <div class="col-xs-3">Account</div>
     <div class="col-xs-9  pull-left">
-    {{shop?.account.fee}}
-    {{shop?.tva?.number}}
-    {{shop?.tva?.fees}}
-    {{shop?.updated}}
-  </div>
+      {{shop?.account.fee}} {{shop?.tva?.number}} {{shop?.tva?.fees}} {{shop?.updated}}
+    </div>
   </div>
   <div class="row">
     <div class="col-xs-3">Owner</div>
@@ -103,17 +91,18 @@
   <div class="row">
     <div class="col-xs-3">Scoring</div>
     <div class="col-xs-9  pull-left">
-      weight: {{shop?.scoring.weight}}
-      orders: {{shop?.scoring.orders}}
-      issues: {{shop?.scoring.issues}}
-      score: {{shop?.scoring.score}}
+      weight: {{shop?.scoring.weight}} orders: {{shop?.scoring.orders}} issues: {{shop?.scoring.issues}} score: {{shop?.scoring.score}}
     </div>
   </div>
   <div class="row">
     <div class="col-xs-3">Created</div>
     <div class="col-xs-9  pull-left">{{shop?.created}}</div>
   </div>
-  <div >
-    <a  [routerLink]="['/shop/edit/',shop?.urlpath]"><button class="btn btn-block">Edit Shop</button></a>
+  <div class="row">
+    <div class="col-xs-3">Map</div>
+    <img src="//maps.googleapis.com/maps/api/staticmap?center={{shop?.address.geo.lat}},{{shop?.address.geo.lng}}&zoom=12&size=400x400&markers=color:green%7Xlabel:%7C{{shop?.address.geo.lat}},{{shop?.address.geo.lng}}&key=AIzaSyD5w46BmWX6hX-uJ2yMycS_cRb2HRvDXQU"/>
+  </div>
+  <div>
+    <a [routerLink]="['/shop/edit/',shop?.urlpath]"><button class="btn btn-block">Edit Shop</button></a>
   </div>
 </div>
