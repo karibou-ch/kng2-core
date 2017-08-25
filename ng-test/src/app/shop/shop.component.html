@@ -1,5 +1,8 @@
 <div class="container">
   <h1>Shop</h1>
+  <div *ngIf="currentUser?.isOwnerOrAdmin(shop?.name)">
+    <a [routerLink]="['/shop/edit/',shop?.urlpath]"><button class="btn">Edit Shop</button></a>
+  </div>
   <div class="row">
     <div class="col-xs-12">Photo</div>
     <div class="col-xs-3" [hidden]="!shop?.photo.bg">
@@ -101,8 +104,5 @@
   <div class="row">
     <div class="col-xs-3">Map</div>
     <img src="//maps.googleapis.com/maps/api/staticmap?center={{shop?.address.geo.lat}},{{shop?.address.geo.lng}}&zoom=12&size=400x400&markers=color:green%7Xlabel:%7C{{shop?.address.geo.lat}},{{shop?.address.geo.lng}}&key=AIzaSyD5w46BmWX6hX-uJ2yMycS_cRb2HRvDXQU"/>
-  </div>
-  <div>
-    <a [routerLink]="['/shop/edit/',shop?.urlpath]"><button class="btn btn-block">Edit Shop</button></a>
   </div>
 </div>

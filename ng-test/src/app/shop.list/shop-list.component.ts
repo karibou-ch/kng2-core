@@ -15,6 +15,7 @@ export class ShopListComponent implements OnInit {
   constructor(
     private $loader: LoaderService,
     private route: ActivatedRoute,
+    private router: Router,
     private $shop: ShopService
   ) { }
 
@@ -36,5 +37,9 @@ export class ShopListComponent implements OnInit {
         });
 
     });
+  }
+
+  onNewShop(route){
+    this.router.navigate(route);
   }
 }

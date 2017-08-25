@@ -8,7 +8,7 @@ import { config, LoaderService, User, UserService } from '../../../../dist';
   styleUrls: ['./header.component.scss']
 })
 export class HeaderComponent implements OnInit {
-  user: User = new User();
+  user: User = new User(null);
   config;
 
   constructor(

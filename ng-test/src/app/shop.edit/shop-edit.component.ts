@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, Input } from '@angular/core';
 import { Observable } from 'rxjs/Rx';
 import { ActivatedRoute } from '@angular/router';
 import { FormsModule }   from '@angular/forms';
@@ -23,11 +23,14 @@ export class ShopEditComponent implements OnInit {
     private $shop: ShopService
   ) { }
 
+
+  @Input() slug:string;
   private currentUser: User;
   private isReady: boolean;
   private config: any;
-  shop: Shop;
-  private slug: string;
+  private shop: Shop = new Shop();
+  private newInstance:boolean=false;
+  private errors:any;
 
   ngOnInit() {
 
@@ -35,6 +38,17 @@ export class ShopEditComponent implements OnInit {
       this.isReady = true;
       this.config = ready[0];
       this.currentUser = ready[1];
+
+      // on category creation there is no slug available
+      this.newInstance=this.route.snapshot.data.newInstance;
+      if(this.newInstance){
+        return;
+      }
+
+      // two options for slug initialisation : 1) Input, 2) URL
+      if(!this.slug){
+        this.slug=this.route.snapshot.params['slug'];
+      }
 
       this.slug = this.route.snapshot.params['slug'];
       this.$shop.get(this.slug)
@@ -48,6 +62,15 @@ export class ShopEditComponent implements OnInit {
   onSave() {
     // TODO use error feedback for user!
     this.$shop.save(this.shop).subscribe()
+    // TODO use error feedback for user!
+    if(this.newInstance){
+      return this.$shop.create(this.shop).subscribe();
+    }
+    this.$shop.save(this.shop).subscribe(this.processErrors);
+  }
+
+  processErrors(err){
+    this.errors=err;
   }
 
   addFaq() {

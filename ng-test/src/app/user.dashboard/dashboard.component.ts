@@ -9,7 +9,7 @@ import { LoaderService, User, UserService } from '../../../../dist'
 })
 export class DashboardComponent implements OnInit {
 
-  user: User = new User();
+  user: User = new User(null);
 
   constructor(
     private loaderSrv: LoaderService,
