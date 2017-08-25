@@ -1,6 +1,7 @@
 import { Component, OnInit, Input } from '@angular/core';
 import {ActivatedRoute} from '@angular/router';
-
+import 'rxjs/add/operator/map';
+import 'rxjs/Rx';
 import { Observable } from 'rxjs/Rx';
 import {
     ProductService,
@@ -29,7 +30,7 @@ export class ProductEditComponent implements OnInit {
     currentUser: User;
     isReady: boolean;
     config: any;
-    product: Product; 
+    product: Product;
 
     ngOnInit() {
         this.$loader.ready().subscribe((loader) => {
@@ -39,9 +40,9 @@ export class ProductEditComponent implements OnInit {
 
             if (!this.sku) {
                 this.sku = this.route.snapshot.params['sku'];
-            }
-            console.log(this.sku)
+            };
             this.$product.findBySku(this.sku).subscribe(prod => this.product = prod)
+
         });
     }
 

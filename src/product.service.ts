@@ -129,19 +129,22 @@ export class ProductService {
     //
     // get product based on its sku
     get(sku): Observable<Product> {
+        let cached: Observable<Product>;
+
         // check if in the cache
         if (this.cache.map[sku]) {
             return Observable.of(this.cache.map[sku]);
         }
-
+        console.log("not in cache")
         return this.http.get(this.config.API_SERVER + '/v1/products/' + sku, {
             headers: this.headers,
             withCredentials: true
         })
-            .map(res => res.json().map(obj => new Product(obj)))
+            //.map(res => res.json() as Product[])
+            //.map(res => res.json() as Product)
+            .map(res => new Product(res.json()))
             .map(this.updateCache)
-            //TODO should run next here!
-            //.do(this.product$.next)      
+            .do(this.product$.next)      
             .catch(this.handleError);
     }
 
@@ -210,12 +213,11 @@ class Cache {
 
 
 export class Product {
-    
+
     constructor(json: any) {
+        console.log(json);
         Object.assign(this, json);
     };
-
-    
 
     _id;
     title: string;

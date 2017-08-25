@@ -56,6 +56,7 @@ export class CategoryEditComponent implements OnInit {
 
       //
       // TODO manage on Error user feedback!
+        console.log(this.$category.findBySlug(this.slug))
       this.$category.findBySlug(this.slug).subscribe(cat=>this.category=cat)
 
     });
