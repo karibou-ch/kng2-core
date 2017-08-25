@@ -9,10 +9,12 @@ import 'rxjs/Rx';
 import { Config } from './config';
 import { User, UserCard, UserAddress } from './user.service';
 import { Category } from './category.service';
+import { Product } from './product.service';
 
 import { ConfigService } from './config.service';
 import { UserService } from './user.service';
-import { CategoryService } from './category.service'
+import { CategoryService } from './category.service';
+import { ProductService } from './product.service'
 
 //manage the first requests needed when bootstrapping the application. Used by the components.
 @Injectable()
@@ -26,6 +28,7 @@ export class LoaderService {
     private http: Http,
     private config: ConfigService,
     private user: UserService,
+    private productSrv: ProductService,
     private categorySrv: CategoryService
   ) {
 

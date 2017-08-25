@@ -23,6 +23,9 @@ import { CardComponent } from './user.card/card.component';
 import { ShopComponent } from './shop/shop.component';
 import { CategoryComponent } from './category/category.component';
 import { CategoryEditComponent } from './category.edit/category-edit.component';
+import { ProductListComponent } from './product.list/product-list.component';
+import { ProductComponent } from './product/product.component';
+import { ProductEditComponent } from './product.edit/product-edit.component';
 
 @NgModule({
   declarations: [
@@ -37,7 +40,10 @@ import { CategoryEditComponent } from './category.edit/category-edit.component';
     CardComponent,
     ShopComponent,
     CategoryComponent,
-    CategoryEditComponent
+    CategoryEditComponent,
+    ProductListComponent,
+    ProductComponent,
+    ProductEditComponent
   ],
   imports: [
     BrowserModule,
