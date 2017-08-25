@@ -87,11 +87,13 @@ export class CategoryService {
   };
 
 
-  //slug -> "url-isation" of a string
-  findNameBySlug(slug) {
-    throw new Error("Already implemented");
-    // var cat=this.find({slug:slug});
-    // if (cat) {return cat.name;} else {return "Inconnu";}      
+  //
+  // retourne le Nom de la catégorie ou un message d'erreur
+  findNameBySlug(slug):Observable<string> {
+    return this.get(slug)
+      .map(c=>c.name)
+      // TODO manage i18n
+      .catch(err=>"Catégorie Inconnue")
   };
 
   findBySlug(slug):Observable<Category> {
@@ -114,15 +116,12 @@ export class CategoryService {
       withCredentials: true
     })
       .map(res => res.json() as Category[])
-      // TODO manage cache!
-      .map(categories => categories.map(this.updateCache.bind(this)));
-    //.catch;
+      .map(categories => categories.map(this.updateCache.bind(this)))
+      .catch(this.handleError);
   }
 
   //get category based on his slug
   get(slug):Observable<Category> {
-    let cached:Observable<Category>; //????
-
     // check if in the cache
     if (this.cache.map[slug]){
       return Observable.of(this.cache.map[slug]);
@@ -133,7 +132,7 @@ export class CategoryService {
       withCredentials: true
     })
       .map(res => res.json() as Category)
-      .map(category => this.updateCache(category))
+      .map(this.updateCache)
       //TODO should run next here!
       //.do(this.category$.next)      
       .catch(this.handleError);
@@ -149,7 +148,7 @@ export class CategoryService {
       withCredentials: true
     })
     .map(res => res.json() as Category)
-    .map(category => this.updateCache(category))
+    .map(this.updateCache)
     //TODO should run next here!
     //.do(this.category$.next)      
     .catch(this.handleError);
@@ -158,23 +157,14 @@ export class CategoryService {
 
 //  app.post('/v1/category', auth.ensureAdmin, categories.create);
   create(cat: Category):Observable<Category> {
-
-    return this.http.post(this.config.API_SERVER + '/v1/category/', cat, {
+    return this.http.post(this.config.API_SERVER + '/v1/category', cat, {
       headers: this.headers,
       withCredentials: true
     })
     .map(res => res.json() as Category)
-    .map(category => this.updateCache(category))
-    .do(this.category$.next)      
+    .map(this.updateCache)
+    // .do(this.category$.next)      
     .catch(this.handleError);
-    /*
-    if (!err) { err = function () { }; }
-    var category = this, s = this.backend.save(cat, function () {
-      category = category.wrap(s);
-      if (cb) { cb(category); }
-    }, err);
-    return category;
-    */
   }
 
 //  app.put('/v1/category/:category', auth.ensureAdmin, auth.checkPassword, categories.remove);
@@ -186,7 +176,7 @@ export class CategoryService {
     })
     .map(res => res.json() as Category)
     .do(this.category$.next)      
-    .map(cat => this.deleteCache(cat))
+    .map(this.deleteCache)
     .catch(this.handleError);
   }
 

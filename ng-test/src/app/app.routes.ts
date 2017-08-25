@@ -20,6 +20,7 @@ export const appRoutes: Routes = [
   { path: 'produit', component: ProduitListComponent },
   { path: 'produit/:sku', component: ProduitComponent },
   { path: 'produit/edit/:sku', component: ProduitEditComponent },
+  { path: 'category/create', component: CategoryEditComponent, data:{newInstance:true} },
   { path: 'category/:slug', component: CategoryEditComponent },
   { path: 'login', component: LoginComponent },
   { path: 'order', component: OrderComponent },
@@ -31,5 +32,3 @@ export const appRoutes: Routes = [
   },
   // { path: '**', component: PageNotFoundComponent }
 ];
-
-
