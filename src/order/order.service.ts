@@ -259,7 +259,7 @@ export class OrderService {
       headers: this.headers,
       withCredentials: true
     })
-      .map(res => res.json() as Order[]);
+      .map(res => res.json().map(obj => new Order(obj)));
   }
 
   // find all orders by user
@@ -271,7 +271,7 @@ export class OrderService {
       headers: this.headers,
       withCredentials: true
     })
-      .map(res => res.json() as Order[]);
+      .map(res => res.json().map(obj => new Order(obj)));
   }
 
   // find all order filtered by filter
@@ -283,7 +283,7 @@ export class OrderService {
       headers: this.headers,
       withCredentials: true
     })
-      .map(res => res.json() as Order[])
+      .map(res => res.json().map(obj => new Order(obj)));
       //.map(orders => orders.map(order => this.updateCache(order)));
   }
 
@@ -298,7 +298,7 @@ export class OrderService {
       headers: this.headers,
       withCredentials: true
     })
-      .map(res => res.json() as Order[])
+      .map(res => res.json().map(obj => new Order(obj)));
       //.map(orders => orders.map(order => this.updateCache(order)));
   }
 

@@ -60,6 +60,11 @@ export interface OrderItem{
 
 
 export class Order {
+
+  constructor(json:any){
+      Object.assign(this,json);
+  }
+
   /** order identifier */
   oid:number;
 
@@ -149,8 +154,6 @@ export class Order {
     shipped?:boolean,
     bags?:number
   }
-
-
 
   //
   // Compute the next potential shipping day.

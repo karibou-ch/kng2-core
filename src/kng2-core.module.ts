@@ -14,7 +14,6 @@ import { Order } from './order/order';
 import { UserPipe } from './user.pipe';
 import { User, UserService } from './user.service';
 import { Shop } from './shop.service';
-import { SerializationService } from './serialization.service';
 import *  as OrderEnum from './order/order.enum';
 
 
@@ -35,8 +34,7 @@ import *  as OrderEnum from './order/order.enum';
         ConfigService,
         LoaderService,
         OrderService,
-        UserService,
-        SerializationService
+        UserService
       ]
 })
 export class Kng2CoreModule {
@@ -68,8 +66,7 @@ export {
   LoaderService,
   OrderService, Order, OrderEnum,
   UserPipe,
-  UserService, User, Shop,
-  SerializationService
+  UserService, User, Shop
 }
 
 export * from './order/order.enum';
