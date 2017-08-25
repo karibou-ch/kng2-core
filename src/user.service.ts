@@ -12,7 +12,7 @@ import { ConfigService } from './config.service';
 import { Shop } from './shop.service';
 
 
-export class Address {
+export class UserAddress {
 
     constructor() {
       this.name = "";
@@ -38,7 +38,7 @@ export class Address {
     }
 }
 
-export class Card {
+export class UserCard {
 
     constructor() {
       this.type = "";
@@ -95,8 +95,6 @@ export class User {
 
     this.photo = '';
 
-    this.addresses = [new Address];
-
     this.logistic = {
       postalCode: ''
     };
@@ -134,7 +132,7 @@ export class User {
 
   photo: string;
 
-  addresses: [Address];
+  addresses: UserAddress[];
 
   /* preferred postalCode*/
   logistic: {
@@ -152,7 +150,7 @@ export class User {
   context: any;
 
   /* payments methods */
-  payments: [Card];
+  payments: UserCard[];
   // payments:[{
   //   type:{type:String},
   //   name:{type:String},
