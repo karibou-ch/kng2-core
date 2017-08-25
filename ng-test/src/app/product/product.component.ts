@@ -12,17 +12,17 @@ import {
 
 
 @Component({
-    selector: 'app-produit',
-    templateUrl: './produit.component.html',
-    styleUrls: ['./produit.component.scss']
+    selector: 'app-product',
+    templateUrl: './product.component.html',
+    styleUrls: ['./product.component.scss']
 })
-export class ProduitComponent implements OnInit {
+export class ProductComponent implements OnInit {
 
     sku: number;
     currentUser: User;
     isReady: boolean;
     config: any;
-    product: Product = new Product();
+    product: Product;
 
     constructor(
         private $loader: LoaderService,

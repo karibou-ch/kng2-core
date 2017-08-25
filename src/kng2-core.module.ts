@@ -6,7 +6,7 @@ import { HttpModule } from '@angular/http';
 import { AuthGuardService } from './auth-guard.service';
 
 import { Category, CategoryService } from './category.service';
-import { Product, ProductService } from './produit.service';
+import { Product, ProductService } from './product.service';
 import { ConfigService } from './config.service';
 import { config } from './config';
 import { LoaderService } from './loader.service';

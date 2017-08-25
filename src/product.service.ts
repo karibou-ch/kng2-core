@@ -1,6 +1,7 @@
 import { Http, Headers, RequestOptions } from '@angular/http';
 import { Injectable } from '@angular/core';
 import { Observable, BehaviorSubject, ReplaySubject } from 'rxjs/Rx';
+import 'rxjs/add/operator/map';
 import { config } from './config';
 
 @Injectable()
@@ -56,9 +57,8 @@ export class ProductService {
             headers: this.headers,
             withCredentials: true
         })
-            .map(res => res.json() as Product[])
-            // TODO manage cache!
-            .map(product => product.map(this.updateCache.bind(this)))
+            .map(res => res.json().map(obj => new Product(obj)))
+            .map(products => products.map(this.updateCache.bind(this)))
             .catch(this.handleError);
     };
 
@@ -66,48 +66,60 @@ export class ProductService {
         return this.http.get(this.config.API_SERVER + '/v1/products/location/' + location + '/category/' + category + '/details/' + detail, {
             headers: this.headers,
             withCredentials: true
-        }).map(res => res.json() as Product[]);
-        // TODO manage cache!
+        })
+            .map(res => res.json().map(obj => new Product(obj)))
+            .map(products => products.map(this.updateCache.bind(this)))
+            .catch(this.handleError);
     }
 
     findByCategoryAndDetail(category, detail): Observable<Product[]> {
         return this.http.get(this.config.API_SERVER + '/v1/products/category/' + category + '/details/' + detail, {
             headers: this.headers,
             withCredentials: true
-        }).map(res => res.json() as Product[]);
-        // TODO manage cache!
+        })
+            .map(res => res.json().map(obj => new Product(obj)))
+            .map(products => products.map(this.updateCache.bind(this)))
+            .catch(this.handleError);
     }
 
     findByLocationAndCategory(location, category): Observable<Product[]> {
         return this.http.get(this.config.API_SERVER + '/v1/products/location/' + location + '/category/' + category, {
             headers: this.headers,
             withCredentials: true
-        }).map(res => res.json() as Product[]);
-        // TODO manage cache!
+        })
+            .map(res => res.json().map(obj => new Product(obj)))
+            .map(products => products.map(this.updateCache.bind(this)))
+            .catch(this.handleError);
     }
 
     findLove(): Observable<Product[]> {
         return this.http.get(this.config.API_SERVER + '/v1/products/love', {
             headers: this.headers,
             withCredentials: true
-        }).map(res => res.json() as Product[]);
-        // TODO manage cache!
+        })
+            .map(res => res.json().map(obj => new Product(obj)))
+            .map(products => products.map(this.updateCache.bind(this)))
+            .catch(this.handleError);
     }
 
     findByLocation(location): Observable<Product[]> {
         return this.http.get(this.config.API_SERVER + '/v1/products/location/' + location, {
             headers: this.headers,
             withCredentials: true
-        }).map(res => res.json() as Product[]);
-        // TODO manage cache!
+        })
+            .map(res => res.json().map(obj => new Product(obj)))
+            .map(products => products.map(this.updateCache.bind(this)))
+            .catch(this.handleError);
     }
 
     findByCategory(category): Observable<Product[]> {
         return this.http.get(this.config.API_SERVER + '/v1/products/category/' + category, {
             headers: this.headers,
             withCredentials: true
-        }).map(res => res.json() as Product[]);
-        // TODO manage cache!
+        })
+            .map(res => res.json().map(obj => new Product(obj)))
+            .map(products => products.map(this.updateCache.bind(this)))
+            .catch(this.handleError);
     }
 
     findBySku(sku): Observable<Product> {
@@ -117,8 +129,6 @@ export class ProductService {
     //
     // get product based on its sku
     get(sku): Observable<Product> {
-        let cached: Observable<Product>; //???? 
-
         // check if in the cache
         if (this.cache.map[sku]) {
             return Observable.of(this.cache.map[sku]);
@@ -128,8 +138,8 @@ export class ProductService {
             headers: this.headers,
             withCredentials: true
         })
-            .map(res => res.json() as Product)
-            .map(product => this.updateCache(product))
+            .map(res => res.json().map(obj => new Product(obj)))
+            .map(this.updateCache)
             //TODO should run next here!
             //.do(this.product$.next)      
             .catch(this.handleError);
@@ -141,9 +151,9 @@ export class ProductService {
             withCredentials: true,
             password: password
         })
-            .map(res => res.json() as Product)
+            .map(res => res.json().map(obj => new Product(obj)))
             .do(this.product$.next)
-            .map(product => this.deleteCache(product))
+            .map(this.deleteCache)
             .catch(this.handleError);
     }
 
@@ -152,8 +162,8 @@ export class ProductService {
             headers: this.headers,
             withCredentials: true
         })
-            .map(res => res.json() as Product)
-            .map(product => this.updateCache(product))
+            .map(res => res.json().map(obj => new Product(obj)))
+            .map(this.updateCache)
             .do(this.product$.next)
             .catch(this.handleError);
     }
@@ -164,11 +174,11 @@ export class ProductService {
             headers: this.headers,
             withCredentials: true
         })
-            .map(res => res.json() as Product)
-        //.map(product => this.updateCache(product))
-        //TODO should run next here!
-        //.do(this.category$.next)      
-        //.catch(this.handleError);
+            //.map(res => res.json() as Product[])
+            .map(res => res.json().map(obj => new Product(obj)))
+            .map(this.updateCache)
+            .do(this.product$.next)
+            .catch(this.handleError);
     }
 
 
@@ -200,14 +210,25 @@ class Cache {
 
 
 export class Product {
+    
+    constructor(json: any) {
+        Object.assign(this, json);
+    };
+
+    
+
     _id;
     title: string;
+    variants;
+    sku: number;
+    slug: string;
+    updated: Date;
+    created: Date;
     categories: {
         _id;
         name: string;
         weight: number;
     };
-    sku: number;
     vendor: {
         _id;
         urlpath: string;
@@ -215,10 +236,10 @@ export class Product {
         name: string;
         description: string;
         owner: any;
-        __v;
         status: boolean;
         url: string;
         created: Date;
+        marketplace;
         scoring: {
             score: number;
             issues: number;
@@ -258,7 +279,6 @@ export class Product {
             };
             region: string;
         };
-        marketplace;
         detail: {
             local: boolean;
             vegetarian: boolean;
@@ -271,10 +291,6 @@ export class Product {
         };
         version: number;
     };
-    slug: string;
-    __v;
-    updated: Date;
-    created: Date;
     faq?: [{
         q: string;
         a: string;
@@ -289,7 +305,6 @@ export class Product {
         tva: number;
         stock: number;
     };
-    variants;
     shelflife: {
         display: boolean;
     };
@@ -305,7 +320,7 @@ export class Product {
     };
     details: {
         keywords: string;
-        internal;
+        internal: string;
         description: string;
         origine: string;
         biodegradable: boolean;

@@ -12,11 +12,11 @@ import {
 }  from '../../../../dist'
 
 @Component({
-    selector: 'app-produit-edit',
-    templateUrl: './produit-edit.component.html',
-    styleUrls: ['./produit-edit.component.scss']
+    selector: 'app-product-edit',
+    templateUrl: './product-edit.component.html',
+    styleUrls: ['./product-edit.component.scss']
 })
-export class ProduitEditComponent implements OnInit {
+export class ProductEditComponent implements OnInit {
 
     constructor(
         private $loader: LoaderService,
@@ -29,7 +29,7 @@ export class ProduitEditComponent implements OnInit {
     currentUser: User;
     isReady: boolean;
     config: any;
-    product: Product = new Product();
+    product: Product; 
 
     ngOnInit() {
         this.$loader.ready().subscribe((loader) => {
@@ -40,7 +40,7 @@ export class ProduitEditComponent implements OnInit {
             if (!this.sku) {
                 this.sku = this.route.snapshot.params['sku'];
             }
-
+            console.log(this.sku)
             this.$product.findBySku(this.sku).subscribe(prod => this.product = prod)
         });
     }
