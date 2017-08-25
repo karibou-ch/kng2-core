@@ -15,6 +15,7 @@ import { RecoveryComponent } from './user.recovery/recovery.component';
 export const appRoutes: Routes = [
   { path: 'config', component: ConfigComponent },
   { path: 'category', component: CategoryComponent },
+  { path: 'category/create', component: CategoryEditComponent, data:{newInstance:true} },
   { path: 'category/:slug', component: CategoryEditComponent },
   { path: 'login', component: LoginComponent },
   { path: 'order', component: OrderComponent },
