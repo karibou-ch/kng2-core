@@ -61,8 +61,12 @@ export interface OrderItem{
 
 export class Order {
 
-  constructor(json:any){
+  constructor(json?:any){
+    if(json !== undefined){
       Object.assign(this,json);
+    }else{
+      //TODO empty new order
+    }
   }
 
   /** order identifier */
