@@ -26,12 +26,11 @@
 
     <div class="form-group ">
       <label class="control-label">Catégorie de la boutique</label>
-      <select [ngModel]="shop?.catalog?.name" (ngModelChange)="shop.catalog.name = $event" [ngModelOptions]="{standalone: true}">
-        <option>Artisan</option>
-        <option>Producteur</option>
-        <option>Détaillant</option>
+      <select [ngModel]="shop?.catalog" (ngModelChange)="shop.catalog = $event" [ngModelOptions]="{standalone: true}">
+        <option *ngFor="let cat of catalogs " [ngValue]="cat">{{cat.name}}</option>
       </select>
     </div>
+
 
     <div class="form-group">
       <label class="control-label">Specify if bio
@@ -90,7 +89,7 @@
       <input type="text" [ngModel]="shop?.account?.fees" (ngModelChange)="shop.account.fees = $event" name="fee" class="form-control" placeholder="Fee" autofocus="autofocus" required="">
     </div>
     <label class="control-label">Updated the</label>
-    <p>{{shop?.account.updated}}
+    <p>{{shop?.account?.updated}}
 
       <h1>Availability</h1>
       <div class="form-group ">
@@ -113,6 +112,11 @@
         <input type="date" [ngModel]="shop?.available?.to" (ngModelChange)="shop.available.to = $event" class="form-control" name="to">
       </label>
       </div>
+      <div class="form-group ">
+        <label class="control-label">Comment
+        <input type="text" [ngModel]="shop?.available?.comment" (ngModelChange)="shop.available.comment = $event" class="form-control" name="comment">
+      </label>
+      </div>
 
       <h1>Faq</h1>
       <div class="form-group ">
@@ -131,38 +135,38 @@
       <div class="form-group ">
         <label class="control-label">Define a logo</label>
         <div [hidden]="!shop?.photo?.logo">
-          <img title="" class="img-thumbnail" [src]="shop?.photo.logo" *ngIf="shop?.photo.logo">
+          <img title="" class="img-thumbnail" [src]="shop?.photo?.logo" *ngIf="shop?.photo?.logo">
         </div>
-        <button [hidden]="!shop?.photo.logo" (click)="shop?.photo.logo=null" class="btn btn-block">clear this image</button>
+        <button [hidden]="!shop?.photo?.logo" (click)="shop?.photo.logo=null" class="btn btn-block">clear this image</button>
       </div>
 
       <div class="form-group ">
         <label class="control-label">Define a background</label>
         <div [hidden]="!shop?.photo?.bg">
-          <img title="" class="img-thumbnail" [src]="shop?.photo.bg" *ngIf="shop?.photo.bg">
+          <img title="" class="img-thumbnail" [src]="shop?.photo?.bg" *ngIf="shop?.photo?.bg">
         </div>
-        <button [hidden]="!shop?.photo.bg" (click)="shop?.photo.bg=null" class="btn btn-block">clear this image</button>
+        <button [hidden]="!shop?.photo?.bg" (click)="shop?.photo.bg=null" class="btn btn-block">clear this image</button>
       </div>
 
       <div class="form-group ">
         <label class="control-label">Define the team</label>
         <div [hidden]="!shop?.photo?.owner">
-          <img title="" class="img-thumbnail" [src]="shop?.photo.owner" *ngIf="shop?.photo.owner">
+          <img title="" class="img-thumbnail" [src]="shop?.photo?.owner" *ngIf="shop?.photo?.owner">
         </div>
-        <button [hidden]="!shop?.photo.owner" (click)="shop?.photo.owner=null" class="btn btn-block">clear this image</button>
+        <button [hidden]="!shop?.photo?.owner" (click)="shop?.photo.owner=null" class="btn btn-block">clear this image</button>
       </div>
 
       <div class="form-group ">
         <label class="control-label">Define a foreground</label>
         <div [hidden]="!shop?.photo?.fg">
-          <img title="" class="img-thumbnail" [src]="shop?.photo.fg" *ngIf="shop?.photo.fg">
+          <img title="" class="img-thumbnail" [src]="shop?.photo?.fg" *ngIf="shop?.photo?.fg">
         </div>
-        <button [hidden]="!shop?.photo.fg" (click)="shop?.photo.fg=null" class="btn btn-block">clear this image</button>
+        <button [hidden]="!shop?.photo?.fg" (click)="shop?.photo.fg=null" class="btn btn-block">clear this image</button>
       </div>
 
       <div class="form-group ">
         <label class="control-label">Gallery</label>
-        <div [hidden]="!shop?.photo?.gallery[0]" *ngFor="let im of shop?.photo.gallery">
+        <div [hidden]="!shop?.photo?.gallery[0]" *ngFor="let im of shop?.photo?.gallery">
           <img title="" class="img-thumbnail" [src]="im" *ngIf="im">
         </div>
         <button [hidden]="!im" (click)="im=null" class="btn btn-block">clear this image</button>

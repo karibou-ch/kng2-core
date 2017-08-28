@@ -28,15 +28,12 @@ export class ShopComponent implements OnInit {
       this.isReady = true;
       this.config = ready[0];
       this.currentUser = <User> ready[1];
-      console.log(this.currentUser);
-      console.log(typeof this.currentUser);
-      console.log(this.currentUser.isAdmin());
       this.slug = this.route.snapshot.params['slug'];
       this.$shop.get(this.slug)
         .subscribe(res => {
           this.shop = res;
+          console.log(res);
         });
-
     });
   }
 }

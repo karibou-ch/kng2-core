@@ -43,8 +43,8 @@ export class UserCard {
 
 export class User {
 
-  constructor(json: any) {
-    if (json !== null) {
+  constructor(json?: any) {
+    if (json !== undefined) {
       Object.assign(this, json);
     } else {
       this.id = '';
@@ -85,7 +85,6 @@ export class User {
       this.logistic = {
         postalCode: ''
       };
-
 
     }
   }
@@ -303,11 +302,11 @@ export class User {
 @Injectable()
 export class UserService {
 
-  defaultUser: User = new User(null);
+  defaultUser: User = new User();
 
   // TODO make observable content !!
   config: any;
-  currentUser: User = new User(null);
+  currentUser: User = new User();
 
 
   private cache = {

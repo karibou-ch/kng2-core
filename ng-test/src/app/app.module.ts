@@ -1,7 +1,7 @@
 import { BrowserModule } from '@angular/platform-browser';
 import { NgModule } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { HttpModule } from '@angular/http';
+import { HttpClientModule } from '@angular/common/http';
 import { RouterModule, Routes } from '@angular/router';
 
 import { AppComponent } from './app.component';
@@ -24,6 +24,7 @@ import { AddressComponent } from './user.address/address.component';
 import { CardComponent } from './user.card/card.component';
 import { CategoryComponent } from './category/category.component';
 import { CategoryEditComponent } from './category.edit/category-edit.component';
+import { ShopCreateComponent } from './shop.create/shop-create.component';
 
 
 @NgModule({
@@ -42,13 +43,14 @@ import { CategoryEditComponent } from './category.edit/category-edit.component';
     CategoryEditComponent,
     ShopComponent,
     ShopListComponent,
-    ShopEditComponent
+    ShopEditComponent,
+    ShopCreateComponent
   ],
   imports: [
     BrowserModule,
     FormsModule,
     Kng2CoreModule,
-    HttpModule,
+    HttpClientModule,
     RouterModule.forRoot(appRoutes)
   ],
   providers: [],

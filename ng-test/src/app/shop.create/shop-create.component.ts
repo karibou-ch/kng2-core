@@ -5,18 +5,12 @@ import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { LoaderService, ShopService, Shop, User, UserService, Category, CategoryService, config } from '../../../../dist';
 
-export class Faq {
-  q: string;
-  a: string;
-  updated: Date;
-}
-
 @Component({
-  selector: 'app-shop-edit',
-  templateUrl: './shop-edit.component.html',
-  styleUrls: ['./shop-edit.component.scss']
+  selector: 'app-shop-create',
+  templateUrl: './shop-create.component.html',
+  styleUrls: ['./shop-create.component.scss']
 })
-export class ShopEditComponent implements OnInit {
+export class ShopCreateComponent implements OnInit {
 
   constructor(
     private http: HttpClient,
@@ -33,7 +27,6 @@ export class ShopEditComponent implements OnInit {
   private config: any;
   private shop: Shop = new Shop();
   private catalogs: Array<Category> = new Array;
-  private newInstance: boolean = false;
   private errors: any;
 
   ngOnInit() {
@@ -43,27 +36,16 @@ export class ShopEditComponent implements OnInit {
       this.config = ready[0];
       this.currentUser = ready[1];
 
+      //Loading categorys before the if newInstance
       this.$category.select().subscribe(res => {
         this.catalogs = res.filter(res => res.type == "Catalog");
       });
 
-
-      // two options for slug initialisation : 1) Input, 2) URL
-      if (!this.slug) {
-        this.slug = this.route.snapshot.params['slug'];
-      }
-
-      this.slug = this.route.snapshot.params['slug'];
-      this.$shop.get(this.slug)
-        .subscribe(res => {
-          this.shop = res;
-          this.shop.catalog = new Category(res.catalog);
-        });
     });
 
   }
 
-  onSave() {
+  onCreate() {
 
     this.shop.catalog = this.shop.catalog._id;
     if (!this.shop.address.region)
@@ -73,30 +55,12 @@ export class ShopEditComponent implements OnInit {
     this.http.get(url, { withCredentials: false }).subscribe((res: any) => {
       this.shop.address.geo.lat = res.results[0].geometry.location.lat;
       this.shop.address.geo.lng = res.results[0].geometry.location.lng;
+      this.$shop.create(this.shop).subscribe();
     });
-
-
-    console.log(this.shop);
-
-    // TODO use error feedback for user!
-    this.$shop.save(this.shop).subscribe()
-
-
   }
 
   processErrors(err) {
     this.errors = err;
-  }
-
-  addFaq() {
-    this.shop.faq.push(new Faq());
-  }
-
-  delFaq(f: Faq) {
-    let index: number = this.shop.faq.indexOf(f);
-    if (index !== -1) {
-      this.shop.faq.splice(index, 1);
-    }
   }
 
 }

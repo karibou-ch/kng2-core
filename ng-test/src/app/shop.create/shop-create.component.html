@@ -1,0 +1,58 @@
+<div class="container">
+  <form>
+    <div>
+      <h1>Create new shop</h1>
+    </div>
+    <hr>
+    <h1>Infos</h1>
+    <div class="form-group ">
+      <label class="control-label">Specify the name</label>
+      <input type="text" [ngModel]="shop?.name" (ngModelChange)="shop.name = $event" name="shopName" class="form-control" placeholder="Name" autofocus="autofocus" required="">
+    </div>
+    <div class="form-group ">
+      <label class="control-label">Specify the description</label>
+      <input type="text" [ngModel]="shop?.description" (ngModelChange)="shop.description = $event" name="shopDescription" class="form-control" placeholder="Description" autofocus="autofocus" required="">
+    </div>
+
+    <div class="form-group ">
+      <label class="control-label">Catégorie de la boutique</label>
+      <select [ngModel]="shop?.catalog" (ngModelChange)="shop.catalog = $event" [ngModelOptions]="{standalone: true}">
+        <option *ngFor="let cat of catalogs " [ngValue]="cat">{{cat.name}}</option>
+      </select>
+    </div>
+
+    <h1>Address</h1>
+    <div class="form-group ">
+      <label class="control-label">Depository</label>
+      <input type="text" [ngModel]="shop?.address?.depository" (ngModelChange)="shop.address.depository = $event" name="depository" class="form-control" placeholder="Depository" autofocus="autofocus" required="">
+    </div>
+    <div class="form-group ">
+      <label class="control-label">Complet Name</label>
+      <input type="text" [ngModel]="shop?.address?.name" (ngModelChange)="shop.address.name = $event" name="name" class="form-control" placeholder="Name" autofocus="autofocus" required="">
+    </div>
+    <div class="form-group ">
+      <label class="control-label">Floor</label>
+      <input type="text" [ngModel]="shop?.address?.floor" (ngModelChange)="shop.address.floor = $event" name="floor" class="form-control" placeholder="Floor" autofocus="autofocus" required="">
+    </div>
+    <div class="form-group ">
+      <label class="control-label">Phone</label>
+      <input type="text" [ngModel]="shop?.address?.phone" (ngModelChange)="shop.address.phone = $event" name="phone" class="form-control" placeholder="Phone" autofocus="autofocus" required="">
+    </div>
+    <div class="form-group ">
+      <label class="control-label">Street</label>
+      <input type="text" [ngModel]="shop?.address?.streetAdress" (ngModelChange)="shop.address.streetAdress = $event" name="streetAdress" class="form-control" placeholder="Street" autofocus="autofocus" required="">
+    </div>
+    <div class="form-group ">
+      <label class="control-label">Region</label>
+      <input type="text" [ngModel]="shop?.address?.region" (ngModelChange)="shop.address.region = $event" name="region" class="form-control" placeholder="Region" autofocus="autofocus" required="">
+    </div>
+    <div class="form-group ">
+      <label class="control-label">Postal Code</label>
+      <input type="text" [ngModel]="shop?.address?.postalCode" (ngModelChange)="shop.address.postalCode = $event" name="postalCode" class="form-control" placeholder="postalCode" autofocus="autofocus" required="">
+    </div>
+
+      <div>
+        <button name="save" (click)="onCreate();" class="btn btn-block">Save</button>
+      </div>
+  </form>
+</div>
