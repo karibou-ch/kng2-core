@@ -7,7 +7,7 @@ import { ConnectableObservable } from 'rxjs/observable/ConnectableObservable'
 import 'rxjs/Rx';
 
 import { Config } from './config';
-import { User } from './user.service';
+import { User, UserCard, UserAddress } from './user.service';
 import { Category } from './category.service';
 
 import { ConfigService } from './config.service';
