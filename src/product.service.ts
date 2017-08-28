@@ -135,7 +135,6 @@ export class ProductService {
         if (this.cache.map[sku]) {
             return Observable.of(this.cache.map[sku]);
         }
-        console.log("not in cache")
         return this.http.get(this.config.API_SERVER + '/v1/products/' + sku, {
             headers: this.headers,
             withCredentials: true
@@ -172,15 +171,16 @@ export class ProductService {
     }
 
     save(prod: Product): Observable<Product> {
-
+        
+        console.log(prod.title);
         return this.http.post(this.config.API_SERVER + '/v1/products/' + prod.sku, prod, {
             headers: this.headers,
             withCredentials: true
         })
-            //.map(res => res.json() as Product[])
-            .map(res => res.json().map(obj => new Product(obj)))
-            .map(this.updateCache)
-            .do(this.product$.next)
+            .map(res => res.json() as Product)
+            //.map(res => new Product(res.json()))
+            //.map(this.updateCache)
+            //.do(this.product$.next)
             .catch(this.handleError);
     }
 
@@ -215,7 +215,6 @@ class Cache {
 export class Product {
 
     constructor(json: any) {
-        console.log(json);
         Object.assign(this, json);
     };
 
