@@ -7,6 +7,7 @@ import { config } from './config';
 export class Category {
 
   constructor(json?: any) {
+    if (json !== undefined) {
       Object.assign(this, json);
     } else {
       let defaultCat = {
