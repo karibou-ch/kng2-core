@@ -18,6 +18,7 @@ export class ProductListComponent implements OnInit {
     isReady: boolean = false;
     config: any;
     products: Product[] = [];
+    password: string;
 
     constructor(
         private loader: LoaderService,
@@ -30,7 +31,7 @@ export class ProductListComponent implements OnInit {
         this.loader.ready().subscribe((loader) => {
             this.isReady = true;
             this.config = loader[0];
-            //this.loadLovedProduct(); //pout un test
+            //this.loadLovedProduct(); //pour un test
             this.loadProducts()
         });
     }
@@ -45,6 +46,12 @@ export class ProductListComponent implements OnInit {
         this.$product.findLove().subscribe((products: Product[]) => {
             this.products = products.sort();
         });
+    }
+
+    onDelete(prod: Product) {
+        //this.password = <HTMLInputElement> document.getElementById("pswd")).value;
+        console.log("delete : " + prod.title + "  password : " + this.password)
+        this.$product.remove(prod.sku, this.password) // decond arument is "password", but what password ?
     }
 
 }

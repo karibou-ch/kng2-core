@@ -3,6 +3,20 @@
 	<table class="table">
 		<tr *ngFor="let product of products">
 			<td><a [routerLink]="['/product',product.sku]">{{product.title}}</a></td>
+			<td><input
+				id = "pswd"
+				type="password"
+				(input) ="password = $event.target.value"
+			/></td>
+			<td><div>
+					<button
+						id="delButton"
+						name="DeleteProduct"
+						(click)="onDelete(product);"
+						class="btn btn-block">Delete Product</button>
+				</div></td>
 		</tr>
 	</table>
+	<a [routerLink]="['/product/create']"><button>Create new
+			product</button></a>
 </div>

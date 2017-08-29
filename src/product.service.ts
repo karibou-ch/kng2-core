@@ -58,8 +58,8 @@ export class ProductService {
             withCredentials: true
         })
             .map(res => res.json().map(obj => new Product(obj)))
-            //.map(products => products.map(this.updateCache.bind(this)))
-            //.catch(this.handleError);
+        //.map(products => products.map(this.updateCache.bind(this)))
+        //.catch(this.handleError);
     };
 
     findByLocationCategoryAndDetail(category, detail): Observable<Product[]> {
@@ -68,8 +68,8 @@ export class ProductService {
             withCredentials: true
         })
             .map(res => res.json().map(obj => new Product(obj)))
-            //.map(products => products.map(this.updateCache.bind(this)))
-            //.catch(this.handleError);
+        //.map(products => products.map(this.updateCache.bind(this)))
+        //.catch(this.handleError);
     }
 
     findByCategoryAndDetail(category, detail): Observable<Product[]> {
@@ -78,8 +78,8 @@ export class ProductService {
             withCredentials: true
         })
             .map(res => res.json().map(obj => new Product(obj)))
-            //.map(products => products.map(this.updateCache.bind(this)))
-            //.catch(this.handleError);
+        //.map(products => products.map(this.updateCache.bind(this)))
+        //.catch(this.handleError);
     }
 
     findByLocationAndCategory(location, category): Observable<Product[]> {
@@ -88,8 +88,8 @@ export class ProductService {
             withCredentials: true
         })
             .map(res => res.json().map(obj => new Product(obj)))
-            //.map(products => products.map(this.updateCache.bind(this)))
-            //.catch(this.handleError);
+        //.map(products => products.map(this.updateCache.bind(this)))
+        //.catch(this.handleError);
     }
 
     findLove(): Observable<Product[]> {
@@ -98,8 +98,8 @@ export class ProductService {
             withCredentials: true
         })
             .map(res => res.json().map(obj => new Product(obj)))
-            //.map(products => products.map(this.updateCache.bind(this)))
-            //.catch(this.handleError);
+        //.map(products => products.map(this.updateCache.bind(this)))
+        //.catch(this.handleError);
     }
 
     findByLocation(location): Observable<Product[]> {
@@ -108,8 +108,8 @@ export class ProductService {
             withCredentials: true
         })
             .map(res => res.json().map(obj => new Product(obj)))
-            //.map(products => products.map(this.updateCache.bind(this)))
-            //.catch(this.handleError);
+        //.map(products => products.map(this.updateCache.bind(this)))
+        //.catch(this.handleError);
     }
 
     findByCategory(category): Observable<Product[]> {
@@ -118,8 +118,8 @@ export class ProductService {
             withCredentials: true
         })
             .map(res => res.json().map(obj => new Product(obj)))
-            //.map(products => products.map(this.updateCache.bind(this)))
-            //.catch(this.handleError);
+        //.map(products => products.map(this.updateCache.bind(this)))
+        //.catch(this.handleError);
     }
 
     findBySku(sku): Observable<Product> {
@@ -147,31 +147,34 @@ export class ProductService {
             .catch(this.handleError);
     }
 
+    //not working yet
     remove(sku, password) {
+        console.log("in the remove")
         return this.http.put(this.config.API_SERVER + '/v1/products/' + sku, {
             headers: this.headers,
             withCredentials: true,
             password: password
         })
-            .map(res => res.json().map(obj => new Product(obj)))
-            .do(this.product$.next)
-            .map(this.deleteCache)
-            .catch(this.handleError);
+            .map(res => new Product(res.json()))
+        //.do(this.product$.next)
+        //.map(this.deleteCache)
+        //.catch(this.handleError);
     }
 
     create(prod: Product): Observable<Product> {
-        return this.http.post(this.config.API_SERVER + '/v1/products/', prod, {
+        return this.http.post(this.config.API_SERVER + '/v1/shops/chocolat-de-villars-sur-glane/products/', prod, {
             headers: this.headers,
             withCredentials: true
         })
-            .map(res => res.json().map(obj => new Product(obj)))
-            .map(this.updateCache)
-            .do(this.product$.next)
+            .map(res => new Product(res.json()))
+            //.map(res => res.json().map(obj => new Product(obj)))
+            //.map(this.updateCache)
+            //.do(this.product$.next)
             .catch(this.handleError);
     }
 
     save(prod: Product): Observable<Product> {
-        
+
         console.log(prod.title);
         return this.http.post(this.config.API_SERVER + '/v1/products/' + prod.sku, prod, {
             headers: this.headers,
@@ -214,8 +217,52 @@ class Cache {
 
 export class Product {
 
-    constructor(json: any) {
-        Object.assign(this, json);
+    constructor(json?: any) {
+        if (json !== undefined) {
+            Object.assign(this, json);
+        } else {
+            let defaultProduct = {
+                attributes: {
+                    available: false,
+                    comment: false,
+                    discount: false,
+                    home: false,
+                    weigth: 0
+                },
+                categories: "520ddfc75ddf27485d000008",
+                details: {
+                    description: "",
+                    origin: "",
+                    biodegradable: false,
+                    vegetarian: false,
+                    bioconvertion: false,
+                    biodynamic: false,
+                    grta: true,
+                    bio: true,
+                    local: true,
+                    natural: false,
+                    homemade: false,
+                    cold: false,
+                    gluten: false,
+                    lactose: false
+                },
+                photo: {
+                    url: "//ucarecdn.com/2a857236-1943-4f57-89f6-f1da02cd39dc/"
+                },
+                pricing: {
+                    part: "1g",
+                    price: "",
+                    stock: ""
+                },
+                quantity: {
+                    display: false,
+                    comment: ""
+                },
+                title: "",
+                urlshop: "chocolat-de-villars-sur-glane"
+            }
+            Object.assign(this, defaultProduct);
+        }
     };
 
     _id;
