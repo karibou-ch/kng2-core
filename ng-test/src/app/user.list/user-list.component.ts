@@ -1,4 +1,6 @@
 import { Component, OnInit } from '@angular/core';
+import { Router } from '@angular/router';
+import { LoaderService, User, UserService } from '../../../../dist'
 
 @Component({
   selector: 'app-user-list',
@@ -7,9 +9,27 @@ import { Component, OnInit } from '@angular/core';
 })
 export class UserListComponent implements OnInit {
 
-  constructor() { }
+  users: Array<User> = new Array();
+
+  constructor(
+    private $loader: LoaderService,
+    private _router: Router,
+    private $user: UserService,
+  ) { }
+
+  private currentUser: User;
+  private isReady: boolean;
+  private config: any;
 
   ngOnInit() {
+
+    this.$loader.ready().subscribe(ready => {
+    this.isReady = true;
+    this.config = ready[0];
+    this.currentUser = ready[1];
+
+      this.$user.query().subscribe(res => this.users = res);
+    });
   }
 
 }

@@ -440,8 +440,9 @@ export class UserService {
       headers: this.headers,
       withCredentials: true
     })
-      .map(res => res.json() as User[])
-      .map(users => users.map(user => this.updateCache(user)));
+      .map(res => res.json().map(obj => new User(obj)))
+      //TODO fix the cache, that ligne trow an infinity of request
+      //.map(users => users.map(user => this.updateCache(user)));
   }
 
   // Reçoit un statut de requête http
