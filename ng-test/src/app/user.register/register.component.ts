@@ -12,10 +12,6 @@ export class RegisterComponent implements OnInit {
 
   user: any = {};
   loading = false;
-  isReady: boolean = false;
-  status;
-  semaphore = true;
-
 
   constructor(
     private userSrv: UserService,

@@ -23,8 +23,8 @@ import { CardComponent } from './user.card/card.component';
 import { ShopComponent } from './shop/shop.component';
 import { CategoryComponent } from './category/category.component';
 import { CategoryEditComponent } from './category.edit/category-edit.component';
-import { UsersComponent } from './users/users.component';
 import { RegisterComponent } from './user.register/register.component';
+import { UserListComponent } from './user.list/user-list.component';
 
 @NgModule({
   declarations: [
@@ -40,8 +40,8 @@ import { RegisterComponent } from './user.register/register.component';
     ShopComponent,
     CategoryComponent,
     CategoryEditComponent,
-    UsersComponent,
-    RegisterComponent
+    RegisterComponent,
+    UserListComponent
   ],
   imports: [
     BrowserModule,

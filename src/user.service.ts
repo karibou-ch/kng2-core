@@ -14,77 +14,34 @@ import { Shop } from './shop.service';
 
 export class UserAddress {
 
-    constructor() {
-    }
-    name: string;
-    note: string;
-    floor: string;
-    streetAdress: string;
-    region: string;
-    postalCode: string;
-    primary: boolean;
-    geo: {
-      lat: number;
-      lng: number;
-    }
+  constructor() {
+  }
+  name: string;
+  note: string;
+  floor: string;
+  streetAdress: string;
+  region: string;
+  postalCode: string;
+  primary: boolean;
+  geo: {
+    lat: number;
+    lng: number;
+  }
 }
 
 export class UserCard {
 
-    constructor() {
-    }
-     type:string;
-     name:string;
-     number:string;
-     expiry:string;
-     provider:string;
-     alias:string;
-   }
+  constructor() {
+  }
+  type: string;
+  name: string;
+  number: string;
+  expiry: string;
+  provider: string;
+  alias: string;
+}
 
 export class User {
-
-  constructor() {
-    this.id = '';
-    this.displayName = '';
-    this.name = {
-      givenName: '',
-      familyName: '',
-    };
-    this.birthday = new Date();
-    this.gender = '';
-    this.tags = [];
-    this.url = '';
-
-    this.email = {
-      address: '',
-      cc: '',
-      status: ''
-    };
-
-    this.reminder = {
-      active: false,
-      weekdays: [],
-      time: null
-    };
-
-    this.roles = [];
-    this.shops = [];
-    this.provider = '';
-    this.url = '';
-
-    this.phoneNumbers = [{
-      number: '',
-      what: 'mobile'
-    }];
-
-    this.photo = '';
-
-    this.logistic = {
-      postalCode: ''
-    };
-
-
-  }
 
   id: string;
 
@@ -160,7 +117,53 @@ export class User {
   roles: string[];
   rank: string;
 
+  constructor(json?: any) {
+    if (json !== undefined) {
+      Object.assign(this, json);
+    } else {
+      let defaultUser = {
+        id: '',
+        displayName: '',
 
+        name: {
+          givenName: '',
+          familyName: ''
+        },
+
+        birthday: new Date(),
+        gender: '',
+        tags: [],
+        email: {
+          address: '',
+          cc: '',
+          status: ''
+        },
+
+        reminder: {
+          active: false,
+          weekdays: [],
+          time: null
+        },
+
+        roles: [],
+        shops: [],
+        provider: '',
+        url: '',
+        phoneNumbers: [{
+          number: '',
+          what: 'mobile'
+        }],
+
+        photo: '',
+
+        logistic: {
+          postalCode: ''
+        }
+      }
+      Object.assign(this, defaultUser);
+    }
+
+  }
 
   //
   // methods
@@ -280,7 +283,7 @@ export class User {
 
     // TODO get geo
     // self.geo=new Map();
-    self.addresses.forEach(function (address, i) {
+    self.addresses.forEach(function(address, i) {
       // address is correct
       if (!address.geo || !address.geo.lat || !address.geo.lng) {
         return;
@@ -304,7 +307,7 @@ export class UserService {
   defaultUser: User = new User();
 
   // TODO make observable content !!
-  config:any;
+  config: any;
   currentUser: User = new User();
 
 
@@ -348,7 +351,7 @@ export class UserService {
   private user$: ReplaySubject<User>;
 
   constructor(
-    public configSrv:ConfigService,
+    public configSrv: ConfigService,
     public http: Http
   ) {
     this.config = ConfigService.defaultConfig;
@@ -376,7 +379,7 @@ export class UserService {
       headers: this.headers,
       withCredentials: true
     })
-      .map(res => res.json() as User)
+      .map(res => new User(res.json()))
       .map(user => this.updateCache(user))
       .catch(err => Observable.of(this.defaultUser));
     //   .map(res => res.json()).publishLast().refCount();
@@ -397,7 +400,7 @@ export class UserService {
       headers: this.headers,
       withCredentials: true
     })
-      .map(res => res.json() as User)
+      .map(res => new User(res.json()))
       .catch(err => Observable.of(this.defaultUser))
       .map(user => this.updateCache(user))
       .flatMap(() => this.user$.asObservable());
@@ -477,7 +480,7 @@ export class UserService {
       headers: this.headers,
       withCredentials: true
     })
-      .map(res => res.json() as User)
+      .map(res => new User(res.json()))
       .catch(err => Observable.of(this.defaultUser));
 
     // TODO inform consumers of user change
@@ -504,18 +507,17 @@ export class UserService {
   // app.post('/register', queued(auth.register_post));
   register(user): Observable<User> {
 
-    // FIXME autofill the address name when available
-    user.populateAdresseName();
+    // TODO deprecated, this should be done in component
+    //user.populateAdresseName();
     return this.http.post(this.config.API_SERVER + '/register', user, {
       headers: this.headers,
       withCredentials: true
     })
-      .map(res => res.json() as User)
+      .map(res => new User(res.json()))
       .map(user => this.updateCache(user))
       .catch(err => Observable.of(this.defaultUser));
     // _user.copy(u);
     // _user.updateGeoCode();
-
   };
 
   // app.post('/v1/users/:id/password',users.ensureMe, users.password);
@@ -533,10 +535,9 @@ export class UserService {
       headers: this.headers,
       withCredentials: true
     })
-      .map(res => res.json() as User)
+      .map(res => new User(res.json()))
       .catch(err => Observable.of(this.defaultUser))
       .map(user => this.updateCache(user));
-
 
     /*
     _user.copy(u);
@@ -552,7 +553,7 @@ export class UserService {
       headers: this.headers,
       withCredentials: true
     })
-      .map(res => res.json() as User)
+      .map(res => new User(res.json()))
       .map(user => this.deleteCache(user));
     //self.delete();
     //$rootScope.$broadcast("user.remove",self);
@@ -589,7 +590,7 @@ export class UserService {
   }
 
   //boucle observables, map met a jour l'adresse, liste observable, merge ou concat, subscribe(TODO notify success or error)
-  updateGeoCode(user : User): Observable<any> {
+  updateGeoCode(user: User): Observable<any> {
     let obs = [], self = this;
     //let dirty = false;
     // check state
@@ -624,24 +625,24 @@ export class UserService {
     //on encapsule tout dans un observable et on y souscrit
     return Observable.from(obs);
 
-  // ==== méthodes alternative pour ce cas là =========
-  /*
-    return Observable.from(user.addresses)
-      .concatMap(address => {
-        return this.geocode(address.streetAdress, address.postalCode, address.region);
-      })
-      .map((geo, i) => {
-        if (!geo.results.length || !geo.results[0].geometry) {
-            return;
-          }
-          if (!geo.results[0].geometry.lat) {
-            return;
-          }
-          user.addresses[i].geo = { lat: null, lng: null };
-          user.addresses[i].geo.lat = geo.results[0].geometry.location.lat;
-          user.addresses[i].geo.lng = geo.results[0].geometry.location.lng;
-      });
-    */
+    // ==== méthodes alternative pour ce cas là =========
+    /*
+      return Observable.from(user.addresses)
+        .concatMap(address => {
+          return this.geocode(address.streetAdress, address.postalCode, address.region);
+        })
+        .map((geo, i) => {
+          if (!geo.results.length || !geo.results[0].geometry) {
+              return;
+            }
+            if (!geo.results[0].geometry.lat) {
+              return;
+            }
+            user.addresses[i].geo = { lat: null, lng: null };
+            user.addresses[i].geo.lat = geo.results[0].geometry.location.lat;
+            user.addresses[i].geo.lng = geo.results[0].geometry.location.lng;
+        });
+      */
 
   }
 
@@ -658,7 +659,7 @@ export class UserService {
       headers: this.headers,
       withCredentials: true
     })
-      .map(res => res.json() as User)
+      .map(res => new User(res.json()))
       .map(user => this.updateCache(user))
       .catch(err => Observable.of(this.defaultUser));;
 
@@ -691,7 +692,7 @@ export class UserService {
       headers: this.headers,
       withCredentials: true
     })
-      .map(res => res.json() as User)
+      .map(res => new User(res.json()))
       .map(user => this.updateCache(user))
       .catch(err => Observable.of(this.defaultUser));
     /*
@@ -716,7 +717,7 @@ export class UserService {
       headers: this.headers,
       withCredentials: true
     })
-      .map(res => res.json() as User)
+      .map(res => new User(res.json()))
       .map(user => this.updateCache(user))
       .catch(err => Observable.of(this.defaultUser));
     /*
@@ -738,7 +739,6 @@ export class UserService {
     */
   }
 
-
   /**
    * ADMIN
    */
@@ -749,7 +749,7 @@ export class UserService {
       headers: this.headers,
       withCredentials: true
     })
-      .map(res => res.json() as User)
+      .map(res => new User(res.json()))
       .map(user => this.updateCache(user))
       .catch(err => Observable.of(this.defaultUser));
   }

@@ -21,6 +21,6 @@
       <label for="password">Confirmer le mot de passe</label>
       <input [(ngModel)]="user.confirm" type="password" class="form-control validate" id="confirm" name="confirm" placeholder="confirm" required>
     </div>
-    <button [disabled]="!registerForm.form.valid || !isReadyR" type="submit" class="btn btn-info">S'inscrire</button>
+    <button [disabled]="!registerForm.form.valid" type="submit" class="btn btn-info">S'inscrire</button>
   </form>
 </div>
