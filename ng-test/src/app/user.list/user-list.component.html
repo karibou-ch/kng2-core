@@ -18,8 +18,10 @@
       <td>{{u.updated}}</td>
       <td>{{u.status}}</td>
       <td>{{u?.roles}}</td>
-      <td>{{u?.addresses?.lenght || '0'}}</td>
-      <td>{{u?.shops?.lenght || '0'}}</td>
+      <!--<td *ngFor="let a of u?.shops | a.owner: u.id?.lenght">
+        {{a.length || '0' }}
+      </td>
+      <td>{{u?.shops?.lenght || '0'}}</td>->
     </tr>
   </table>
 </div>

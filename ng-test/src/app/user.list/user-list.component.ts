@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
-import { LoaderService, User, UserService } from '../../../../dist'
+import { LoaderService, User, UserService, Shop, ShopService } from '../../../../dist'
 
 @Component({
   selector: 'app-user-list',
@@ -15,9 +15,11 @@ export class UserListComponent implements OnInit {
     private $loader: LoaderService,
     private _router: Router,
     private $user: UserService,
+    private $shop: ShopService
   ) { }
 
   private currentUser: User;
+  private shops: Array<Shop>;
   private isReady: boolean;
   private config: any;
 
@@ -29,6 +31,7 @@ export class UserListComponent implements OnInit {
     this.currentUser = ready[1];
 
       this.$user.query().subscribe(res => this.users = res);
+      this.$shop.query().subscribe(shops => this.shops = shops);
     });
   }
 
