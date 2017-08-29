@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, Input } from '@angular/core';
 import { Observable } from 'rxjs/Rx';
 import { ActivatedRoute } from '@angular/router';
 import { LoaderService, ShopService, Shop, User, UserService, config } from '../../../../dist';
@@ -16,19 +16,28 @@ export class ShopComponent implements OnInit {
     private $shop: ShopService
   ) { }
 
+
+  @Input() slug:string;
   private currentUser: User;
   private isReady: boolean;
   private config: any;
-  private shop: Shop;
-  private slug: string;
+  private shop: Shop = new Shop();
 
   ngOnInit() {
 
     this.$loader.ready().subscribe(ready => {
+      this.isReady=true;
+      this.config=ready[0];
+      this.currentUser=ready[1];
+      //
+      // two options for slug initialisation : 1) Input, 2) URL
+      if(!this.slug){
+        this.slug=this.route.snapshot.params['slug'];
+      }
+      console.log(this.slug);
       this.isReady = true;
       this.config = ready[0];
       this.currentUser = <User> ready[1];
-      this.slug = this.route.snapshot.params['slug'];
       this.$shop.get(this.slug)
         .subscribe(res => {
           this.shop = res;

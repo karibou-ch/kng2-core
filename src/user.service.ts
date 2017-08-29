@@ -44,49 +44,47 @@ export class UserCard {
 export class User {
 
   constructor(json?: any) {
-    if (json !== undefined) {
-      Object.assign(this, json);
-    } else {
-      this.id = '';
-      this.displayName = '';
-      this.name = {
+    let defaultUser = {
+      id: '',
+      displayName: '',
+      name: {
         givenName: '',
         familyName: '',
-      };
-      this.birthday = new Date();
-      this.gender = '';
-      this.tags = [];
-      this.url = '';
+      },
+      birthday: new Date(),
+      gender: '',
+      tags: [],
+      url: '',
 
-      this.email = {
+      email: {
         address: '',
         cc: '',
         status: ''
-      };
+      },
 
-      this.reminder = {
+      reminder: {
         active: false,
         weekdays: [],
         time: null
-      };
+      },
 
-      this.roles = [];
-      this.shops = [];
-      this.provider = '';
-      this.url = '';
+      roles: [],
+      shops: [],
+      provider: '',
 
-      this.phoneNumbers = [{
+      phoneNumbers: [{
         number: '',
         what: 'mobile'
-      }];
+      }],
 
-      this.photo = '';
+      photo: '',
 
-      this.logistic = {
+      logistic: {
         postalCode: ''
-      };
+      }
+    };
 
-    }
+    Object.assign(this, defaultUser, json || {});
   }
 
   id: string;

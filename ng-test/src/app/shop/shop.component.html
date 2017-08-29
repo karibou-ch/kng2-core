@@ -1,21 +1,21 @@
 <div class="container">
   <h1>Shop</h1>
   <div *ngIf="currentUser?.isOwnerOrAdmin(shop?.name)">
-    <a [routerLink]="['/shop/edit/',shop?.urlpath]"><button class="btn">Edit Shop</button></a>
+    <a [routerLink]="['/shop/edit/',shop?.urlpath]" ><button class="btn">Edit Shop</button></a>
   </div>
   <div class="row">
     <div class="col-xs-12">Photo</div>
-    <div class="col-xs-3" [hidden]="!shop?.photo.bg">
-      <img title="" class="img-thumbnail" [src]="shop?.photo.bg" *ngIf="shop?.photo.bg">
+    <div class="col-xs-3" [hidden]="!shop?.photo?.bg">
+      <img title="" class="img-thumbnail" [src]="shop?.photo?.bg" *ngIf="shop?.photo?.bg">
     </div>
-    <div class="col-xs-3" [hidden]="!shop?.photo.fg">
-      <img title="" class="img-thumbnail" [src]="shop?.photo.fg" *ngIf="shop?.photo.fg">
+    <div class="col-xs-3" [hidden]="!shop?.photo?.fg">
+      <img title="" class="img-thumbnail" [src]="shop?.photo?.fg" *ngIf="shop?.photo?.fg">
     </div>
-    <div class="col-xs-3" [hidden]="!shop?.photo.logo">
-      <img title="" class="img-thumbnail" [src]="shop?.photo.logo" *ngIf="shop?.photo.logo">
+    <div class="col-xs-3" [hidden]="!shop?.photo?.logo">
+      <img title="" class="img-thumbnail" [src]="shop?.photo?.logo" *ngIf="shop?.photo?.logo">
     </div>
-    <div class="col-xs-3" [hidden]="!shop?.photo.owner">
-      <img title="" class="img-thumbnail" [src]="shop?.photo.owner" *ngIf="shop?.photo.owner">
+    <div class="col-xs-3" [hidden]="!shop?.photo?.owner">
+      <img title="" class="img-thumbnail" [src]="shop?.photo?.owner" *ngIf="shop?.photo?.owner">
     </div>
   </div>
   <div class="row">
@@ -103,6 +103,6 @@
   </div>
   <div class="row">
     <div class="col-xs-3">Map</div>
-    <img src="//maps.googleapis.com/maps/api/staticmap?center={{shop?.address.geo.lat}},{{shop?.address.geo.lng}}&zoom=12&size=400x400&markers=color:green%7Xlabel:%7C{{shop?.address.geo.lat}},{{shop?.address.geo.lng}}&key=AIzaSyD5w46BmWX6hX-uJ2yMycS_cRb2HRvDXQU"/>
+    <img src="//maps.googleapis.com/maps/api/staticmap?center={{shop?.address?.geo?.lat}},{{shop?.address?.geo?.lng}}&zoom=12&size=400x400&markers=color:green%7Xlabel:%7C{{shop?.address.geo.lat}},{{shop?.address.geo.lng}}&key=AIzaSyD5w46BmWX6hX-uJ2yMycS_cRb2HRvDXQU"/>
   </div>
 </div>

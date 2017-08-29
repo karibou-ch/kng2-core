@@ -1,7 +1,7 @@
 import { Http, Headers } from '@angular/http';
 import { Injectable } from '@angular/core';
 import { Observable, BehaviorSubject, ReplaySubject } from 'rxjs/Rx';
-import { Category} from './category.service';
+import { Category } from './category.service';
 
 import { ConfigService } from './config.service';
 
@@ -119,89 +119,28 @@ export class Shop {
   //
   // Object methods
   constructor(json?: any) {
-    if (json !== undefined) {
-      Object.assign(this, json);
-    } else {
-      let defaultShop = {
-      /*  urlpath: "",
-        name: "",
-        description: "",
-        url: "",
-        photo: {
-          owner: "",
-          bg: "",
-          fg: "",
-          logo: "",
-          gallery: [],
-          source: "",
-        },
 
-        details: {
-          bio: false,
-          gluten: false,
-          lactose: false,
-          vegetarian: false,
-          local: false,
-        },
-
-        address: {
-          depository: "",
-          name: "",
-          floor: "",
-          phone: "",
-          streetAdress: "",
-          region: "",
-          postalCode: "",
-          geo: {
-            lat: 0,
-            lng: 0,
-          }
-        },
-
-        catalog: new Category(),
-
-        available: {
-          active: false,
-          from: new Date(),
-          to: new Date(),
-          weekdays: [],
-          comment: "le shop n'est pas accesible pour le moment"
-        },
-
-        discount: {
-          amount: 0,
-          threshold: 0,
-          active: false,
-        },
-
-        info: {
-          //
-          // requiere a detailled email for order preparation
-          detailledOrder: false,
-          active: false,
-          comment: "Votre commentaire"
-        },
-
-        //
-        // type Date on pending, set true on active, false on deleted
-        status: false,
-        // secret value for the business model
-        // - > is available/displayed for shop owner and admin ONLY
-        // - > is saved on each order to compute bill
-        account: {
-          fee: 0.2,
-          tva: {},
-          updated: new Date,
-        },
-
+    let defaultShop = {
+      urlpath: "",
+      name: "",
+      description: "",
+      url: "",
+      photo: {
         owner: "",
-        scoring: {
-          weight: 0,
-          orders: 0,
-          issues: 0,
-          score: 0,
-        },
-      }*/
+        bg: "",
+        fg: "",
+        logo: "",
+        gallery: [],
+        source: "",
+      },
+
+      details: {
+        bio: false,
+        gluten: false,
+        lactose: false,
+        vegetarian: false,
+        local: false,
+      },
 
       address: {
         depository: "",
@@ -214,16 +153,75 @@ export class Shop {
         geo: {
           lat: 0,
           lng: 0,
-        }
+        },
       },
-      catalog: "",
-      description: "",
-      name:""
-    }
-      Object.assign(this, defaultShop);
-    }
+
+      catalog: new Category(),
+
+      available: {
+        active: false,
+        from: new Date(),
+        to: new Date(),
+        weekdays: [],
+        comment: "le shop n'est pas accesible pour le moment"
+      },
+
+      discount: {
+        amount: 0,
+        threshold: 0,
+        active: false,
+      },
+
+      info: {
+        //
+        // requiere a detailled email for order preparation
+        detailledOrder: false,
+        active: false,
+        comment: "Votre commentaire"
+      },
+
+      //
+      // type Date on pending, set true on active, false on deleted
+      status: false,
+      // secret value for the business model
+      // - > is available/displayed for shop owner and admin ONLY
+      // - > is saved on each order to compute bill
+      account: {
+        fee: 0.2,
+        tva: {},
+        updated: new Date,
+      },
+
+      owner: "",
+      scoring: {
+        weight: 0,
+        orders: 0,
+        issues: 0,
+        score: 0,
+      }
+    };
+
+    /*address: {
+      depository: "",
+      name: "",
+      floor: "",
+      phone: "",
+      streetAdress: "",
+      region: "",
+      postalCode: "",
+      geo: {
+        lat: 0,
+        lng: 0,
+      }
+    },
+    catalog: "",
+    description: "",
+    name: ""
+  }*/
+    Object.assign(this, defaultShop, json || {});
+
   }
-};
+}
 
 @Injectable()
 export class ShopService {
@@ -306,12 +304,11 @@ export class ShopService {
       headers: this.headers,
       withCredentials: true
     })
-      .map(res => new Shop(res.json()))
+    .map(res => new Shop(res.json()))
     //.map(shop => this.updateCache(shop));
     //.map(this.updateCache)
     //.do(this.shop$.next)
   };
-
 
   //
   // TODO: what is it used for ?
@@ -335,7 +332,6 @@ export class ShopService {
         headers: this.headers,
         withCredentials: true
       });
-
   };
 
   save(shop: Shop): Observable<Shop> {
@@ -357,7 +353,7 @@ export class ShopService {
       withCredentials: true
     })
       .map(res => new Shop(res.json()))
-      .map(this.updateCache)
+      //.map(shop => this.updateCache(shop))
       .do(this.shop$.next)
     // TODO shop.create => user.shops.push(shop);
   };

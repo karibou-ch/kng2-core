@@ -37,7 +37,7 @@ export class CategoryEditComponent implements OnInit {
   currentUser:User;
   isReady:boolean;
   config:any;
-  category:Category=new Category(null);
+  category:Category=new Category();
 
 
   ngOnInit() {
