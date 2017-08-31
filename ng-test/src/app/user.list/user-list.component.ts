@@ -35,4 +35,8 @@ export class UserListComponent implements OnInit {
     });
   }
 
+  nbrOfShop(u: any){
+    return this.shops.filter(value => value.owner.id === u).length;
+  }
+
 }

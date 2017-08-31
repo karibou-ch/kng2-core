@@ -193,7 +193,7 @@ export class ShopService {
       search: filter,
     })
       .map(res => res.json() as Shop[])
-      .map(shops => shops.map(this.updateCache));
+      //.map(shops => shops.map(this.updateCache));
   };
 
   findByCatalog(cat, filter):Observable<Shop[]> {
