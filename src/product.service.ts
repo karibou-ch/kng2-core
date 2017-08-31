@@ -149,7 +149,6 @@ export class ProductService {
 
     //not working yet
     remove(sku, password) {
-        console.log("in the remove")
         return this.http.put(this.config.API_SERVER + '/v1/products/' + sku, {
             headers: this.headers,
             withCredentials: true,
@@ -174,8 +173,6 @@ export class ProductService {
     }
 
     save(prod: Product): Observable<Product> {
-
-        console.log(prod.title);
         return this.http.post(this.config.API_SERVER + '/v1/products/' + prod.sku, prod, {
             headers: this.headers,
             withCredentials: true

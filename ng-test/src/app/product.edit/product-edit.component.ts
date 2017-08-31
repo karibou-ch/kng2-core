@@ -49,7 +49,6 @@ export class ProductEditComponent implements OnInit {
     onSave() {
         // TODO use error feedback for user!
         (<HTMLInputElement> document.getElementById("editButton")).disabled = true;
-        console.log(this.product.title);
         this.$product.save(this.product).subscribe();
         (<HTMLInputElement> document.getElementById("editButton")).disabled = false;
     }
