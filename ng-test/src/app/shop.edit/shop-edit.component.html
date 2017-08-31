@@ -172,6 +172,9 @@
         <button [hidden]="!im" (click)="im=null" class="btn btn-block">clear this image</button>
       </div>
 
+      <div>
+        <button name="delete" (click)="onDelete();" class="btn btn-block">Delete</button>
+      </div>
 
       <div>
         <button name="save" (click)="onSave();" class="btn btn-block">Save</button>

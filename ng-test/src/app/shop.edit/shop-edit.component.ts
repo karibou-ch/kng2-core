@@ -81,7 +81,6 @@ export class ShopEditComponent implements OnInit {
     // TODO use error feedback for user!
     this.$shop.save(this.shop).subscribe()
 
-
   }
 
   processErrors(err) {
@@ -97,6 +96,11 @@ export class ShopEditComponent implements OnInit {
     if (index !== -1) {
       this.shop.faq.splice(index, 1);
     }
+  }
+
+  onDelete(){
+
+
   }
 
 }
