@@ -364,14 +364,16 @@ export class ShopService {
   remove(shop: Shop, password: string): Observable<any> {
     // TODO user.shops.pop(me);
     // TODO $rootScope.$broadcast("shop.remove",me);
-    return this.http.delete(this.config.API_SERVER + '/v1/shops/' + shop.urlpath, {
+    //return this.http.delete(this.config.API_SERVER + '/v1/shops/' + shop.urlpath, {
+    var passwordJson = { "password": password };
+    return this.http.put(this.config.API_SERVER + '/v1/shops/' + shop.urlpath, passwordJson, {
       headers: this.headers,
-      withCredentials: true
+      withCredentials: true,
     })
       .map(res => new Shop(res.json()))
       .map(this.deleteCache)
       // TODO what to callback on delete
-      .do(() => this.shop$.next(new Shop(null)))
+      .do(() => this.shop$.next(new Shop()))
   };
 
 }

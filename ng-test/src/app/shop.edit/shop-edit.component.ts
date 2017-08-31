@@ -35,6 +35,7 @@ export class ShopEditComponent implements OnInit {
   private catalogs: Array<Category> = new Array;
   private newInstance: boolean = false;
   private errors: any;
+  private password: string;
 
   ngOnInit() {
 
@@ -99,8 +100,8 @@ export class ShopEditComponent implements OnInit {
   }
 
   onDelete(){
-
-
+    console.log(this.password);
+    this.$shop.remove(this.shop, this.password).subscribe(res => console.log(res));
   }
 
 }
