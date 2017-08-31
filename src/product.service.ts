@@ -229,7 +229,7 @@ export class Product {
                     home: false,
                     weigth: 0
                 },
-                categories: "520ddfc75ddf27485d000008",
+                categories: "",
                 details: {
                     description: "",
                     origin: "",
@@ -237,9 +237,9 @@ export class Product {
                     vegetarian: false,
                     bioconvertion: false,
                     biodynamic: false,
-                    grta: true,
-                    bio: true,
-                    local: true,
+                    grta: false,
+                    bio: false,
+                    local: false,
                     natural: false,
                     homemade: false,
                     cold: false,
@@ -250,7 +250,7 @@ export class Product {
                     url: "//ucarecdn.com/2a857236-1943-4f57-89f6-f1da02cd39dc/"
                 },
                 pricing: {
-                    part: "1g",
+                    part: "",
                     price: "",
                     stock: ""
                 },

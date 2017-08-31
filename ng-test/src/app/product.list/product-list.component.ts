@@ -5,6 +5,8 @@ import {
     LoaderService,
     User,
     UserService,
+    Category,
+    CategoryService,
     config
 }  from '../../../../dist'
 
@@ -19,10 +21,13 @@ export class ProductListComponent implements OnInit {
     config: any;
     products: Product[] = [];
     password: string;
+    catalogs: Array<Category> = new Array;
+    selectCat: Category;
 
     constructor(
         private loader: LoaderService,
-        private $product: ProductService
+        private $product: ProductService,
+        private $category: CategoryService,
     ) {
 
     }
@@ -32,12 +37,21 @@ export class ProductListComponent implements OnInit {
             this.isReady = true;
             this.config = loader[0];
             //this.loadLovedProduct(); //pour un test
-            this.loadProducts()
+            this.loadProducts();
+            this.$category.select().subscribe(res => {
+                this.catalogs = res.filter(res => res.type == "Category").sort();
+            });
         });
     }
 
     loadProducts() {
         this.$product.select().subscribe((products: Product[]) => {
+            this.products = products.sort();
+        });
+    }
+
+    filterProduct() {
+        this.$product.findByCategory(this.selectCat.slug).subscribe((products: Product[]) => {
             this.products = products.sort();
         });
     }
@@ -49,9 +63,9 @@ export class ProductListComponent implements OnInit {
     }
 
     onDelete(prod: Product) {
-        //this.password = <HTMLInputElement> document.getElementById("pswd")).value;
         console.log("delete : " + prod.title + "  password : " + this.password)
-        this.$product.remove(prod.sku, this.password) // decond arument is "password", but what password ?
+        var a = this.$product.remove(prod.sku, this.password)
+        console.log(a);
     }
 
 }

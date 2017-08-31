@@ -1,13 +1,25 @@
 <div class="container">
 	<h2>Product list</h2>
+	<label class="control-label">Product category</label> <select
+		[ngModel]="product?.categories"
+		(ngModelChange)="selectCat = $event"
+		[ngModelOptions]="{standalone: true}">
+		<option
+			*ngFor="let cat of catalogs "
+			[ngValue]="cat">{{cat.name}}</option>
+	</select>
+	<button
+		id="filterButton"
+		name="FilterProduct"
+		(click)="filterProduct();"
+		class="btn btn-block">Filter Product</button>
 	<table class="table">
 		<tr *ngFor="let product of products">
 			<td><a [routerLink]="['/product',product.sku]">{{product.title}}</a></td>
 			<td><input
-				id = "pswd"
-				type="password"
-				(input) ="password = $event.target.value"
-			/></td>
+					id="pswd"
+					type="password"
+					(input)="password = $event.target.value" /></td>
 			<td><div>
 					<button
 						id="delButton"
