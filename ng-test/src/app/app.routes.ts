@@ -8,6 +8,8 @@ import { DashboardComponent } from './user.dashboard/dashboard.component';
 import { HeaderComponent } from './header/header.component';
 import { LoginComponent } from './user.login/login.component';
 import { RegisterComponent } from './user.register/register.component';
+import { UserComponent } from './user/user.component';
+import { UserPasswordComponent } from './user.password/user-password.component';
 import { UserListComponent } from './user.list/user-list.component';
 import { OrderComponent } from './order/order.component';
 import { ShopComponent } from './shop/shop.component';
@@ -22,6 +24,8 @@ export const appRoutes: Routes = [
   { path: 'login', component: LoginComponent },
   { path: 'register', component: RegisterComponent },
   { path: 'order', component: OrderComponent },
+  { path: 'user/:id', component: UserComponent },
+  { path: 'user/password/:id', component: UserComponent },
   { path: 'users', component: UserListComponent },
   { path: 'shop', component: ShopComponent },
   { path: 'recovery', component: RecoveryComponent },

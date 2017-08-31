@@ -25,6 +25,8 @@ import { CategoryComponent } from './category/category.component';
 import { CategoryEditComponent } from './category.edit/category-edit.component';
 import { RegisterComponent } from './user.register/register.component';
 import { UserListComponent } from './user.list/user-list.component';
+import { UserComponent } from './user/user.component';
+import { UserPasswordComponent } from './user.password/user-password.component';
 
 @NgModule({
   declarations: [
@@ -41,7 +43,9 @@ import { UserListComponent } from './user.list/user-list.component';
     CategoryComponent,
     CategoryEditComponent,
     RegisterComponent,
-    UserListComponent
+    UserListComponent,
+    UserComponent,
+    UserPasswordComponent
   ],
   imports: [
     BrowserModule,

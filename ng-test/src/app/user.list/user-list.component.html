@@ -12,13 +12,13 @@
       <td>Shop</td>
     </tr>
     <tr *ngFor="let u of users">
-      <td>{{u.id}}</td>
+      <td> <a [routerLink]="['/user',u.id]">{{u.id}}</a></td>
       <td>{{u.displayName}}</td>
       <td>{{u.logged}}</td>
       <td>{{u.updated}}</td>
       <td>{{u.status}}</td>
       <td>{{u?.roles}}</td>
-      <td >{{ u?.addresses?.length }}</td>
+      <td >{{u?.addresses?.length }}</td>
       <td>{{nbrOfShop(u?.id)}}</td>
     </tr>
   </table>

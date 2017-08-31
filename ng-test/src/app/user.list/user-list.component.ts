@@ -26,17 +26,19 @@ export class UserListComponent implements OnInit {
   ngOnInit() {
 
     this.$loader.ready().subscribe(ready => {
-    this.isReady = true;
-    this.config = ready[0];
-    this.currentUser = ready[1];
+      this.isReady = true;
+      this.config = ready[0];
+      this.currentUser = ready[1];
 
       this.$user.query().subscribe(res => this.users = res);
       this.$shop.query().subscribe(shops => this.shops = shops);
     });
   }
 
-  nbrOfShop(u: any){
-    return this.shops.filter(value => value.owner.id === u).length;
+  nbrOfShop(u: any) {
+    if (this.shops !== undefined) {
+      return this.shops.filter(value => value.owner.id === u).length;
+    }
   }
 
 }
