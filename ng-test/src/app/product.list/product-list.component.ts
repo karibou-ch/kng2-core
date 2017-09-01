@@ -63,9 +63,7 @@ export class ProductListComponent implements OnInit {
     }
 
     onDelete(prod: Product) { // still not working
-        console.log("delete : " + prod.title + "  password : " + this.password)
-        var a = this.$product.remove(prod.sku, this.password)
-        console.log(a);
+        this.$product.remove(prod.sku, this.password).subscribe();
     }
 
 }
