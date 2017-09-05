@@ -7,12 +7,11 @@ import { ConnectableObservable } from 'rxjs/observable/ConnectableObservable'
 import 'rxjs/Rx';
 
 import { Config } from './config';
-import { User, UserCard, UserAddress } from './user.service';
-import { Category } from './category.service';
-
 import { ConfigService } from './config.service';
-import { UserService } from './user.service';
-import { CategoryService } from './category.service'
+
+import { User, UserCard, UserAddress, UserService } from './user.service';
+import { Category, CategoryService } from './category.service';
+import { Shop, ShopService } from './shop.service';
 
 //manage the first requests needed when bootstrapping the application. Used by the components.
 @Injectable()
@@ -25,8 +24,9 @@ export class LoaderService {
   constructor(
     private http: Http,
     private config: ConfigService,
-    private user: UserService,
-    private categorySrv: CategoryService
+    private $user: UserService,
+    private $category: CategoryService,
+    private $shop: ShopService
   ) {
 
     //
@@ -40,7 +40,7 @@ export class LoaderService {
         //combineLatest to get array with last item of each when one emits an item
         Observable.combineLatest(
           Observable.of(config),
-          this.user.me()
+          this.$user.me()
         )
       )
       //
