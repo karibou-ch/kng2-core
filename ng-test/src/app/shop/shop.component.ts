@@ -34,14 +34,12 @@ export class ShopComponent implements OnInit {
       if(!this.slug){
         this.slug=this.route.snapshot.params['slug'];
       }
-      console.log(this.slug);
       this.isReady = true;
       this.config = ready[0];
       this.currentUser = <User> ready[1];
       this.$shop.get(this.slug)
         .subscribe(res => {
           this.shop = res;
-          console.log(res);
         });
     });
   }

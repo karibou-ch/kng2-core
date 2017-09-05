@@ -76,9 +76,6 @@ export class ShopEditComponent implements OnInit {
       this.shop.address.geo.lng = res.results[0].geometry.location.lng;
     });
 
-
-    console.log(this.shop);
-
     // TODO use error feedback for user!
     this.$shop.save(this.shop).subscribe()
 
@@ -100,7 +97,6 @@ export class ShopEditComponent implements OnInit {
   }
 
   onDelete(){
-    console.log(this.password);
     this.$shop.remove(this.shop, this.password).subscribe(res => console.log(res));
   }
 

@@ -121,17 +121,9 @@ export class Shop {
   constructor(json?: any) {
 
     let defaultShop = {
-      urlpath: "",
-      name: "",
-      description: "",
-      url: "",
+
       photo: {
-        owner: "",
-        bg: "",
-        fg: "",
-        logo: "",
-        gallery: [],
-        source: "",
+        gallery: []
       },
 
       details: {
@@ -143,32 +135,17 @@ export class Shop {
       },
 
       address: {
-        depository: "",
-        name: "",
-        floor: "",
-        phone: "",
-        streetAdress: "",
-        region: "",
-        postalCode: "",
-        geo: {
-          lat: 0,
-          lng: 0,
-        },
+        geo: {},
       },
 
       catalog: new Category(),
 
       available: {
         active: false,
-        from: new Date(),
-        to: new Date(),
-        weekdays: [],
-        comment: "le shop n'est pas accesible pour le moment"
+        weekdays: []
       },
 
       discount: {
-        amount: 0,
-        threshold: 0,
         active: false,
       },
 
@@ -176,8 +153,7 @@ export class Shop {
         //
         // requiere a detailled email for order preparation
         detailledOrder: false,
-        active: false,
-        comment: "Votre commentaire"
+        active: false
       },
 
       //
@@ -188,17 +164,9 @@ export class Shop {
       // - > is saved on each order to compute bill
       account: {
         fee: 0.2,
-        tva: {},
-        updated: new Date,
+        tva: {}
       },
-
-      owner: "",
-      scoring: {
-        weight: 0,
-        orders: 0,
-        issues: 0,
-        score: 0,
-      }
+      scoring: {}
     };
 
     /*address: {

@@ -33,7 +33,6 @@ export class ShopListComponent implements OnInit {
       this.$shop.query("")
         .subscribe(res => {
           this.shops = res;
-          console.log(res);
         });
 
     });

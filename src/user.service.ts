@@ -45,22 +45,13 @@ export class User {
 
   constructor(json?: any) {
     let defaultUser = {
-      id: '',
-      displayName: '',
-      name: {
-        givenName: '',
-        familyName: '',
-      },
-      birthday: new Date(),
-      gender: '',
+      id:'',
+      displayname:'',
+      name: {},
+      gender: {},
       tags: [],
-      url: '',
 
-      email: {
-        address: '',
-        cc: '',
-        status: ''
-      },
+      email: {},
 
       reminder: {
         active: false,
@@ -70,18 +61,12 @@ export class User {
 
       roles: [],
       shops: [],
-      provider: '',
 
       phoneNumbers: [{
-        number: '',
         what: 'mobile'
       }],
 
-      photo: '',
-
-      logistic: {
-        postalCode: ''
-      }
+      logistic: {}
     };
 
     Object.assign(this, defaultUser, json || {});

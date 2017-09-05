@@ -27,7 +27,7 @@
     <div class="form-group ">
       <label class="control-label">Catégorie de la boutique</label>
       <select [ngModel]="shop?.catalog" (ngModelChange)="shop.catalog = $event" [ngModelOptions]="{standalone: true}">
-        <option *ngFor="let cat of catalogs " [ngValue]="cat">{{cat.name}}</option>
+        <option *ngFor="let cat of catalogs " [ngValue]="cat.name">{{cat.name}}</option>
       </select>
     </div>
 
