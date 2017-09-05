@@ -3,19 +3,21 @@ import { Injectable } from '@angular/core';
 import { Observable, BehaviorSubject, ReplaySubject } from 'rxjs/Rx';
 import 'rxjs/add/operator/map';
 import { config } from './config';
+import { ConfigService } from './config.service';
 
 @Injectable()
 export class ProductService {
 
     public product$: ReplaySubject<Product>;
     private headers: Headers;
-    config: any;
-    private cache: Cache = new Cache();
+    private config: any;
+    private cache = new Cache();
 
     constructor(
+        private configSrv: ConfigService,
         private http: Http
     ) {
-        this.config = config;
+        this.config = ConfigService.defaultConfig;
         this.headers = new Headers();
         this.headers.append('Content-Type', 'application/json');
 
@@ -70,7 +72,7 @@ export class ProductService {
             .map(res => res.json().map(obj => new Product(obj)))
         //.map(products => products.map(this.updateCache.bind(this)))
         //.catch(this.handleError);
-    }
+    };
 
     findByCategoryAndDetail(category, detail): Observable<Product[]> {
         return this.http.get(this.config.API_SERVER + '/v1/products/category/' + category + '/details/' + detail, {
@@ -80,7 +82,7 @@ export class ProductService {
             .map(res => res.json().map(obj => new Product(obj)))
         //.map(products => products.map(this.updateCache.bind(this)))
         //.catch(this.handleError);
-    }
+    };
 
     findByLocationAndCategory(location, category): Observable<Product[]> {
         return this.http.get(this.config.API_SERVER + '/v1/products/location/' + location + '/category/' + category, {
@@ -90,7 +92,7 @@ export class ProductService {
             .map(res => res.json().map(obj => new Product(obj)))
         //.map(products => products.map(this.updateCache.bind(this)))
         //.catch(this.handleError);
-    }
+    };
 
     findLove(): Observable<Product[]> {
         return this.http.get(this.config.API_SERVER + '/v1/products/love', {
@@ -100,7 +102,7 @@ export class ProductService {
             .map(res => res.json().map(obj => new Product(obj)))
         //.map(products => products.map(this.updateCache.bind(this)))
         //.catch(this.handleError);
-    }
+    };
 
     findByLocation(location): Observable<Product[]> {
         return this.http.get(this.config.API_SERVER + '/v1/products/location/' + location, {
@@ -110,7 +112,7 @@ export class ProductService {
             .map(res => res.json().map(obj => new Product(obj)))
         //.map(products => products.map(this.updateCache.bind(this)))
         //.catch(this.handleError);
-    }
+    };
 
     findByCategory(category): Observable<Product[]> {
         return this.http.get(this.config.API_SERVER + '/v1/products/category/' + category, {
@@ -120,7 +122,7 @@ export class ProductService {
             .map(res => res.json().map(obj => new Product(obj)))
         //.map(products => products.map(this.updateCache.bind(this)))
         //.catch(this.handleError);
-    }
+    };
 
     findBySku(sku): Observable<Product> {
         return this.get(sku)
@@ -143,9 +145,9 @@ export class ProductService {
             //.map(res => res.json() as Product)
             .map(res => new Product(res.json()))
             //.map(this.updateCache)
-            //.do(this.product$.next)    
+            //.do(this.product$.next)
             .catch(this.handleError);
-    }
+    };
 
     remove(sku:number,password:string):Observable<any>{
       console.log(sku);
@@ -171,7 +173,7 @@ export class ProductService {
             //.map(this.updateCache)
             //.do(this.product$.next)
             .catch(this.handleError);
-    }
+    };
 
     save(prod: Product): Observable<Product> {
         return this.http.post(this.config.API_SERVER + '/v1/products/' + prod.sku, prod, {
@@ -183,9 +185,7 @@ export class ProductService {
             //.map(this.updateCache)
             //.do(this.product$.next)
             .catch(this.handleError);
-    }
-
-
+    };
 
     private handleError(error: Response | any) {
         //
@@ -200,7 +200,7 @@ export class ProductService {
         }
         console.error(errMsg);
         return Observable.throw(errMsg);
-    }
+    };
 }
 
 class Cache {
