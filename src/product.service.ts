@@ -147,18 +147,19 @@ export class ProductService {
             .catch(this.handleError);
     }
 
-    //not working yet
-    remove(sku, password) {
-        return this.http.put(this.config.API_SERVER + '/v1/products/' + sku, {
-            headers: this.headers,
-            withCredentials: true,
-            password: password
-        })
-            .map(res => new Product(res.json()))
-        //.do(this.product$.next)
-        //.map(this.deleteCache)
-        //.catch(this.handleError);
-    }
+    remove(sku:number,password:string):Observable<any>{
+      console.log(sku);
+      console.log(password);
+      var passwordJson = {"password":password};
+      return this.http.put(this.config.API_SERVER + '/v1/products/'+sku, passwordJson, {
+        headers: this.headers,
+        withCredentials: true
+      })
+        .map(res => res.json() as Product)
+        .map(this.deleteCache)
+        // TODO what to callback on delete
+        .do(()=>this.product$.next(new Product()))
+    };
 
     create(prod: Product): Observable<Product> {
         return this.http.post(this.config.API_SERVER + '/v1/shops/chocolat-de-villars-sur-glane/products/', prod, {
