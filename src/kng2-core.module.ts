@@ -6,6 +6,7 @@ import { HttpModule } from '@angular/http';
 import { AuthGuardService } from './auth-guard.service';
 
 import { Category, CategoryService } from './category.service';
+import { Product, ProductService } from './produit.service';
 import { ConfigService } from './config.service';
 import { config } from './config';
 import { LoaderService } from './loader.service';
@@ -31,6 +32,7 @@ import *  as OrderEnum from './order/order.enum';
   providers: [
         AuthGuardService,
         CategoryService,
+        ProductService,
         ConfigService,
         LoaderService,
         OrderService,
@@ -63,6 +65,7 @@ export class Kng2CoreModule {
 export {
   AuthGuardService,
   CategoryService, Category,
+  ProductService, Product,
   ConfigService, config,
   LoaderService,
   OrderService, Order, OrderEnum,
