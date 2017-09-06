@@ -5,15 +5,35 @@ import { config } from './config';
 
 
 export class Category {
+
+  constructor(json?: any) {
+    if (json !== undefined) {
+      Object.assign(this, json);
+    } else {
+      let defaultCat = {
+      slug: '',
+      group: '',
+      cover: '',
+      description: '',
+      image: '',
+      name: '',
+      type: '',
+      home: false,
+      active: false,
+    }
+    Object.assign(this, defaultCat);
+  }
+}
+
   slug: string;
   group: string;  /* permet de grouper une catégorie (toutes les catégories des artisans, producteurs*/
   _id;
   cover: string;  /* image de la catégorie */
   description: string;
   image: string; /* icon associé à la catégorie */
-  name: string; 
+  name: string;
   weight; /*permet d'ordonner les cat les plus légère en haut */
-  type: string; 
+  type: string;
   home: boolean; /* afficher une sélection de cat sur la home */
   active: boolean;
 
@@ -28,7 +48,7 @@ class Cache{
   constructor(){
     this.list=[];
     this.map=new Map();
-  }  
+  }
 }
 
 @Injectable()
@@ -36,7 +56,7 @@ export class CategoryService {
   //
   // common multicast to update UX when one shop on the list is modified
   // use it for singleton usage of category
-  public  category$: ReplaySubject<Category>;   
+  public  category$: ReplaySubject<Category>;
 
   config:any;
 
@@ -46,13 +66,13 @@ export class CategoryService {
     description: "",
     group: ""
   };
-  
+
 
   private cache:Cache=new Cache();
   private headers: Headers;
 
   constructor(
-    private http: Http  
+    private http: Http
     ) {
     this.headers = new Headers();
     this.headers.append('Content-Type', 'application/json');
@@ -69,7 +89,7 @@ export class CategoryService {
   }
 
   private updateCache(category:Category){
-    
+
     //check if already exist on cache and add in it if not the case
     if (!this.cache.map[category.slug]){
       this.cache.map[category.slug] = category;
@@ -77,7 +97,7 @@ export class CategoryService {
       return category;
     }
     //update existing entry
-    return Object.assign(this.cache.map[category.slug],category);    
+    return Object.assign(this.cache.map[category.slug],category);
     //return category;
   }
 
@@ -105,7 +125,6 @@ export class CategoryService {
     return this.cache.list.filter(category => category.group === name);
   }
 
-
   // request categories with filter
   select(filter?: any):Observable<Category[]> {
     filter = filter || {};
@@ -115,7 +134,7 @@ export class CategoryService {
       headers: this.headers,
       withCredentials: true
     })
-      .map(res => res.json() as Category[])
+      .map(res => res.json().map(obj => new Category(obj)))
       .map(categories => categories.map(this.updateCache.bind(this)))
       .catch(this.handleError);
   }
@@ -131,10 +150,10 @@ export class CategoryService {
       headers: this.headers,
       withCredentials: true
     })
-      .map(res => res.json() as Category)
+      .map(res => res.json().map(obj => new Category(obj)))
       .map(this.updateCache)
       //TODO should run next here!
-      //.do(this.category$.next)      
+      //.do(this.category$.next)
       .catch(this.handleError);
 
   }
@@ -142,15 +161,15 @@ export class CategoryService {
 
   //   app.post('/v1/category/:category', auth.ensureAdmin, categories.update);
   save(slug, cat:Category):Observable<Category> {
-    
+
     return this.http.post(this.config.API_SERVER + '/v1/category/'+slug, cat, {
       headers: this.headers,
       withCredentials: true
     })
-    .map(res => res.json() as Category)
+    .map(res  => new Category(res.json))
     .map(this.updateCache)
     //TODO should run next here!
-    //.do(this.category$.next)      
+    //.do(this.category$.next)
     .catch(this.handleError);
 
   }
@@ -161,9 +180,9 @@ export class CategoryService {
       headers: this.headers,
       withCredentials: true
     })
-    .map(res => res.json() as Category)
+    .map(res  => new Category(res.json))
     .map(this.updateCache)
-    // .do(this.category$.next)      
+    // .do(this.category$.next)
     .catch(this.handleError);
   }
 
@@ -174,8 +193,8 @@ export class CategoryService {
       withCredentials: true,
       password:password
     })
-    .map(res => res.json() as Category)
-    .do(this.category$.next)      
+    .map(res  => new Category(res.json))
+    .do(this.category$.next)
     .map(this.deleteCache)
     .catch(this.handleError);
   }

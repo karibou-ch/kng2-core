@@ -28,7 +28,7 @@ export class ConfigService {
     },
     loginPath:['/admin', '/account'],
     readonlyPath:['/wallet/create'],
-    avoidShopUIIn:['/admin', '/login', '/signup', '/content']    
+    avoidShopUIIn:['/admin', '/login', '/signup', '/content']
 
   };
 
@@ -40,7 +40,7 @@ export class ConfigService {
   ) {
     this.headers = new Headers();
     this.headers.append('Content-Type', 'application/json');
-    
+
       //.catch(err => Observable.of(new Config()));
   }
 
