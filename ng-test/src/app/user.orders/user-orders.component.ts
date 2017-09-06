@@ -19,8 +19,6 @@ export class UserOrdersComponent implements OnInit {
   isReady: boolean = false;
   currentUser: User;
   config: any;
-  next: Date;
-  current: Date;
   orders: Order[];
 
   ngOnInit() {
@@ -28,20 +26,22 @@ export class UserOrdersComponent implements OnInit {
       this.isReady = true;
       this.config = ready[0];
       this.currentUser = ready[1];
-
-      this.$order.findOrdersByUser(this.currentUser).subscribe(this.onDone, this.onError);
+      this.$order.findOrdersByUser(this.currentUser).subscribe(res => this.onDone(res), this.onError);
+      //this.$order.findOrdersByUser(this.currentUser).subscribe(orders => this.orders=orders);
     })
 
   }
 
   onDone(orders: Order[]){
     this.orders=orders;
+    console.log(this.orders);
     //
     // TODO: implement feedback message and use const to be ready for i18n
     // this.$flash.message(MSG_DONE,4000);
   }
 
   onError(error: any){
+    console.log(error)
   }
 
 }
