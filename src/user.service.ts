@@ -43,35 +43,6 @@ export class UserCard {
 
 export class User {
 
-  constructor(json?: any) {
-    let defaultUser = {
-      id:'',
-      displayname:'',
-      name: {},
-      gender: {},
-      tags: [],
-
-      email: {},
-
-      reminder: {
-        active: false,
-        weekdays: [],
-        time: null
-      },
-
-      roles: [],
-      shops: [],
-
-      phoneNumbers: [{
-        what: 'mobile'
-      }],
-
-      logistic: {}
-    };
-
-    Object.assign(this, defaultUser, json || {});
-  }
-
   id: string;
 
   /* The provider which with the user authenticated (facebook, twitter, etc.) */
@@ -145,6 +116,54 @@ export class User {
   logged: Date;
   roles: string[];
   rank: string;
+
+  constructor(json?: any) {
+    if (json !== undefined) {
+      Object.assign(this, json);
+    } else {
+      let defaultUser = {
+        id: '',
+        displayName: '',
+
+        name: {
+          givenName: '',
+          familyName: ''
+        },
+
+        birthday: new Date(),
+        gender: '',
+        tags: [],
+        email: {
+          address: '',
+          cc: '',
+          status: ''
+        },
+
+        reminder: {
+          active: false,
+          weekdays: [],
+          time: null
+        },
+
+        roles: [],
+        shops: [],
+        provider: '',
+        url: '',
+        phoneNumbers: [{
+          number: '',
+          what: 'mobile'
+        }],
+
+        photo: '',
+
+        logistic: {
+          postalCode: ''
+        }
+      }
+      Object.assign(this, defaultUser);
+    }
+
+  }
 
   //
   // methods
@@ -421,8 +440,9 @@ export class UserService {
       headers: this.headers,
       withCredentials: true
     })
-      .map(res => res.json() as User[])
-      .map(users => users.map(user => this.updateCache(user)));
+      .map(res => res.json().map(obj => new User(obj)))
+      //TODO fix the cache, that ligne trow an infinity of request
+      //.map(users => users.map(user => this.updateCache(user)));
   }
 
   // Reçoit un statut de requête http
@@ -488,8 +508,8 @@ export class UserService {
   // app.post('/register', queued(auth.register_post));
   register(user): Observable<User> {
 
-    // FIXME autofill the address name when available
-    user.populateAdresseName();
+    // TODO deprecated, this should be done in component
+    //user.populateAdresseName();
     return this.http.post(this.config.API_SERVER + '/register', user, {
       headers: this.headers,
       withCredentials: true
@@ -499,7 +519,6 @@ export class UserService {
       .catch(err => Observable.of(this.defaultUser));
     // _user.copy(u);
     // _user.updateGeoCode();
-
   };
 
   // app.post('/v1/users/:id/password',users.ensureMe, users.password);
