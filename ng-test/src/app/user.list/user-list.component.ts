@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { Observable } from 'rxjs/Rx';
 import { Router } from '@angular/router';
 import { LoaderService, User, UserService, Shop, ShopService } from '../../../../dist'
 
@@ -29,14 +30,21 @@ export class UserListComponent implements OnInit {
       this.isReady = true;
       this.config = ready[0];
       this.currentUser = ready[1];
+      Observable.forkJoin(
+         this.$user.query(),
+         this.$shop.query()
+        ).subscribe(resp => {
+          this.users = resp[0],
+          this.shops = resp[1]
+        });
 
-      this.$user.query().subscribe(res => this.users = res);
-      this.$shop.query().subscribe(shops => this.shops = shops);
+      //this.$user.query().subscribe(res => this.users = res);
+      //this.$shop.query().subscribe(shops => this.shops = shops);
     });
   }
 
   nbrOfShop(u: any) {
-    if (!this.shops) {
+    if (this.shops) {
       return this.shops.filter(value => value.owner.id === u).length;
     }
   }
