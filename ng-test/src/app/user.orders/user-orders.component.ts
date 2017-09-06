@@ -30,9 +30,19 @@ export class UserOrdersComponent implements OnInit {
       this.config = ready[0];
       this.currentUser = ready[1];
 
-      this.$order.findOrdersByUser(this.currentUser).subscribe(orders => this.orders = orders);
+      var x = this.$order.findOrdersByUser(this.currentUser).subscribe(this.onDone, this.onError);
     })
 
+  }
+
+  onDone(orders: Order[]){
+    this.orders=orders;
+    //
+    // TODO: implement feedback message and use const to be ready for i18n
+    // this.$flash.message(MSG_DONE,4000);
+  }
+
+  onError(error: any){
   }
 
 }
