@@ -41,8 +41,6 @@ export class ProductComponent implements OnInit {
             if (!this.sku) {
                 this.sku = this.route.snapshot.params['sku'];
             }
-
-            console.log(this.sku);
             this.$product.findBySku(this.sku).subscribe(prod => this.product = prod)
         });
     }
