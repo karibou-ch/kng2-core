@@ -2,6 +2,7 @@ import { Http, Headers } from '@angular/http';
 import { Injectable } from '@angular/core';
 import { Observable, BehaviorSubject, ReplaySubject } from 'rxjs/Rx';
 import { Category } from './category.service';
+import { User } from './user.service';
 
 import { ConfigService } from './config.service';
 
@@ -39,7 +40,7 @@ export class Shop {
       lat: number;
       lng: number;
     }
-  }
+  };
 
   //
   // where shop is located
@@ -60,11 +61,8 @@ export class Shop {
 
   //
   // this shop belongsTo a category
-<<<<<<< HEAD
-  catalog:any;
-=======
+
   catalog: Category;
->>>>>>> refs/remotes/origin/master
 
   //
   // answer question about your shop
@@ -74,22 +72,14 @@ export class Shop {
     updated: Date;
   }];
 
-<<<<<<< HEAD
+
   available:{
     active:boolean;
     from:Date,
     to:Date,
     weekdays:[number],
     comment:string
-=======
-  available: {
-    active: boolean;
-    from: Date,
-    to: Date,
-    weekdays: [number],
-    comment: string
->>>>>>> refs/remotes/origin/master
-  };
+};
 
   discount: {
     amount: number;
@@ -111,23 +101,15 @@ export class Shop {
   // secret value for the business model
   // - > is available/displayed for shop owner and admin ONLY
   // - > is saved on each order to compute bill
-<<<<<<< HEAD
   account:{
     fees?:number;
     tva:{
       number?:number,
       fees?:number
-=======
-  account: {
-    fees?: number;
-    tva: {
-      number?: number,
-      fees?: number
->>>>>>> refs/remotes/origin/master
     },
     updated: Date;
   };
-  owner: any;
+  owner: User;
   scoring: {
     weight: number;
     orders: number;
@@ -139,24 +121,10 @@ export class Shop {
 
   //
   // Object methods
-<<<<<<< HEAD
-  constructor() {
-    let defaultShop = {
-      url:'',
-      photo:{fg:''},
-      options:{},
-      available:{},
-      collect:{},
-      address:{},
-      info:{},
-      account:{},
-      faq:[]
-    }
-    Object.assign(this,defaultShop);
-  }
 
-};
-=======
+
+
+
   constructor(json?: any) {
 
     let defaultShop = {
@@ -195,6 +163,7 @@ export class Shop {
         active: false
       },
 
+      owner: {},
       //
       // type Date on pending, set true on active, false on deleted
       status: false,
@@ -229,17 +198,13 @@ export class Shop {
 
   }
 }
->>>>>>> refs/remotes/origin/master
 
 @Injectable()
 export class ShopService {
   //
   // common multicast to update UX when one shop on the list is modified
-<<<<<<< HEAD
+
   public  shop$: ReplaySubject<Shop>;
-=======
-  public shop$: ReplaySubject<Shop>;
->>>>>>> refs/remotes/origin/master
 
   private config: any;
   private headers: Headers;
@@ -282,11 +247,7 @@ export class ShopService {
     }
     //
     //update existing entry
-<<<<<<< HEAD
     return Object.assign(this.cache.map[shop.urlpath],shop);
-=======
-    return Object.assign(this.cache.map[shop.urlpath], shop);
->>>>>>> refs/remotes/origin/master
   }
 
 
@@ -294,24 +255,15 @@ export class ShopService {
   // REST api wrapper
   //
 
-<<<<<<< HEAD
   query(filter?: any):Observable<Shop[]> {
-=======
-  query(filter): Observable<Shop[]> {
->>>>>>> refs/remotes/origin/master
     return this.http.get(this.config.API_SERVER + '/v1/shops', {
       headers: this.headers,
       withCredentials: true,
       search: filter,
     })
-<<<<<<< HEAD
-      .map(res => res.json() as Shop[])
-      //.map(shops => shops.map(this.updateCache));
-=======
       .map(res => res.json().map(obj => new Shop(obj)));
     //.map(shops => shops.map(this.updateCache.bind(this)));
->>>>>>> refs/remotes/origin/master
-  };
+};
 
   findByCatalog(cat, filter): Observable<Shop[]> {
     return this.http.get(this.config.API_SERVER + '/v1/shops/category/' + cat, {
@@ -354,17 +306,10 @@ export class ShopService {
       {
         content: content
       }, {
-<<<<<<< HEAD
-      headers: this.headers,
-      withCredentials: true
-    });
-
-=======
         headers: this.headers,
         withCredentials: true
       });
->>>>>>> refs/remotes/origin/master
-  };
+    };
 
   save(shop: Shop): Observable<Shop> {
     return this.http.post(this.config.API_SERVER + '/v1/shops/' + shop.urlpath, shop, {
@@ -387,11 +332,7 @@ export class ShopService {
       .map(res => new Shop(res.json()))
       //.map(shop => this.updateCache(shop))
       .do(this.shop$.next)
-<<<<<<< HEAD
       // TODO shop.create => user.shops.push(shop);
-=======
-    // TODO shop.create => user.shops.push(shop);
->>>>>>> refs/remotes/origin/master
   };
 
   //
@@ -409,11 +350,7 @@ export class ShopService {
       .map(res => new Shop(res.json()))
       .map(this.deleteCache)
       // TODO what to callback on delete
-<<<<<<< HEAD
-      .do(()=>this.shop$.next(new Shop()))
-=======
       .do(() => this.shop$.next(new Shop()))
->>>>>>> refs/remotes/origin/master
-  };
+    };
 
 }

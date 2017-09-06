@@ -57,7 +57,6 @@ export class Kng2CoreModule {
   //   }
   // }
 }
-
 //
 //
 export {
