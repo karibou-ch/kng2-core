@@ -67,7 +67,7 @@ export {
   LoaderService,
   OrderService, Order, OrderEnum,
   UserPipe,
-  UserService, User, UserAddress, UserCard, Shop, ShopService
+  UserService, User, UserAddress, UserCard, ShopService, Shop
 }
 
 export * from './order/order.enum';

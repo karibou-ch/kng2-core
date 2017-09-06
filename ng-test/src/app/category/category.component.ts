@@ -1,10 +1,10 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
-import { 
-  CategoryService, 
-  Category, 
-  LoaderService, 
-  User, 
+import {
+  CategoryService,
+  Category,
+  LoaderService,
+  User,
   UserService,
   config
 }  from '../../../../dist'
@@ -23,7 +23,7 @@ export class CategoryComponent implements OnInit {
     private $loader: LoaderService,
     private $categorySrv: CategoryService,
     private router: Router
-  ){ 
+  ){
 
   }
 
@@ -42,6 +42,6 @@ export class CategoryComponent implements OnInit {
   }
 
   onNewCategory(route){
-    this.router.navigate(route); 
+    this.router.navigate(route);
   }
 }

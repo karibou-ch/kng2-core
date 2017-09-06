@@ -117,6 +117,7 @@ export class User {
   roles: string[];
   rank: string;
 
+<<<<<<< HEAD
   constructor(json?: any) {
     if (json !== undefined) {
       Object.assign(this, json);
@@ -165,6 +166,8 @@ export class User {
 
   }
 
+=======
+>>>>>>> refs/remotes/origin/master
   //
   // methods
   display() {

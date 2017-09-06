@@ -10,7 +10,7 @@ import { LoaderService, User, UserService } from '../../../..'
 })
 export class LoginComponent implements OnInit {
 
-  user: User = new User();
+  user: User = new User(null);
   model: any = {};
   loading = false;
   status;
@@ -42,7 +42,7 @@ export class LoginComponent implements OnInit {
       provider: "local"
     }).subscribe(
     () => this._router.navigate(['/dashboard'])
-    );  
+    );
 
   }
 
