@@ -10,19 +10,16 @@ import { LoaderService, User, UserService, Shop, ShopService } from '../../../..
 })
 export class UserListComponent implements OnInit {
 
-  users: Array<User> = new Array();
-
   constructor(
     private $loader: LoaderService,
     private _router: Router,
-    private $user: UserService,
-    private $shop: ShopService
+    private $user: UserService
   ) { }
 
   private currentUser: User;
-  private shops: Array<Shop> = [];
   private isReady: boolean;
   private config: any;
+  private users: Array<User> = new Array();
 
   ngOnInit() {
 
@@ -30,23 +27,11 @@ export class UserListComponent implements OnInit {
       this.isReady = true;
       this.config = ready[0];
       this.currentUser = ready[1];
-      Observable.forkJoin(
-         this.$user.query(),
-         this.$shop.query()
-        ).subscribe(resp => {
-          this.users = resp[0],
-          this.shops = resp[1]
+      this.$user.query()
+        .subscribe(res => {
+          this.users = res;
         });
-
-      //this.$user.query().subscribe(res => this.users = res);
-      //this.$shop.query().subscribe(shops => this.shops = shops);
     });
-  }
-
-  nbrOfShop(u: any) {
-    if (this.shops) {
-      return this.shops.filter(value => value.owner.id === u).length;
-    }
   }
 
 }

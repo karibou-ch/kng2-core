@@ -171,7 +171,6 @@ export class Shop {
       // - > is available/displayed for shop owner and admin ONLY
       // - > is saved on each order to compute bill
       account: {
-        fee: 0.2,
         tva: {}
       },
       scoring: {}
