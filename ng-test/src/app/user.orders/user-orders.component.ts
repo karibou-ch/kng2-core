@@ -17,7 +17,6 @@ export class UserOrdersComponent implements OnInit {
   ) { }
 
   isReady: boolean = false;
-  date;
   currentUser: User;
   config: any;
   next: Date;
@@ -30,7 +29,7 @@ export class UserOrdersComponent implements OnInit {
       this.config = ready[0];
       this.currentUser = ready[1];
 
-      var x = this.$order.findOrdersByUser(this.currentUser).subscribe(this.onDone, this.onError);
+      this.$order.findOrdersByUser(this.currentUser).subscribe(this.onDone, this.onError);
     })
 
   }
