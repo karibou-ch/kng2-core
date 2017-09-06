@@ -19,7 +19,7 @@ export class UserListComponent implements OnInit {
   ) { }
 
   private currentUser: User;
-  private shops: Array<Shop>;
+  private shops: Array<Shop> = [];
   private isReady: boolean;
   private config: any;
 
@@ -36,7 +36,7 @@ export class UserListComponent implements OnInit {
   }
 
   nbrOfShop(u: any) {
-    if (this.shops !== undefined) {
+    if (!this.shops) {
       return this.shops.filter(value => value.owner.id === u).length;
     }
   }

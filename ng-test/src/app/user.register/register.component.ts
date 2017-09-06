@@ -14,8 +14,8 @@ export class RegisterComponent implements OnInit {
   loading = false;
 
   constructor(
-    private userSrv: UserService,
-    private loaderSrv: LoaderService,
+    private $user: UserService,
+    private $loader: LoaderService,
     private _router: Router
   ) {
 
@@ -27,7 +27,7 @@ export class RegisterComponent implements OnInit {
 
   register() {
     this.loading = true;
-    this.userSrv.register(this.user).subscribe();
+    this.$user.register(this.user).subscribe();
 
   }
 
