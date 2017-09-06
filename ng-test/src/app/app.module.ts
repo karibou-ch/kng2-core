@@ -24,6 +24,10 @@ import { AddressComponent } from './user.address/address.component';
 import { CardComponent } from './user.card/card.component';
 import { CategoryComponent } from './category/category.component';
 import { CategoryEditComponent } from './category.edit/category-edit.component';
+import { RegisterComponent } from './user.register/register.component';
+import { UserListComponent } from './user.list/user-list.component';
+import { UserComponent } from './user/user.component';
+import { UserPasswordComponent } from './user.password/user-password.component';
 import { UserOrdersComponent } from './user.orders/user-orders.component';
 import { ShopCreateComponent } from './shop.create/shop-create.component';
 
@@ -41,7 +45,14 @@ import { ShopCreateComponent } from './shop.create/shop-create.component';
     ShopComponent,
     CategoryComponent,
     CategoryEditComponent,
+<<<<<<< HEAD
     UserOrdersComponent,
+=======
+    RegisterComponent,
+    UserListComponent,
+    UserComponent,
+    UserPasswordComponent,
+>>>>>>> refs/remotes/origin/master
     ShopComponent,
     ShopListComponent,
     ShopEditComponent,
