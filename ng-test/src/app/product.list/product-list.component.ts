@@ -62,11 +62,7 @@ export class ProductListComponent implements OnInit {
         });
     }
 
-<<<<<<< HEAD
     onDelete(prod: Product) {
-=======
-    onDelete(prod: Product) { // still not working
->>>>>>> 0556b3580dfb6363baf0d3a49f2058a9c56ea0b6
         this.$product.remove(prod.sku, this.password).subscribe();
     }
 
