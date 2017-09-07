@@ -14,14 +14,14 @@ import { MaterialModule } from './material.module';
 
 @NgModule({
   declarations: [
-    AppComponent,
-    MaterialModule
+    AppComponent
   ],
   imports: [
     BrowserModule,
     FormsModule,
     Kng2CoreModule,
     HttpClientModule,
+    MaterialModule,
     RouterModule.forRoot(appRoutes)
   ],
   providers: [],
