@@ -228,7 +228,7 @@ export class OrderService {
   // update shipping status (TODO WTF !?)
   // role:logistic
   // app.post('/v1/orders/:oid/shipping', auth.ensureLogisticOrAdmin, orders.updateShipping);
-  updateShipping(order: Order, oid, status) {
+  updateShipping(order: Order, status) {
     //return this.chain(backend.$order.save({ action: oid, id: 'shipping' }, { amount: status }).$promise);
     return this.http.post(this.config.API_SERVER + '/v1/orders/' + order.oid + '/shipping', { amount: status }, {
       headers: this.headers,
@@ -238,6 +238,21 @@ export class OrderService {
       .catch(err => Observable.of(this.defaultOrder));
 
   }
+
+  // update shopper  
+  // role:logistic
+  // app.post('/v1/orders/:oid/shipper', auth.ensureLogisticOrAdmin, orders.updateShippingShopper);
+  updateShippingShopper(order: Order) {
+    //return this.chain(backend.$order.save({ action: oid, id: 'shipping' }, { amount: status }).$promise);
+    return this.http.post(this.config.API_SERVER + '/v1/orders/' + order.oid + '/shopper', {  }, {
+      headers: this.headers,
+      withCredentials: true
+    })
+      .map(res => res.json() as Order)
+      .catch(err => Observable.of(this.defaultOrder));
+
+  }
+
 
   // update fee of shipping
   // role:admin
