@@ -11,10 +11,14 @@ import { AuthGuardService, Kng2CoreModule } from '../../../dist';
 import { appRoutes } from './app.routes';
 
 import { MaterialModule } from './material.module';
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+
+import { HeaderComponent } from './header/header.component';
 
 @NgModule({
   declarations: [
-    AppComponent
+    AppComponent,
+    HeaderComponent
   ],
   imports: [
     BrowserModule,
@@ -22,6 +26,7 @@ import { MaterialModule } from './material.module';
     Kng2CoreModule,
     HttpClientModule,
     MaterialModule,
+    BrowserAnimationsModule,
     RouterModule.forRoot(appRoutes)
   ],
   providers: [],

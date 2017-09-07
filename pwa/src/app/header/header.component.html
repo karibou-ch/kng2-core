@@ -1,0 +1,53 @@
+<md-toolbar color="primary">
+  <span>logo</span>
+
+  <md-tab-group>
+    <md-tab [routerLinkActive]="['active']"><a routerLink="/">Maraîcher</a></md-tab>
+    <md-tab [routerLinkActive]="['active']"><a routerLink="/">Boucherie</a></md-tab>
+    <md-tab [routerLinkActive]="['active']"><a routerLink="/">Laiterie</a></md-tab>
+    <md-tab [routerLinkActive]="['active']"><a routerLink="/">Boulangerie</a></md-tab>
+    <md-tab [routerLinkActive]="['active']"><a routerLink="/">Epicerie</a></md-tab>
+    <md-tab [routerLinkActive]="['active']"><a routerLink="/">Soins & Maison</a></md-tab>
+  </md-tab-group>
+
+  <div>
+    <button md-icon-button>
+      <i class="material-icons md-18">search</i>
+  </button>
+    <button md-icon-button [mdMenuTriggerFor]="menu">
+      <i class="material-icons md-18">face</i>
+  </button>
+    <md-menu #menu="mdMenu">
+      <div *ngIf="user.isAuthenticated()">
+        <button md-menu-item routerLink="/dashboard">
+          <md-icon>dialpad</md-icon>
+          <span>Bonjour, {{ user?.displayName }}</span>
+      </button>
+        <button md-menu-item (click)="logout()">
+          <md-icon>voicemail</md-icon>
+          <span>Se déconnecter</span>
+        </button>
+      </div>
+      <div *ngIf="!user.isAuthenticated()">
+        <button md-menu-item routerLink="/login">
+          <md-icon>person</md-icon>
+          <span>Se connecter</span>
+        </button>
+      </div>
+    </md-menu>
+    <button md-icon-button>
+      <i class="material-icons md-18">shopping_basket</i>
+  </button>
+</div>
+
+  <md-toolbar-row>
+    <md-tab-group>
+      <md-tab [routerLinkActive]="['active']"><a routerLink="/">Qui sommes-nous ?</a></md-tab>
+      <md-tab [routerLinkActive]="['active']"><a routerLink="/">Comment ça marche ?</a></md-tab>
+      <md-tab [routerLinkActive]="['active']"><a routerLink="/">Producteurs</a></md-tab>
+      <md-tab [routerLinkActive]="['active']"><a routerLink="/">Participer</a></md-tab>
+      <md-tab [routerLinkActive]="['active']"><a routerLink="/">Contact</a></md-tab>
+    </md-tab-group>
+  </md-toolbar-row>
+
+</md-toolbar>
