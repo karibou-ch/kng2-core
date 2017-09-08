@@ -1,6 +1,9 @@
 /* You can add global styles to this file, and also import other style files */
-@import '~@angular/material/prebuilt-themes/indigo-pink.css';
-@import '~https://fonts.googleapis.com/icon?family=Material+Icons';
+/*@import '~@angular/material/prebuilt-themes/indigo-pink.css';*/
+@import './_custom-theme';
+@import url(https://fonts.googleapis.com/css?family=Raleway:300,400,500,700,600);
+
+$green: #95b023;
 
 body {
   margin: 0;
@@ -15,4 +18,8 @@ md-card {
 
 md-toolbar-row {
   justify-content: space-between;
+}
+
+body{
+  font-family: Raleway;
 }

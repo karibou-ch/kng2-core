@@ -1,53 +1,85 @@
-<md-toolbar color="primary">
-  <span>logo</span>
-
-  <md-tab-group>
-    <md-tab [routerLinkActive]="['active']"><a routerLink="/">Maraîcher</a></md-tab>
-    <md-tab [routerLinkActive]="['active']"><a routerLink="/">Boucherie</a></md-tab>
-    <md-tab [routerLinkActive]="['active']"><a routerLink="/">Laiterie</a></md-tab>
-    <md-tab [routerLinkActive]="['active']"><a routerLink="/">Boulangerie</a></md-tab>
-    <md-tab [routerLinkActive]="['active']"><a routerLink="/">Epicerie</a></md-tab>
-    <md-tab [routerLinkActive]="['active']"><a routerLink="/">Soins & Maison</a></md-tab>
-  </md-tab-group>
-
-  <div>
-    <button md-icon-button>
-      <i class="material-icons md-18">search</i>
-  </button>
-    <button md-icon-button [mdMenuTriggerFor]="menu">
-      <i class="material-icons md-18">face</i>
-  </button>
-    <md-menu #menu="mdMenu">
-      <div *ngIf="user.isAuthenticated()">
-        <button md-menu-item routerLink="/dashboard">
-          <md-icon>dialpad</md-icon>
-          <span>Bonjour, {{ user?.displayName }}</span>
+<md-sidenav-container fullscreen>
+  <nav>
+    <md-toolbar class="toolbar-top">
+      <img src="../../assets/img/logo.gif" alt="logo" width="60px">
+      <div class="container-small">
+        <button md-icon-button color="accent" class="container-small" (click)="sidenav.open()">
+          <md-icon>view_headline</md-icon>
+          <span>Menu</span>
+        </button>
+      </div>
+      <span flex></span>
+      <ul class="container-big">
+        <li class="nav1">
+          <a [routerLink]="" [routerLinkActive]="['active']">Maraîcher</a>
+          <a [routerLink]="" [routerLinkActive]="['active']">Boucherie</a>
+          <a [routerLink]="" [routerLinkActive]="['active']">Laiterie</a>
+          <a [routerLink]="" [routerLinkActive]="['active']">Boulangerie</a>
+          <a [routerLink]="" [routerLinkActive]="['active']">Epicerie</a>
+          <a [routerLink]="" [routerLinkActive]="['active']">Soins & Maison</a>
+        </li>
+        <li class="nav2">
+          <a [routerLink]="" [routerLinkActive]="['active']">Qui sommes-nous ?</a>
+          <a [routerLink]="" [routerLinkActive]="['active']">Comment ça marche ?</a>
+          <a [routerLink]="" [routerLinkActive]="['active']">Producteurs</a>
+          <a [routerLink]="" [routerLinkActive]="['active']">Participer</a>
+          <a [routerLink]="" [routerLinkActive]="['active']">Contact</a>
+        </li>
+      </ul>
+      <span flex></span>
+      <div>
+      <button md-icon-button color="accent">
+        <md-icon>search</md-icon>
       </button>
-        <button md-menu-item (click)="logout()">
-          <md-icon>voicemail</md-icon>
-          <span>Se déconnecter</span>
-        </button>
+        <button md-icon-button color="accent" [mdMenuTriggerFor]="menu">
+        <md-icon>face</md-icon>
+      </button>
+        <md-menu #menu="mdMenu">
+          <div *ngIf="user.isAuthenticated()">
+            <button md-menu-item color="accent" routerLink="/dashboard">
+            <md-icon>perm_identity</md-icon>
+            <span>Bonjour, {{ user?.displayName }}</span>
+            </button>
+            <button md-menu-item color="accent" (click)="logout()">
+            <md-icon>exit_to_app</md-icon>
+            <span>Se déconnecter</span>
+          </button>
+          </div>
+          <div *ngIf="!user.isAuthenticated()">
+            <button md-menu-item color="accent" routerLink="/login">
+              <md-icon>perm_identity</md-icon>
+              <span>Se connecter</span>
+            </button>
+          </div>
+        </md-menu>
+        <button color="accent" md-icon-button>
+        <md-icon>shopping_basket</md-icon>
+      </button>
       </div>
-      <div *ngIf="!user.isAuthenticated()">
-        <button md-menu-item routerLink="/login">
-          <md-icon>person</md-icon>
-          <span>Se connecter</span>
-        </button>
-      </div>
-    </md-menu>
-    <button md-icon-button>
-      <i class="material-icons md-18">shopping_basket</i>
-  </button>
-</div>
-
-  <md-toolbar-row>
-    <md-tab-group>
-      <md-tab [routerLinkActive]="['active']"><a routerLink="/">Qui sommes-nous ?</a></md-tab>
-      <md-tab [routerLinkActive]="['active']"><a routerLink="/">Comment ça marche ?</a></md-tab>
-      <md-tab [routerLinkActive]="['active']"><a routerLink="/">Producteurs</a></md-tab>
-      <md-tab [routerLinkActive]="['active']"><a routerLink="/">Participer</a></md-tab>
-      <md-tab [routerLinkActive]="['active']"><a routerLink="/">Contact</a></md-tab>
-    </md-tab-group>
-  </md-toolbar-row>
-
-</md-toolbar>
+    </md-toolbar>
+  </nav>
+  <md-sidenav #sidenav class="sidenav">
+    <md-toolbar color="primary">
+      <h1>Panier-local</h1>
+    </md-toolbar>
+    <div class="sidenav-container">
+    <h3>Catégories</h3>
+    <div class="nav1side">
+      <li><a [routerLink]="" [routerLinkActive]="['active']">Maraîcher</a></li>
+      <li><a [routerLink]="" [routerLinkActive]="['active']">Boucherie</a></li>
+      <li><a [routerLink]="" [routerLinkActive]="['active']">Laiterie</a></li>
+      <li><a [routerLink]="" [routerLinkActive]="['active']">Boulangerie</a></li>
+      <li><a [routerLink]="" [routerLinkActive]="['active']">Epicerie</a></li>
+      <li><a [routerLink]="" [routerLinkActive]="['active']">Soins & Maison</a></li>
+    </div>
+    <h3>Informations</h3>
+    <div class="nav2side">
+      <li><a [routerLink]="" [routerLinkActive]="['active']">Qui sommes-nous ?</a></li>
+      <li><a [routerLink]="" [routerLinkActive]="['active']">Comment ça marche ?</a></li>
+      <li><a [routerLink]="" [routerLinkActive]="['active']">Producteurs</a></li>
+      <li><a [routerLink]="" [routerLinkActive]="['active']">Participer</a></li>
+      <li><a [routerLink]="" [routerLinkActive]="['active']">Contact</a></li>
+    </div>
+  </div>
+  </md-sidenav>
+</md-sidenav-container>
