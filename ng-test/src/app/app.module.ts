@@ -16,6 +16,7 @@ import { DashboardComponent } from './user.dashboard/dashboard.component';
 import { ShopComponent } from './shop/shop.component';
 import { ShopListComponent } from './shop.list/shop-list.component';
 import { ShopEditComponent } from './shop.edit/shop-edit.component';
+import { ShopCreateComponent } from './shop.create/shop-create.component';
 
 import { AuthGuardService, Kng2CoreModule } from '../../../dist';
 
@@ -25,10 +26,11 @@ import { CardComponent } from './user.card/card.component';
 import { CategoryComponent } from './category/category.component';
 import { CategoryEditComponent } from './category.edit/category-edit.component';
 import { RegisterComponent } from './user.register/register.component';
+
 import { UserListComponent } from './user.list/user-list.component';
 import { UserComponent } from './user/user.component';
 import { UserPasswordComponent } from './user.password/user-password.component';
-import { ShopCreateComponent } from './shop.create/shop-create.component';
+import { UserOrdersComponent } from './user.orders/user-orders.component';
 
 @NgModule({
   declarations: [
@@ -41,17 +43,17 @@ import { ShopCreateComponent } from './shop.create/shop-create.component';
     DashboardComponent,
     AddressComponent,
     CardComponent,
-    ShopComponent,
     CategoryComponent,
     CategoryEditComponent,
+    UserOrdersComponent,
     RegisterComponent,
     UserListComponent,
     UserComponent,
     UserPasswordComponent,
     ShopComponent,
-    ShopListComponent,
     ShopEditComponent,
-    ShopCreateComponent
+    ShopCreateComponent,
+    ShopListComponent
   ],
   imports: [
     BrowserModule,

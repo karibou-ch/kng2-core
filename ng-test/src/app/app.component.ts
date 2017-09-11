@@ -16,9 +16,8 @@ export class AppComponent {
   constructor(
     private config: ConfigService,
     private loader: LoaderService
-  ) {
+  ) {}
 
-  }
 
   ngOnInit(){
     this.loader.ready().subscribe();
