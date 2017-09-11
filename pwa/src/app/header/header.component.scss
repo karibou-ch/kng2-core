@@ -7,11 +7,11 @@
 
   a {
     color: $dark-grey !important;
-  }
 
-  a:hover{
-    background-color: $light-grey;
-    border-radius: 5px;
+    &:hover{
+      background-color: $light-grey;
+      border-radius: 5px;
+    }
   }
 }
 
@@ -20,20 +20,22 @@
 
   a {
     color: $green !important;
-  }
 
-  a:hover{
-    background-color: $light-grey;
-    border-radius: 5px;
+    &:hover{
+      background-color: $light-grey;
+      border-radius: 5px;
+    }
   }
+}
+
+md-nav-bar {
+  position: relative;
 }
 
 a {
   padding: 5px;
   text-decoration: none;
 }
-
-
 
 ul {
   list-style: none;
@@ -66,13 +68,13 @@ ul {
   }
 }
 ////SIDE NAV//////////////////////////////////////
-
 .sidenav {
   li {
     padding: 4px;
-  }
-  li:hover {
-    background-color: $light-grey;
+
+    &:hover {
+      background-color: $light-grey;
+    }
   }
 
   h1{
