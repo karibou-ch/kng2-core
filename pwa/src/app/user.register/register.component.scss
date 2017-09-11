@@ -1,0 +1,28 @@
+.register-form {
+  min-width: 150px;
+  max-width: 500px;
+  width: 100%;
+}
+
+.full-width {
+  width: 100%;
+  tr md-form-field{
+    width: 100%;
+  }
+}
+
+md-card{
+  max-width: 500px;
+}
+
+md-form-field{
+  margin-top:10px;
+}
+
+button{
+  margin: 10px;
+  color:white!important;
+}
+md-toolbar{
+  margin-bottom: 5px;
+}

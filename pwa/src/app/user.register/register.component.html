@@ -1,0 +1,41 @@
+<md-card class="container">
+  <md-toolbar color="primary">
+    <div class="md-toolbar-tools">
+      <h2><span>Formulaire d'enregistrement</span></h2>
+    </div>
+  </md-toolbar>
+  <md-card-content>
+    <form (ngSubmit)="register()" class="col-xs-4" #registerForm="ngForm" class="register-form">
+      <table class="full-width" cellspacing="0">
+        <tr>
+          <md-form-field class="form-group">
+            <input mdInput [(ngModel)]="user.lastname" type="text" class="form-control validate" id="familyName" name="familyName" placeholder="Nom" required>
+          </md-form-field>
+        </tr>
+        <tr>
+          <md-form-field class="form-group">
+            <input mdInput [(ngModel)]="user.firstname" type="text" class="form-control validate" id="givenName" name="givenName" placeholder="Prénom" required>
+          </md-form-field>
+        </tr>
+        <tr>
+          <md-form-field class="form-group">
+            <input mdInput [(ngModel)]="user.email" type="email" class="form-control validate" id="email" name="email" placeholder="Email" required>
+          </md-form-field>
+        </tr>
+        <tr>
+          <md-form-field class="form-group">
+            <input mdInput [(ngModel)]="user.password" type="password" class="form-control validate" id="password" name="password" placeholder="Mot de passe" required>
+          </md-form-field>
+        </tr>
+        <tr>
+          <md-form-field class="form-group">
+            <input mdInput [(ngModel)]="user.confirm" type="password" class="form-control validate" id="confirm" name="confirm" placeholder="Confirmer le mot de passe" required>
+          </md-form-field>
+        </tr>
+        <tr>
+          <button md-raised-button color="primary" [disabled]="!registerForm.form.valid" type="submit">S'enregistrer</button>
+        </tr>
+      </table>
+    </form>
+  </md-card-content>
+</md-card>

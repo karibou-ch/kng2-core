@@ -20,19 +20,9 @@
         </tr>
         <tr>
           <button md-raised-button color="primary" [disabled]="!loginForm.form.valid || !isReady" type="submit">Soumettre</button>
-          <button md-raised-button color="primary">S'enregistrer</button>
+          <button md-raised-button color="primary" routerLink="/register">S'enregistrer</button>
         </tr>
       </table>
     </form>
   </md-card-content>
 </md-card>
-
-<div [hidden]="!submitted">
-  <h2>{{ status }}</h2>
-  <div class="row">
-    <div class="col-xs-3">User object</div>
-    <div class="col-xs-9  pull-left">{{ user?.displayName }}</div>
-  </div>
-  <button (click)="logout()" [disabled]="!isReady">Logout</button>
-  <!--  -->
-</div>
