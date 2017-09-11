@@ -84,7 +84,7 @@ export class OrderService {
   // role:client
   // app.post('/v1/orders', auth.ensureUserValid, orders.ensureValidAlias, queued(orders.create));
   create(shipping, items, payment): Observable<Order> {
-    //backend.$order.save({shipping:shipping,items:items,payment:payment}, function() {  
+    //backend.$order.save({shipping:shipping,items:items,payment:payment}, function() {
     return this.http.post(this.config.API_SERVER + '/v1/orders', { shipping: shipping, items: items, payment: payment }, {
       headers: this.headers,
       withCredentials: true
@@ -162,7 +162,7 @@ export class OrderService {
       .catch(err => Observable.of(this.defaultOrder));
   }
 
-  // order can be canceled 
+  // order can be canceled
   // -> when user cancel an order reason is always cancel)
   // -> when admin cancel an order reason can be "customer", "fraud", "inventory", "system","timeout","other"
   // role: admin|user
@@ -228,7 +228,7 @@ export class OrderService {
   // update shipping status (TODO WTF !?)
   // role:logistic
   // app.post('/v1/orders/:oid/shipping', auth.ensureLogisticOrAdmin, orders.updateShipping);
-  updateShipping(order: Order, oid, status) {
+  updateShipping(order: Order, status) {
     //return this.chain(backend.$order.save({ action: oid, id: 'shipping' }, { amount: status }).$promise);
     return this.http.post(this.config.API_SERVER + '/v1/orders/' + order.oid + '/shipping', { amount: status }, {
       headers: this.headers,
@@ -238,6 +238,21 @@ export class OrderService {
       .catch(err => Observable.of(this.defaultOrder));
 
   }
+
+  // update shopper  
+  // role:logistic
+  // app.post('/v1/orders/:oid/shipper', auth.ensureLogisticOrAdmin, orders.updateShippingShopper);
+  updateShippingShopper(order: Order) {
+    //return this.chain(backend.$order.save({ action: oid, id: 'shipping' }, { amount: status }).$promise);
+    return this.http.post(this.config.API_SERVER + '/v1/orders/' + order.oid + '/shopper', {  }, {
+      headers: this.headers,
+      withCredentials: true
+    })
+      .map(res => res.json() as Order)
+      .catch(err => Observable.of(this.defaultOrder));
+
+  }
+
 
   // update fee of shipping
   // role:admin
@@ -250,7 +265,7 @@ export class OrderService {
       .catch(err => Observable.of(this.defaultOrder));
   };
 
-  // validate shop products collect 
+  // validate shop products collect
   // role:logistic
   // app.post('/v1/orders/:shopname/collect', auth.ensureLogisticOrAdmin, orders.updateCollect);
   updateCollect(shopname, status, when): Observable<Order[]> {
@@ -259,7 +274,7 @@ export class OrderService {
       headers: this.headers,
       withCredentials: true
     })
-      .map(res => res.json() as Order[]);
+      .map(res => res.json().map(obj => new Order(obj)));
   }
 
   // find all orders by user
@@ -271,7 +286,7 @@ export class OrderService {
       headers: this.headers,
       withCredentials: true
     })
-      .map(res => res.json() as Order[]);
+      .map(res => res.json().map(obj => new Order(obj)));
   }
 
   // find all order filtered by filter
@@ -283,7 +298,7 @@ export class OrderService {
       headers: this.headers,
       withCredentials: true
     })
-      .map(res => res.json() as Order[])
+      .map(res => res.json().map(obj => new Order(obj)));
       //.map(orders => orders.map(order => this.updateCache(order)));
   }
 
@@ -293,16 +308,16 @@ export class OrderService {
   findOrdersByShop(shop, filter): Observable<Order[]> {
     //let params = Object.assign({}, filter || {}, { id: shop.urlpath, action: 'shops' });
     //return this.chainAll(backend.$order.query(params).$promise);
-    return this.http.get('/v1/orders/shops/'+shop.urlpath,{ 
+    return this.http.get('/v1/orders/shops/'+shop.urlpath,{
       params: filter,
       headers: this.headers,
       withCredentials: true
     })
-      .map(res => res.json() as Order[])
+      .map(res => res.json().map(obj => new Order(obj)));
       //.map(orders => orders.map(order => this.updateCache(order)));
   }
 
-  // find all repport 
+  // find all repport
   // role:admin|shop
   // app.get('/v1/orders/invoices/shops/:month/:year?', orders.ensureHasShopOrAdmin, orders.invoicesByShops);
   findRepportForShop(filter):Observable<any> {

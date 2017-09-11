@@ -2,6 +2,7 @@ import { Http, Headers } from '@angular/http';
 import { Injectable } from '@angular/core';
 import { Observable, BehaviorSubject, ReplaySubject } from 'rxjs/Rx';
 import { Category } from './category.service';
+import { User } from './user.service';
 
 import { ConfigService } from './config.service';
 
@@ -21,12 +22,12 @@ export class Shop {
     source: string;
   };
 
-  details: {
-    bio: boolean;
-    gluten: boolean;
-    lactose: boolean;
-    vegetarian: boolean;
-    local: boolean;
+  details:{
+    bio:boolean;
+    gluten:boolean;
+    lactose:boolean;
+    vegetarian:boolean;
+    local:boolean;
   };
 
 
@@ -39,7 +40,7 @@ export class Shop {
       lat: number;
       lng: number;
     }
-  }
+  };
 
   //
   // where shop is located
@@ -60,6 +61,7 @@ export class Shop {
 
   //
   // this shop belongsTo a category
+
   catalog: Category;
 
   //
@@ -70,13 +72,14 @@ export class Shop {
     updated: Date;
   }];
 
-  available: {
-    active: boolean;
-    from: Date,
-    to: Date,
-    weekdays: [number],
-    comment: string
-  };
+
+  available:{
+    active:boolean;
+    from:Date,
+    to:Date,
+    weekdays:[number],
+    comment:string
+};
 
   discount: {
     amount: number;
@@ -98,15 +101,15 @@ export class Shop {
   // secret value for the business model
   // - > is available/displayed for shop owner and admin ONLY
   // - > is saved on each order to compute bill
-  account: {
-    fees?: number;
-    tva: {
-      number?: number,
-      fees?: number
+  account:{
+    fees?:number;
+    tva:{
+      number?:number,
+      fees?:number
     },
     updated: Date;
   };
-  owner: any;
+  owner: User;
   scoring: {
     weight: number;
     orders: number;
@@ -118,6 +121,10 @@ export class Shop {
 
   //
   // Object methods
+
+
+
+
   constructor(json?: any) {
 
     let defaultShop = {
@@ -156,6 +163,7 @@ export class Shop {
         active: false
       },
 
+      owner: {},
       //
       // type Date on pending, set true on active, false on deleted
       status: false,
@@ -163,7 +171,6 @@ export class Shop {
       // - > is available/displayed for shop owner and admin ONLY
       // - > is saved on each order to compute bill
       account: {
-        fee: 0.2,
         tva: {}
       },
       scoring: {}
@@ -195,7 +202,8 @@ export class Shop {
 export class ShopService {
   //
   // common multicast to update UX when one shop on the list is modified
-  public shop$: ReplaySubject<Shop>;
+
+  public  shop$: ReplaySubject<Shop>;
 
   private config: any;
   private headers: Headers;
@@ -238,7 +246,7 @@ export class ShopService {
     }
     //
     //update existing entry
-    return Object.assign(this.cache.map[shop.urlpath], shop);
+    return Object.assign(this.cache.map[shop.urlpath],shop);
   }
 
 
@@ -246,14 +254,15 @@ export class ShopService {
   // REST api wrapper
   //
 
-  query(filter): Observable<Shop[]> {
+  query(filter?: any):Observable<Shop[]> {
     return this.http.get(this.config.API_SERVER + '/v1/shops', {
       headers: this.headers,
-      withCredentials: true
+      withCredentials: true,
+      search: filter,
     })
       .map(res => res.json().map(obj => new Shop(obj)));
     //.map(shops => shops.map(this.updateCache.bind(this)));
-  };
+};
 
   findByCatalog(cat, filter): Observable<Shop[]> {
     return this.http.get(this.config.API_SERVER + '/v1/shops/category/' + cat, {
@@ -263,7 +272,6 @@ export class ShopService {
       .map(res => res.json().map(obj => new Shop(obj)))
       .map(shops => shops.map(this.updateCache));
   };
-
 
   //
   // get a single shop
@@ -300,7 +308,7 @@ export class ShopService {
         headers: this.headers,
         withCredentials: true
       });
-  };
+    };
 
   save(shop: Shop): Observable<Shop> {
     return this.http.post(this.config.API_SERVER + '/v1/shops/' + shop.urlpath, shop, {
@@ -323,7 +331,7 @@ export class ShopService {
       .map(res => new Shop(res.json()))
       //.map(shop => this.updateCache(shop))
       .do(this.shop$.next)
-    // TODO shop.create => user.shops.push(shop);
+      // TODO shop.create => user.shops.push(shop);
   };
 
   //
@@ -342,6 +350,6 @@ export class ShopService {
       .map(this.deleteCache)
       // TODO what to callback on delete
       .do(() => this.shop$.next(new Shop()))
-  };
+    };
 
 }
