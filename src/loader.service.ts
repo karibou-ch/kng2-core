@@ -35,7 +35,6 @@ export class LoaderService {
     //create a multicast Observable with the caching property of BehaviorSubject (publishbehavior)
     //every subscribing component will be connected to the same request and get the last item received
 
-
     this.loader = this.config.init()
       .flatMap(config =>
         //

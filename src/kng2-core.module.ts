@@ -13,7 +13,7 @@ import { LoaderService } from './loader.service';
 import { OrderService } from './order/order.service';
 import { Order } from './order/order';
 import { UserPipe } from './user.pipe';
-import { User, UserService, UserAddress, UserCard } from './user.service';
+import { User, UserCard, UserAddress, UserService } from './user.service';
 import { Shop, ShopService } from './shop.service';
 import *  as OrderEnum from './order/order.enum';
 
@@ -59,7 +59,6 @@ export class Kng2CoreModule {
   //   }
   // }
 }
-
 //
 //
 export {
