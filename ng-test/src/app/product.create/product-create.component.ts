@@ -32,7 +32,7 @@ export class ProductCreateComponent implements OnInit {
     private config: any;
     private product: Product = new Product();
     private catalogs: Array<Category> = new Array;
-    private errors: any;
+    private error: any;
 
     ngOnInit() {
         this.$loader.ready().subscribe(ready => {
@@ -43,7 +43,7 @@ export class ProductCreateComponent implements OnInit {
             //this.$category.select().subscribe(res => this.catalogs);
             //Loading categorys before the if new Instance
             this.$category.select().subscribe(res => {
-                this.catalogs = res.filter(res => res.type == "Category").sort();
+                this.catalogs = res.filter(res => res.type == "Category").sort((a, b) => a.weight - b.weight);
             });
         });
 
@@ -51,7 +51,16 @@ export class ProductCreateComponent implements OnInit {
 
     onSave() {
         this.product.categories = this.product.categories._id;
-        this.$product.create(this.product).subscribe();
+        this.$product.create(this.product).subscribe(this.onDone, this.onError);
+    }
+
+    
+    onDone(p:Product){
+        this.product = p;
+    }
+
+    onError(error){
+        this.error = error;
     }
 
 }

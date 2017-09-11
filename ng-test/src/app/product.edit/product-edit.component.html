@@ -207,6 +207,7 @@
 			<button
 				id="editButton"
 				name="save"
+				[disabled]="!isReady"
 				(click)="onSave();"
 				class="btn btn-block">Save</button>
 		</div>
