@@ -31,7 +31,7 @@ export class LoginComponent implements OnInit {
       Object.assign(this.user, loader[1]);
       this.isReady=true;
     })
-    if(this.user.isAuthenticated()) this._router.navigate(['/dashboard']);
+    if(this.user.isAuthenticated()) this._router.navigate(['/']);
   }
 
   login() {
@@ -41,7 +41,7 @@ export class LoginComponent implements OnInit {
       password: this.model.password,
       provider: "local"
     }).subscribe(
-    () => this._router.navigate(['/dashboard'])
+    () => this._router.navigate(['/'])
     );
 
   }

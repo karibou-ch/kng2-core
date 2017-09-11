@@ -5,6 +5,7 @@ import { HttpClientModule } from '@angular/common/http';
 import { RouterModule, Routes } from '@angular/router';
 
 import { AppComponent } from './app.component';
+import { LoginComponent } from './user.login/login.component';
 
 import { AuthGuardService, Kng2CoreModule } from '../../../dist';
 
@@ -19,6 +20,7 @@ import { HeaderComponent } from './header/header.component';
 @NgModule({
   declarations: [
     AppComponent,
+    LoginComponent,
     HeaderComponent
   ],
   imports: [
