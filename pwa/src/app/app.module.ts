@@ -10,25 +10,18 @@ import { AuthGuardService, Kng2CoreModule } from '../../../dist';
 
 import { appRoutes } from './app.routes';
 
-import {MdButtonModule, MdCheckboxModule, MdSidenavModule, MdMenuModule, MdTabsModule,
-        MdToolbarModule, MdIconModule} from '@angular/material';
-import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
-
-import { HeaderComponent } from './header/header.component';
+import { MaterialModule } from './material.module';
 
 @NgModule({
   declarations: [
-    AppComponent,
-    HeaderComponent
+    AppComponent
   ],
   imports: [
     BrowserModule,
     FormsModule,
     Kng2CoreModule,
     HttpClientModule,
-    MdButtonModule, MdCheckboxModule, MdSidenavModule, MdMenuModule, MdTabsModule,
-    MdToolbarModule,MdIconModule,
-    BrowserAnimationsModule,
+    MaterialModule,
     RouterModule.forRoot(appRoutes)
   ],
   providers: [],
