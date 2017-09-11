@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
 import { ConfigService, LoaderService } from '../../../dist';
+import {OverlayContainer} from '@angular/material';
 
 ConfigService.setDefaultConfig({
     API_SERVER:'http://api.panierlocal.evaletolab.ch'
@@ -13,10 +14,8 @@ ConfigService.setDefaultConfig({
 
 export class AppComponent {
 
-  constructor(
-    private config: ConfigService,
-    private loader: LoaderService
-  ) {}
+  constructor(private config: ConfigService, private loader: LoaderService)
+  {}
 
 
   ngOnInit(){
