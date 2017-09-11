@@ -1,99 +1,38 @@
-<div class="container">
-	<h2 class="title">Login</h2>
-	<form
-		(ngSubmit)="login()"
-		class="col-xs-4"
-		#loginForm="ngForm">
-		<div class="form-group">
-			<label for="email">Email</label>
-			<input
-				[(ngModel)]="model.email"
-				type="email"
-				class="form-control validate"
-				id="email"
-				name="email"
-				required>
-		</div>
-		<div class="layout mdl-layout mdl-js-layout mdl-layout--fixed-header">
-			<label for="password">Mot de passe</label>
-			<input
-				[(ngModel)]="model.password"
-				type="password"
-				class="form-control validate"
-				id="password"
-				name="password"
-				required>
-			<!--  <a routerLink="/recovery">mot de passe oublié?</a> -->
-		</div>
-		<button
-			[disabled]="!loginForm.form.valid || !isReady"
-			type="submit"
-			class="btn btn-info">Soumettre</button>
-		<button class="btn btn-primary">Register</button>
-	</form>
-	<form
-		(ngSubmit)="login()"
-		class="col-xs-4"
-		#loginForm="ngForm">
-		>
-		<fieldset>
-			<ul class="list-unstyled">
-				<li>
-					<div
-						class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
-						<input
-							class="mdl-textfield__input"
-							type="email"
-							id="email"
-							name="email"
-							ng-model="data.email"
-							ng-required="true" />
-						<label
-							class="mdl-textfield__label"
-							for="email">Email*</label> <span
-							class="mdl-tooltip mdl-tooltip--validation"
-							for="email"
-							ng-show="form.email.$invalid && form.email.$touched"> <span
-							ng-show="form.email.$error.required">Required.</span> <span
-							ng-show="form.email.$error.email">Invalid email.</span>
-						</span>
-					</div>
-				</li>
-				<li>
-					<div
-						class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
-						<input
-							class="mdl-textfield__input"
-							type="password"
-							id="password"
-							name="password"
-							ng-model="data.password"
-							ng-required="true" />
-						<label
-							class="mdl-textfield__label"
-							for="password">Password*</label> <span
-							class="mdl-tooltip mdl-tooltip--validation"
-							for="password"
-							ng-show="form.password.$invalid && form.password.$touched">
-							<span ng-show="form.password.$error.required">Required.</span>
-						</span>
-					</div>
-				</li>
-			</ul>
-		</fieldset>
-	</form>
-</div>
+<md-card class="container">
+  <md-toolbar color="primary">
+    <div class="md-toolbar-tools">
+      <h2><span>Formulaire de connection</span></h2>
+    </div>
+  </md-toolbar>
+  <md-card-content>
+    <form (ngSubmit)="login()" class="col-xs-4" #loginForm="ngForm" class="login-form">
+      <table class="full-width" cellspacing="0">
+        <tr>
+          <md-form-field class="full-width">
+            <input mdInput [(ngModel)]="model.email" type="email" class="form-control validate" id="email" name="email" placeholder="Email" required>
+          </md-form-field>
+        </tr>
+        <tr>
+          <md-form-field class="full-width">
+            <input mdInput [(ngModel)]="model.password" type="password" class="form-control validate" id="password" name="password" placeholder="Mot de passe" required>
+            <!--  <a routerLink="/recovery">mot de passe oublié?</a> -->
+          </md-form-field>
+        </tr>
+        <tr>
+          <button md-raised-button color="primary" [disabled]="!loginForm.form.valid || !isReady" type="submit">Soumettre</button>
+          <button md-raised-button color="primary">S'enregistrer</button>
+        </tr>
+      </table>
+    </form>
+  </md-card-content>
+</md-card>
 
 <div [hidden]="!submitted">
-	<h2>{{ status }}</h2>
-	<div class="row">
-		<div class="col-xs-3">User object</div>
-		<div class="col-xs-9  pull-left">{{ user?.displayName }}</div>
-	</div>
-	<button
-		class="btn btn-primary"
-		(click)="logout()"
-		[disabled]="!isReady">Logout</button>
-	<!--  -->
+  <h2>{{ status }}</h2>
+  <div class="row">
+    <div class="col-xs-3">User object</div>
+    <div class="col-xs-9  pull-left">{{ user?.displayName }}</div>
+  </div>
+  <button (click)="logout()" [disabled]="!isReady">Logout</button>
+  <!--  -->
 </div>
-

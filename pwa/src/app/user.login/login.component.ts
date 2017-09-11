@@ -10,7 +10,7 @@ import { LoaderService, User, UserService } from '../../../..'
 })
 export class LoginComponent implements OnInit {
 
-  user: User = new User(null);
+  user: User = new User();
   model: any = {};
   loading = false;
   status;
