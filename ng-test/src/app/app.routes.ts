@@ -6,7 +6,7 @@ import { ProductListComponent }  from './product.list/product-list.component';
 import { ProductEditComponent }  from './product.edit/product-edit.component';
 import { ProductCreateComponent } from './product.create/product-create.component';
 import { ProductComponent }  from './product/product.component';
-import { CategoryEditComponent }  from './category.edit/category-edit.component';
+import { CategoryComponent } from './category/category.component';
 import { CategoryEditComponent } from './category.edit/category-edit.component';
 import { DashboardComponent } from './user.dashboard/dashboard.component';
 import { HeaderComponent } from './header/header.component';
