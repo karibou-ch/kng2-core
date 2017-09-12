@@ -7,6 +7,7 @@ import { RouterModule, Routes } from '@angular/router';
 import { AppComponent } from './app.component';
 import { LoginComponent } from './user.login/login.component';
 import { UserProfileComponent } from './user.profile/user-profile.component';
+import { RegisterComponent } from './user.register/register.component';
 
 import { AuthGuardService, Kng2CoreModule } from '../../../dist';
 
@@ -21,7 +22,8 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
   declarations: [
     AppComponent,
     LoginComponent,
-    UserProfileComponent
+    UserProfileComponent,
+    RegisterComponent
   ],
   imports: [
     BrowserModule,
