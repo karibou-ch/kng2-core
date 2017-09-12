@@ -1,0 +1,38 @@
+<md-card class="container">
+  <md-toolbar color="primary">
+    <div class="md-toolbar-tools">
+      <h2><span>Formulaire de connection</span></h2>
+    </div>
+  </md-toolbar>
+  <md-card-content>
+    <form (ngSubmit)="login()" class="col-xs-4" #loginForm="ngForm" class="login-form">
+      <table class="full-width" cellspacing="0">
+        <tr>
+          <md-form-field class="full-width">
+            <input mdInput [(ngModel)]="model.email" type="email" class="form-control validate" id="email" name="email" placeholder="Email" required>
+          </md-form-field>
+        </tr>
+        <tr>
+          <md-form-field class="full-width">
+            <input mdInput [(ngModel)]="model.password" type="password" class="form-control validate" id="password" name="password" placeholder="Mot de passe" required>
+            <!--  <a routerLink="/recovery">mot de passe oublié?</a> -->
+          </md-form-field>
+        </tr>
+        <tr>
+          <button md-raised-button color="primary" [disabled]="!loginForm.form.valid || !isReady" type="submit">Soumettre</button>
+          <button md-raised-button color="primary">S'enregistrer</button>
+        </tr>
+      </table>
+    </form>
+  </md-card-content>
+</md-card>
+
+<div [hidden]="!submitted">
+  <h2>{{ status }}</h2>
+  <div class="row">
+    <div class="col-xs-3">User object</div>
+    <div class="col-xs-9  pull-left">{{ user?.displayName }}</div>
+  </div>
+  <button (click)="logout()" [disabled]="!isReady">Logout</button>
+  <!--  -->
+</div>
