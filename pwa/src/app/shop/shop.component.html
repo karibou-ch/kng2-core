@@ -1,0 +1,199 @@
+<div class="container" fxLayout="column" fxLayout.gt-md="row" fxLayoutAlign="stretch" fxLayoutGap="10px">
+  <div fxFlex="100%" fxFlex.gt-md="40%" fxLayout="column">
+    <md-card fxFlex class="presentation-card">
+      <md-card-header>
+        <img md-card-avatar [src]="shop?.photo?.logo">
+        <md-card-title>{{shop?.name}}</md-card-title>
+        <md-card-subtitle>
+          <md-chip-list>
+            <md-chip color="primary" selected="true">{{shop?.catalog.name}}</md-chip>
+            <md-chip *ngIf="shop?.details.bio" selected="true" color="accent}">Bio</md-chip>
+            <md-chip *ngIf="shop?.details.gluten" selected="true" color="accent}">sans gluten</md-chip>
+            <md-chip *ngIf="shop?.details.lactose" selected="true" color="accent}">sans lactose</md-chip>
+            <md-chip *ngIf="shop?.details.vegetarian" selected="true" color="accent}">Vegetarian</md-chip>
+            <md-chip *ngIf="shop?.details.local" selected="true" color="accent}">Local</md-chip>
+          </md-chip-list>
+        </md-card-subtitle>
+      </md-card-header>
+      <img md-card-image [src]="shop?.photo?.fg" alt="fg">
+      <md-card-content>
+        <p>
+          {{shop?.description}}
+        </p>
+      </md-card-content>
+      <md-card-actions>
+        <div *ngIf="currentUser?.isOwnerOrAdmin(shop?.name)">
+          <button md-button routerLink="['/shop/edit/',shop?.urlpath]">Edit Shop</button>
+        </div>
+      </md-card-actions>
+    </md-card>
+    <md-card fxFlex class="info-card">
+      <md-card-header>
+        <img md-card-avatar [src]="shop?.photo?.logo">
+        <md-card-title>Infos pratique</md-card-title>
+        <md-card-subtitle>
+        </md-card-subtitle>
+      </md-card-header>
+      <md-card-content>
+        <md-chip-list>
+          <md-chip *ngIf="shop?.available.weekdays[0]" color="primary" selected="true">Lundi</md-chip>
+          <md-chip *ngIf="shop?.available.weekdays[1]" color="primary" selected="true">Mardi</md-chip>
+          <md-chip *ngIf="shop?.available.weekdays[2]" color="primary" selected="true">Mercredi</md-chip>
+          <md-chip *ngIf="shop?.available.weekdays[3]" color="primary" selected="true">Jeudi</md-chip>
+          <md-chip *ngIf="shop?.available.weekdays[4]" color="primary" selected="true">Vendredi</md-chip>
+        </md-chip-list><br>
+        <img class="fullwidth" src="//maps.googleapis.com/maps/api/staticmap?center={{shop?.address?.geo?.lat}},{{shop?.address?.geo?.lng}}&zoom=12&size=400x400&markers=color:green%7Xlabel:%7C{{shop?.address.geo.lat}},{{shop?.address.geo.lng}}&key=AIzaSyD5w46BmWX6hX-uJ2yMycS_cRb2HRvDXQU"
+        />
+        <p>
+          {{shop?.address.streetAdress}}<br> {{shop?.address.name}}
+          <br> {{shop?.address.region}} {{shop?.address.postalCode}} <br> {{shop?.address.phone}}
+        </p>
+      </md-card-content>
+      <md-card-actions>
+      </md-card-actions>
+    </md-card>
+    <md-card fxFlex class="info-card">
+      <md-card-header>
+        <md-card-title>FAQ</md-card-title>
+        <md-card-subtitle>
+          Retrouver les questions les plus fréquentes à propos de la boutique {{shop?.name}}
+        </md-card-subtitle>
+      </md-card-header>
+      <md-card-content>
+        <div *ngFor="let f of shop?.faq" class="col-xs-9  pull-left">
+          <md-expansion-panel  hideToggle="true">
+            <md-expansion-panel-header>
+              <md-panel-title>
+                {{f?.q}} ?
+              </md-panel-title>
+              <md-panel-description>
+                {{f?.updated | date:'shortDate'}}
+              </md-panel-description>
+            </md-expansion-panel-header>
+             {{f?.a}}
+          </md-expansion-panel>
+          <br>
+        </div>
+      </md-card-content>
+      <md-card-actions>
+      </md-card-actions>
+    </md-card>
+  </div>
+  <div fxLayout="row" fxFlex="100%" fxFlex.gt-md="60%">
+    <md-card fxFlex class="info-card">
+      <md-card-header>
+        <md-card-title>Produits</md-card-title>
+        <md-card-subtitle>
+        </md-card-subtitle>
+      </md-card-header>
+      <md-card-content>
+
+      </md-card-content>
+      <md-card-actions>
+      </md-card-actions>
+    </md-card>
+  </div>
+  <!--<div class="row">
+      <div class="col-xs-12">Photo</div>
+      <div class="col-xs-3" [hidden]="!shop?.photo?.bg">
+        <img title="" class="img-thumbnail" [src]="shop?.photo?.bg" *ngIf="shop?.photo?.bg">
+      </div>
+      <div class="col-xs-3" [hidden]="!shop?.photo?.fg">
+        <img title="" class="img-thumbnail" [src]="shop?.photo?.fg" *ngIf="shop?.photo?.fg">
+      </div>
+      <div class="col-xs-3" [hidden]="!shop?.photo?.logo">
+        <img title="" class="img-thumbnail" [src]="shop?.photo?.logo" *ngIf="shop?.photo?.logo">
+      </div>
+      <div class="col-xs-3" [hidden]="!shop?.photo?.owner">
+        <img title="" class="img-thumbnail" [src]="shop?.photo?.owner" *ngIf="shop?.photo?.owner">
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-xs-3">Urlpath</div>
+      <div class="col-xs-9  pull-left">{{shop?.urlpath}}</div>
+    </div>
+    <div class="row">
+      <div class="col-xs-3">Name</div>
+      <div class="col-xs-9  pull-left">{{shop?.name}}</div>
+    </div>
+    <div class="row">
+      <div class="col-xs-3">Description</div>
+      <div class="col-xs-9  pull-left">{{shop?.description}}</div>
+    </div>
+
+    <div class="row">
+      <div class="col-xs-3">Details</div>
+      <div class="col-xs-9  pull-left">
+        bio: {{shop?.details.bio}} gluten: {{shop?.details.gluten}} lactose: {{shop?.details.lactose}} vegetarian: {{shop?.details.vegetarian}} local: {{shop?.details.local}}
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-xs-3">Collect</div>
+      <div class="col-xs-9  pull-left">
+        {{shop?.collect?.streetAdress}} {{shop?.collect?.postalCode}}
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-xs-3">address</div>
+      <div class="col-xs-9 pull-left">
+        {{shop?.address.depository}} {{shop?.address.name}} {{shop?.address.floor}} {{shop?.address.phone}} {{shop?.address.streetAdress}} {{shop?.address.region}} {{shop?.address.postalCode}}
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-xs-3">Catalog</div>
+      <div class="col-xs-9  pull-left">{{shop?.catalog.name}}</div>
+    </div>
+    <div class="row">
+      <div class="col-xs-3">Faq</div>
+      <div *ngFor="let f of shop?.faq" class="col-xs-9  pull-left">
+        question:{{f?.q}} answer:{{f?.a}} update:{{f?.updated}}
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-xs-3">Available</div>
+      <div class="col-xs-9  pull-left">
+        active: {{shop?.available.active}} from {{shop?.available.from}} to {{shop?.available.to}} weekdays: {{shop?.available.weekdays}} comment: {{shop?.available.comment}}
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-xs-3">Discount</div>
+      <div class="col-xs-9  pull-left">
+        {{shop?.discount.amount}} {{shop?.discount.threshold}} {{shop?.discount.active}}
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-xs-3">Info</div>
+      <div class="col-xs-9  pull-left">
+        {{shop?.info.detailledOrder}} {{shop?.info.active}} {{shop?.info.comment}}
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-xs-3">Status</div>
+      <div class="col-xs-9  pull-left">{{shop?.status}}</div>
+    </div>
+    <div class="row">
+      <div class="col-xs-3">Account</div>
+      <div class="col-xs-9  pull-left">
+        {{shop?.account.fee}} {{shop?.tva?.number}} {{shop?.tva?.fees}} {{shop?.updated}}
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-xs-3">Owner</div>
+      <div class="col-xs-9  pull-left">{{shop?.owner?.displayName}}</div>
+    </div>
+    <div class="row">
+      <div class="col-xs-3">Scoring</div>
+      <div class="col-xs-9  pull-left">
+        weight: {{shop?.scoring.weight}} orders: {{shop?.scoring.orders}} issues: {{shop?.scoring.issues}} score: {{shop?.scoring.score}}
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-xs-3">Created</div>
+      <div class="col-xs-9  pull-left">{{shop?.created}}</div>
+    </div>
+    <div class="row">
+      <div class="col-xs-3">Map</div>
+      <img src="//maps.googleapis.com/maps/api/staticmap?center={{shop?.address?.geo?.lat}},{{shop?.address?.geo?.lng}}&zoom=12&size=400x400&markers=color:green%7Xlabel:%7C{{shop?.address.geo.lat}},{{shop?.address.geo.lng}}&key=AIzaSyD5w46BmWX6hX-uJ2yMycS_cRb2HRvDXQU"
+      />
+    </div>-->
+</div>
