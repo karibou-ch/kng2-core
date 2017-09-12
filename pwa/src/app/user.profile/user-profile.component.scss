@@ -1,0 +1,39 @@
+@import "../../_var";
+
+
+.full-width {
+  width: 100%;
+  tr md-form-field{
+    width: 100%;
+  }
+ 	md-icon{
+ 		color: grey;
+ 	}
+}
+
+md-accordion {
+	background-color:$green;
+}
+
+
+md-form{
+  margin-top:10px;
+}
+
+
+button{
+	width: 100%;
+	justify-content: space-between;
+	align-items: center;
+	
+}
+
+md-card{
+  max-width: 500px;
+}
+
+
+.headers-align .mat-expansion-panel-header-description {
+  justify-content: space-between;
+  align-items: center;
+}

@@ -1,0 +1,96 @@
+<md-card class="container" color="primary">
+<md-accordion class="headers-align" color="primary">
+ 	<md-expansion-panel [expanded]="step === 0"  hideToggle="true">
+    	<md-expansion-panel-header>
+      		<md-panel-title>
+        	Mes alarmes
+      		</md-panel-title>
+      		<md-panel-description>
+      			<div></div>
+        		<md-icon>notifications</md-icon>
+      		</md-panel-description>
+    	</md-expansion-panel-header>
+	<button md-raised-button (click)="createAlarm()" > Cr&eacute;er ou modifier une Alarme</button>
+	</md-expansion-panel>
+ 	<md-expansion-panel [expanded]="step === 1"  hideToggle="true">
+    	<md-expansion-panel-header>
+      		<md-panel-title>
+        	Mes derni&egrave;res commandes
+      		</md-panel-title>
+      		<md-panel-description>
+      			 <div></div>
+        		<md-icon>shopping_cart</md-icon>
+			</md-panel-description>
+    	</md-expansion-panel-header>
+		<button md-raised-button>L'historique de mes commandes</button>
+	</md-expansion-panel>
+	<md-expansion-panel [expanded]="step === 2"  hideToggle="true">
+    	<md-expansion-panel-header>
+      		<md-panel-title>
+        	Mon compte commercial
+      		</md-panel-title>
+      		<md-panel-description>
+      			 <div></div>
+        		<md-icon>lock</md-icon>
+			</md-panel-description>
+    	</md-expansion-panel-header>
+    	<table class="full-width" cellspacing="5">
+    		<tr>
+    		<td><button md-raised-button>Voir le solde de mon compte</button><td>
+    		<td><md-icon>local_atm</md-icon></td>
+    		</tr>
+    		<tr>
+    		<td><button md-raised-button>Mes m&eacute;thodes de paiement</button><td>
+    		<td><md-icon>credit_card</md-icon></td>
+    		</tr>
+    		<tr>
+    		<td><button md-raised-button>Acheter une carte cadeau</button></td>
+    		<td>
+    		<td><md-icon>favorite_border</md-icon></td>
+    		</tr>
+    	</table>
+	</md-expansion-panel>
+	<md-expansion-panel [expanded]="step === 3"  hideToggle="true">
+    	<md-expansion-panel-header>
+      		<md-panel-title>
+        	Mon profil
+      		</md-panel-title>
+      		<md-panel-description>
+      			 <div></div>
+        		<md-icon>face</md-icon>
+			</md-panel-description>
+    	</md-expansion-panel-header>
+    	<table class="full-width" cellspacing="5">
+    		<tr>
+    		<td><button md-raised-button> Modifier mes donn&eacute;es personnelles</button><td>
+    		<td><md-icon>face</md-icon></td>
+    		</tr>
+    		<tr>
+    		<td><button md-raised-button> Modifier mon mot de passe</button><td>
+    		<td><md-icon>lock</md-icon></td>
+    		</tr>
+    	</table>
+	</md-expansion-panel>
+	<md-expansion-panel [expanded]="step === 3"  hideToggle="true">
+    	<md-expansion-panel-header>
+      		<md-panel-title>
+        	Mes boutiques
+      		</md-panel-title>
+      		<md-panel-description>
+      			<div><!--  <a>ouvrir une boutique</a>--></div> 
+        		<md-icon>shopping_basket</md-icon>
+			</md-panel-description>
+    	</md-expansion-panel-header>
+    	<table  class="full-width" cellspacing="5">
+    		<tr *ngFor="let s of user.shops">
+				<td><button md-raised-button>{{s?.name}}</button><td>
+			</tr>
+			<tr>
+				<button md-raised-button><md-icon>playlist_add</md-icon></button></tr>
+
+			<tr>
+    	</table>
+		
+	</md-expansion-panel>
+</md-accordion>
+</md-card>
