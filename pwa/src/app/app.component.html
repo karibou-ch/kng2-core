@@ -58,7 +58,7 @@
       </button>
         <md-menu #menu="mdMenu">
           <div *ngIf="user.isAuthenticated()">
-            <button md-menu-item color="accent" routerLink="/dashboard">
+            <button md-menu-item color="accent" routerLink="/profile">
             <md-icon>perm_identity</md-icon>
             <span>Bonjour, {{ user?.displayName }}</span>
             </button>
