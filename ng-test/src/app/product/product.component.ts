@@ -23,7 +23,7 @@ export class ProductComponent implements OnInit {
     currentUser: User;
     isReady: boolean;
     config: any;
-    product: Product;
+    product: Product = new Product();
 
     constructor(
         private $loader: LoaderService,
