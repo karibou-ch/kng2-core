@@ -36,6 +36,7 @@ export class ShopEditComponent implements OnInit {
   private newInstance: boolean = false;
   private errors: any;
   private password: string;
+  addressR: boolean;
 
   ngOnInit() {
 
@@ -66,18 +67,12 @@ export class ShopEditComponent implements OnInit {
 
   onSave() {
 
-    this.shop.catalog = this.shop.catalog._id;
-    if (!this.shop.address.region)
-      this.shop.address.region = "Suisse";
-    var fulladdress = this.shop.address.streetAdress + "," + this.shop.address.postalCode + ", " + this.shop.address.region;
-    var url = "//maps.googleapis.com/maps/api/geocode/json?address=" + fulladdress + "&sensor=false";
-    this.http.get(url, { withCredentials: false }).subscribe((res: any) => {
-      this.shop.address.geo.lat = res.results[0].geometry.location.lat;
-      this.shop.address.geo.lng = res.results[0].geometry.location.lng;
-    });
-
-    // TODO use error feedback for user!
-    this.$shop.save(this.shop).subscribe()
+    if (this.addressR) {
+      this.shop.catalog = this.shop.catalog._id;
+      this.$shop.create(this.shop).subscribe();
+    } else {
+      console.log("Pls add a valide address");
+    }
 
   }
 
@@ -96,7 +91,7 @@ export class ShopEditComponent implements OnInit {
     }
   }
 
-  onDelete(){
+  onDelete() {
     this.$shop.remove(this.shop, this.password).subscribe(res => console.log(res));
   }
 

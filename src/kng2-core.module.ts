@@ -13,7 +13,7 @@ import { OrderService } from './order/order.service';
 import { Order } from './order/order';
 import { UserPipe } from './user.pipe';
 import { User, UserCard, UserAddress, UserService } from './user.service';
-import { Shop, ShopService } from './shop.service';
+import { Shop, ShopService, ShopAddress } from './shop.service';
 import *  as OrderEnum from './order/order.enum';
 
 
@@ -66,7 +66,8 @@ export {
   LoaderService,
   OrderService, Order, OrderEnum,
   UserPipe,
-  UserService, User, UserAddress, UserCard, ShopService, Shop
+  UserService, User, UserAddress, UserCard,
+  ShopService, Shop, ShopAddress
 }
 
 export * from './order/order.enum';

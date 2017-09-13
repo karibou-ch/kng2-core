@@ -50,7 +50,7 @@
       <label class="control-label">Postal Code</label>
       <input type="text" [ngModel]="shop?.address?.postalCode" (ngModelChange)="shop.address.postalCode = $event" name="postalCode" class="form-control" placeholder="postalCode" autofocus="autofocus" required="">
     </div>
-
+    <app-address-geo [(addressShop)]="shop.address" [addressReady]="addressR"  (addressReadyEvent)="addressR=$event"></app-address-geo>
       <div>
         <button name="save" (click)="onCreate();" class="btn btn-block">Save</button>
       </div>

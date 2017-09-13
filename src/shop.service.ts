@@ -8,6 +8,25 @@ import { ConfigService } from './config.service';
 
 //https://stackoverflow.com/questions/13142635/how-can-i-create-an-object-based-on-an-interface-file-definition-in-typescript
 
+
+export class ShopAddress {
+  constructor() {
+  }
+  //
+  // where shop is located
+  // an other place where things are stored
+    depository: string;
+    name: string;
+    floor: string;
+    phone: string;
+    streetAdress: string;
+    region: string;
+    postalCode: string;
+    geo: {
+      lat: number;
+      lng: number;
+    }
+}
 export class Shop {
   urlpath: string;
   name: string;
@@ -42,23 +61,7 @@ export class Shop {
     }
   };
 
-  //
-  // where shop is located
-  address: {
-    // an other place where things are stored
-    depository: string;
-    name: string;
-    floor: string;
-    phone: string;
-    streetAdress: string;
-    region: string;
-    postalCode: string;
-    geo: {
-      lat: number;
-      lng: number;
-    }
-  };
-
+  address: ShopAddress;
   //
   // this shop belongsTo a category
 

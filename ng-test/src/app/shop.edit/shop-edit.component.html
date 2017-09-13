@@ -74,6 +74,7 @@
       <label class="control-label">Postal Code</label>
       <input type="text" [ngModel]="shop?.address?.postalCode" (ngModelChange)="shop.address.postalCode = $event" name="postalCode" class="form-control" placeholder="postalCode" autofocus="autofocus" required="">
     </div>
+    <app-address-geo [(addressShop)]="shop.address" (addressReady)="addressR"></app-address-geo>
 
     <h1>Business</h1>
     <div class="form-group">
