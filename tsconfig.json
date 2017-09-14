@@ -9,8 +9,7 @@
         "removeComments": true,
         "noImplicitAny": false,
         "sourceMap": true,
-        "declaration": true,
-        "outDir": "./dist"        
+        "declaration": true
     },
     "files": [
         "index.ts"
