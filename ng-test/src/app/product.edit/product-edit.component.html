@@ -51,6 +51,12 @@
 				autofocus="autofocus"
 				required="">
 			<label class="control-label">Specify the TVA</label>
+			<form action="" (input)="product.pricing.tva = $event.target.value">
+				<input type="radio" name ="tva" value="0" placeholder="0%">0%
+				<input type="radio" name ="tva" value="0.025" placeholder="2.5%">2.5%
+				<input type="radio" name ="tva" value="0.08" placeholder="8%">8%
+			</form>
+			<!-- 
 			<input
 				type="text"
 				[ngModel]="product?.pricing.tva"
@@ -60,6 +66,7 @@
 				placeholder="Label"
 				autofocus="autofocus"
 				required="">
+			-->
 			<label class="control-label">Specify the stock</label>
 			<input
 				type="text"
