@@ -10,7 +10,7 @@
 	<label>{{product?.pricing?.price}} CHF </label>
 	<div>
 		<label>TVA : {{product?.pricing?.tva}} </label> <label>Part :
-			{{product?.pricing?.part}} </label> <label>Stock :
+			{{product?.pricing?.part}} </label> <label *ngIf="currentUser?.isOwnerOrAdmin(product?.vendor.name)">Stock :
 			{{product?.pricing?.stock}} </label>
 	</div>
 </div>
