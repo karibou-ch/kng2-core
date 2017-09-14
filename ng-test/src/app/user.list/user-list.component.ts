@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { Observable } from 'rxjs/Rx';
 import { Router } from '@angular/router';
-import { LoaderService, User, UserService, Shop, ShopService } from '../../../../dist'
+import { LoaderService, User, UserService, Shop, ShopService } from '../../../../'
 
 @Component({
   selector: 'app-user-list',

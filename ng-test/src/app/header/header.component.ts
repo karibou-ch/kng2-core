@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
-import { config, LoaderService, User, UserService } from '../../../../dist';
+import { config, LoaderService, User, UserService } from '../../../../';
 
 @Component({
   selector: 'app-header',

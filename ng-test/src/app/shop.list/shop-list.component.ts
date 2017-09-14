@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { Observable } from 'rxjs/Rx';
 import { Router, ActivatedRoute, ParamMap } from '@angular/router';
-import { LoaderService, ShopService, Shop, User, UserService, config } from '../../../../dist';
+import { LoaderService, ShopService, Shop, User, UserService, config } from '../../../../';
 
 @Component({
   selector: 'app-shop-list',

@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { ConfigService, LoaderService, UserService, config } from '../../../../dist';
+import { ConfigService, LoaderService, UserService, config } from '../../../../';
 
 
 @Component({

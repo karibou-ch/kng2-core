@@ -18,7 +18,7 @@ import { ShopListComponent } from './shop.list/shop-list.component';
 import { ShopEditComponent } from './shop.edit/shop-edit.component';
 import { ShopCreateComponent } from './shop.create/shop-create.component';
 
-import { AuthGuardService, Kng2CoreModule } from '../../../dist';
+import { AuthGuardService, Kng2CoreModule } from '../../../';
 
 import { appRoutes } from './app.routes';
 import { AddressComponent } from './user.address/address.component';

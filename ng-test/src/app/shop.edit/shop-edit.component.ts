@@ -3,7 +3,7 @@ import { Observable } from 'rxjs/Rx';
 import { ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
-import { LoaderService, ShopService, Shop, User, UserService, Category, CategoryService, config } from '../../../../dist';
+import { LoaderService, ShopService, Shop, User, UserService, Category, CategoryService, config } from '../../../../';
 
 export class Faq {
   q: string;
