@@ -49,8 +49,11 @@ export class OrderService {
   }
 
   private updateCache(order: Order) {
-    if (this.cache.map[order.oid])
-      return Object.assign(this.cache.map[order.oid], order);
+    if(!this.cache.map[order.oid]){
+      this.cache.map[order.oid]=new Order(order);
+      return this.cache.map[order.oid];
+    }
+    return Object.assign(this.cache.map[order.oid], order);
   }
 
   private deleteCache(order: Order) {
@@ -106,21 +109,6 @@ export class OrderService {
       withCredentials: true
     })
 
-  }
-
-  // update effective bags for this order
-  // role:logistic
-  // app.post('/v1/orders/:oid/shipping', auth.ensureLogisticOrAdmin, orders.updateShipping);
-  updateBagsCount(order: Order, value: number): Observable<Order> {
-    var status = order.shipping.shipped;
-    //return this.chain(backend.$order.save({action:this.oid,id:'shipping'},{bags:value,status:status}).$promise);
-    return this.http.post(this.config.API_SERVER + '/v1/orders/' + order.oid + '/shipping', { bags: value, status: status }, {
-      headers: this.headers,
-      withCredentials: true
-    })
-      .map(res => res.json() as Order)
-      .map(order => this.updateCache(order))
-      .catch(err => Observable.of(this.defaultOrder));
   }
 
   // remove this order
@@ -220,8 +208,20 @@ export class OrderService {
         order.items.find(i => i.sku === item.sku).fulfillment.issue = issue;
         return res;
       })
-      .map(res => res.json() as Order)
-      .catch(err => Observable.of(this.defaultOrder));
+      .map(res => new Order(res.json()))
+  }
+
+  // update effective bags for this order
+  // role:logistic
+  // app.post('/v1/orders/:oid/shipping', auth.ensureLogisticOrAdmin, orders.updateShipping);
+  updateBagsCount(order: Order, value: number): Observable<Order> {
+    var status = order.shipping.shipped;
+    //return this.chain(backend.$order.save({action:this.oid,id:'shipping'},{bags:value,status:status}).$promise);
+    return this.http.post(this.config.API_SERVER + '/v1/orders/' + order.oid + '/shipping', { bags: value, status: status }, {
+      headers: this.headers,
+      withCredentials: true
+    })
+      .map(res => this.updateCache(res.json()));
   }
 
 
@@ -234,22 +234,20 @@ export class OrderService {
       headers: this.headers,
       withCredentials: true
     })
-      .map(res => res.json() as Order)
-      .catch(err => Observable.of(this.defaultOrder));
+      .map(res => this.updateCache(res.json()));
 
   }
 
   // update shopper  
   // role:logistic
   // app.post('/v1/orders/:oid/shipper', auth.ensureLogisticOrAdmin, orders.updateShippingShopper);
-  updateShippingShopper(order: Order) {
+  updateShippingShopper(order: Order,priority:number) {
     //return this.chain(backend.$order.save({ action: oid, id: 'shipping' }, { amount: status }).$promise);
-    return this.http.post(this.config.API_SERVER + '/v1/orders/' + order.oid + '/shopper', {  }, {
+    return this.http.post(this.config.API_SERVER + '/v1/orders/' + order.oid + '/shopper', {priority:priority}, {
       headers: this.headers,
       withCredentials: true
     })
-      .map(res => res.json() as Order)
-      .catch(err => Observable.of(this.defaultOrder));
+      .map(res => this.updateCache(res.json()));
 
   }
 
@@ -261,8 +259,7 @@ export class OrderService {
       headers: this.headers,
       withCredentials: true
     })
-      .map(res => res.json() as Order)
-      .catch(err => Observable.of(this.defaultOrder));
+      .map(res => this.updateCache(res.json()));
   };
 
   // validate shop products collect
