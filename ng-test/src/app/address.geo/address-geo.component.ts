@@ -13,25 +13,10 @@ export class AddressGeoComponent implements OnInit {
     private http: HttpClient
   ) { }
 
-  ngOnInit() {
-    this.addressReady = false;
-  }
+  ngOnInit() {}
 
-  @Input() addressUser: UserAddress;
-  @Input() addressShop: ShopAddress;
-  @Input() addressReady :boolean;
-  @Output() addressReadyEvent = new EventEmitter<any>();
-  private address;
-
-  onAddAddress() {
-    if (this.addressUser) {
-      this.address = this.addressUser;
-      this.checkAdd();
-    } else if (this.addressShop) {
-      this.address = this.addressShop;
-      this.checkAdd();
-    }
-  }
+  @Input() address: ShopAddress;
+  @Output() onAddressReady = new EventEmitter<any>();
 
   checkAdd() {
 
@@ -46,17 +31,19 @@ export class AddressGeoComponent implements OnInit {
           this.address.geo.lng = res.results[0].geometry.location.lng;
           let lenghtTab: number = res.results[0].address_components.length - 1;
           if (this.address.postalCode == res.results[0].address_components[lenghtTab].long_name) {
-            this.addressReady = true;
-             this.addressReadyEvent.emit(this.addressReady);
+             this.onAddressReady.emit(true);
           } else {
+            this.onAddressReady.emit(false);
             console.log("Pls add a correct address")
           }
         } else {
+          this.onAddressReady.emit(false);
           console.log("Pls add a correct address")
         }
       });
 
     } else {
+      this.onAddressReady.emit(false);
       console.log("Pls file the streetAdress and the postalCode")
     }
   }

@@ -15,10 +15,10 @@ export class ShopAddress {
   //
   // where shop is located
   // an other place where things are stored
-    depository: string;
+    depository?: string;
     name: string;
     floor: string;
-    phone: string;
+    phone?: string;
     streetAdress: string;
     region: string;
     postalCode: string;

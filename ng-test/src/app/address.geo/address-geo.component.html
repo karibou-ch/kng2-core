@@ -1,6 +1,6 @@
 <div>
-    <button name="addAdd" (click)="onAddAddress();" class="btn btn-block">Add address</button>
+    <button name="addAdd" (click)="checkAdd();" class="btn btn-block">Add address</button>
 </div>
-<div class="row" *ngIf="addressReady">
+<div class="row" *ngIf="address.geo.lat">
   <img src="//maps.googleapis.com/maps/api/staticmap?center={{address?.geo?.lat}},{{address?.geo?.lng}}&zoom=12&size=400x400&markers=color:green%7Xlabel:%7C{{address.geo.lat}},{{address.geo.lng}}&key=AIzaSyD5w46BmWX6hX-uJ2yMycS_cRb2HRvDXQU"/>
 </div>
