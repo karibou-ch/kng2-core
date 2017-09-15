@@ -60,13 +60,18 @@ export interface OrderItem{
 
 
 export class Order {
+  defaultOrder={
+    customer:{},
+    payment:{},
+    fulfillments:{},
+    cancel:{},
+    items:[],
+    vendors:[],
+    shipping:{}
+  };
 
   constructor(json?:any){
-    if(json !== undefined){
-      Object.assign(this,json);
-    }else{
-      //TODO empty new order
-    }
+      Object.assign(this,json||this.defaultOrder);
   }
 
   /** order identifier */
@@ -156,6 +161,8 @@ export class Order {
       lng:number
     },
     shipped?:boolean,
+    shopper?:string,
+    priority?:number,
     bags?:number
   }
 

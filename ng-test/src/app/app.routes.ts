@@ -1,5 +1,5 @@
 import { RouterModule, Routes } from '@angular/router';
-import { AuthGuardService, Kng2CoreModule } from '../../../dist';
+import { AuthGuardService, Kng2CoreModule } from '../../../';
 
 import { ConfigComponent } from './config/config.component';
 import { CategoryComponent } from './category/category.component';

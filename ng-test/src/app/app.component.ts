@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { ConfigService, LoaderService } from '../../../dist';
+import { ConfigService, LoaderService } from '../../../';
 
 ConfigService.setDefaultConfig({
     API_SERVER:'http://api.panierlocal.evaletolab.ch'
