@@ -224,6 +224,10 @@ export class ShopService {
     //
     // 1 means to keep the last value
     this.shop$ = new ReplaySubject(1);
+    this.cache={
+      list:[],
+      map:new Map()
+    };
   }
 
 
@@ -232,17 +236,13 @@ export class ShopService {
   private deleteCache(cat: Shop) {
     if (this.cache.map[cat.urlpath]) {
       this.cache.map.delete(cat.urlpath);
-      let index = this.cache.list.indexOf(cat)
-      if (index > -1)
-        this.cache.list.splice(index, 1);
     }
   }
 
   private updateCache(shop: Shop) {
     if (!this.cache.map[shop.urlpath]) {
-      this.cache.map[shop.urlpath] = shop;
-      this.cache.list.push(shop);
-      return;
+      this.cache.map[shop.urlpath] = new Shop(shop);
+      return this.cache.map[shop.urlpath];
     }
     //
     //update existing entry
