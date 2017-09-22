@@ -46,7 +46,7 @@ export class OrderService {
 
   //
   // common cache functions
-  private cache: {
+  public cache: {
     list: Order[];
     map: Map<number, Order>; //key is a slug
   }
@@ -91,7 +91,7 @@ export class OrderService {
   informShopToOrders(shop: string, when: Date, fulfillment: EnumFulfillments): Observable<any> {
     shop = shop || 'shops'; // specified shop or all shops
     //return this.chain(backend.$order.inform({action:shop,id:'email'},{when:when,fulfillments:fulfillment}).$promise);
-    return this.http.post(this.config.API_SERVER + '/v1/orders/' + shop + '/email', { when: when, fulfillments: fulfillment }, {
+    return this.http.post(this.config.API_SERVER + '/v1/orders/' + shop + '/email', { when: when, fulfillments: EnumFulfillments[fulfillment] }, {
       headers: this.headers,
       withCredentials: true
     })
@@ -121,7 +121,8 @@ export class OrderService {
     return this.http.post(this.config.API_SERVER + '/v1/orders/' + order.oid + '/capture', opts, {
       headers: this.headers,
       withCredentials: true
-    });
+    })
+      .map(res => this.updateCache(res.json()));
   }
 
   // refund an order
@@ -155,9 +156,9 @@ export class OrderService {
   // role:shop:admin
   // app.post('/v1/orders/:oid/items', orders.ensureShopOwnerOrAdmin, queued(orders.updateItem));
   updateItem(order: Order, item, fulfillment: EnumFulfillments): Observable<Order> {
-    var tosave = Object.assign({}, item);
-    tosave.fulfillment.finalprice = parseFloat(item.fulfillment.finalprice);
-    tosave.fulfillment.status = fulfillment;
+    let tosave = Object.assign({}, item);
+    tosave.finalprice = parseFloat(item.finalprice);
+    tosave.fulfillment.status = EnumFulfillments[fulfillment];
     // this.chain(backend.$order.save({action:this.oid,id:'items'},[tosave]).$promise).$promise.then(function () {
     //   _.find(me.items,function(i){return i.sku===item.sku;}).fulfillment.status=fulfillment;
     // });
@@ -165,10 +166,11 @@ export class OrderService {
       headers: this.headers,
       withCredentials: true
     })
-      .map((res) => {
-        order.items.find(i => i.sku === item.sku).fulfillment.status = fulfillment;
-        return res;
-      })
+      // .map((res) => {
+      //   let item:any=order.items.find(i => i.sku === item.sku);
+      //   item.fulfillment.status = EnumFulfillments[fulfillment];
+      //   return res;
+      // })
       .map(res => this.updateCache(res.json()));
   };
 
@@ -185,10 +187,10 @@ export class OrderService {
       headers: this.headers,
       withCredentials: true
     })
-      .map((res) => {
-        order.items.find(i => i.sku === item.sku).fulfillment.issue = issue;
-        return res;
-      })
+      // .map((res) => {
+      //   order.items.find(i => i.sku === item.sku).fulfillment.issue = issue;
+      //   return res;
+      // })
       .map(res => this.updateCache(res.json()));
   }
 

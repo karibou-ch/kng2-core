@@ -120,7 +120,7 @@ export class Order {
     status:EnumFulfillments
   };
 
-  items:[OrderItem];
+  items:OrderItem[];
 
   vendors:[{
     //
