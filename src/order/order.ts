@@ -71,7 +71,11 @@ export class Order {
   };
 
   constructor(json?:any){
-      Object.assign(this,json||this.defaultOrder);
+    Object.assign(this,json||this.defaultOrder);
+    
+    //
+    // default order position
+    this.shipping.position=this.shipping.position||parseInt(this.shipping.postalCode);
   }
 
   /** order identifier */
@@ -163,7 +167,9 @@ export class Order {
     shipped?:boolean,
     shopper?:string,
     priority?:number,
-    bags?:number
+    position?:number,
+    bags?:number,
+    estimated?:number
   }
 
   //

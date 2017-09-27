@@ -224,9 +224,13 @@ export class OrderService {
   // update shopper  
   // role:logistic
   // app.post('/v1/orders/:oid/shipper', auth.ensureLogisticOrAdmin, orders.updateShippingShopper);
-  updateShippingShopper(order: Order,priority:number) {
+  updateShippingShopper(order: Order,priority:number,position:number) {
+    let params={
+      priority:priority,
+      position:position
+    };
     //return this.chain(backend.$order.save({ action: oid, id: 'shipping' }, { amount: status }).$promise);
-    return this.http.post(this.config.API_SERVER + '/v1/orders/' + order.oid + '/shopper', {priority:priority}, {
+    return this.http.post(this.config.API_SERVER + '/v1/orders/' + order.oid + '/shopper', params, {
       headers: this.headers,
       withCredentials: true
     })
