@@ -75,7 +75,7 @@ export class Order {
     
     //
     // default order position
-    this.shipping.position=this.shipping.position||parseInt(this.shipping.postalCode);
+    this.shipping.position=this.shipping.position||parseInt(this.shipping.postalCode)*10;
   }
 
   /** order identifier */
