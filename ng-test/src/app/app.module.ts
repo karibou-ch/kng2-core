@@ -31,6 +31,7 @@ import { UserListComponent } from './user.list/user-list.component';
 import { UserComponent } from './user/user.component';
 import { UserPasswordComponent } from './user.password/user-password.component';
 import { UserOrdersComponent } from './user.orders/user-orders.component';
+import { AddressGeoComponent } from './address.geo/address-geo.component';
 
 @NgModule({
   declarations: [
@@ -53,7 +54,8 @@ import { UserOrdersComponent } from './user.orders/user-orders.component';
     ShopComponent,
     ShopEditComponent,
     ShopCreateComponent,
-    ShopListComponent
+    ShopListComponent,
+    AddressGeoComponent
   ],
   imports: [
     BrowserModule,

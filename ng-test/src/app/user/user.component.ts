@@ -20,6 +20,7 @@ export class UserComponent implements OnInit {
   private isReady: boolean;
   private config: any;
   private user: User = new User();
+  addressReady: boolean;
 
   ngOnInit() {
 
@@ -29,7 +30,8 @@ export class UserComponent implements OnInit {
     this.currentUser = ready[1];
 
     if(!this.id){
-      this.id=this.route.snapshot.params['id'];
+      //this.id=this.route.snapshot.params['id'];
+      console.log("passer par la liste des users")
     }
 
       this.$user.get(this.id).subscribe(res => this.user = res);
