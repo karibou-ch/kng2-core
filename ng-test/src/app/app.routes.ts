@@ -6,7 +6,6 @@ import { ProductListComponent }  from './product.list/product-list.component';
 import { ProductEditComponent }  from './product.edit/product-edit.component';
 import { ProductCreateComponent } from './product.create/product-create.component';
 import { ProductComponent }  from './product/product.component';
-import { CategoryEditComponent }  from './category.edit/category-edit.component';
 import { CategoryComponent } from './category/category.component';
 import { CategoryEditComponent } from './category.edit/category-edit.component';
 import { DashboardComponent } from './user.dashboard/dashboard.component';
@@ -30,6 +29,10 @@ export const appRoutes: Routes = [
   { path: 'product/create', component: ProductCreateComponent },
   { path: 'product/:sku', component: ProductComponent },
   { path: 'product/edit/:sku', component: ProductEditComponent },
+<<<<<<< HEAD
+=======
+  { path: 'category/create', component: CategoryEditComponent, data:{newInstance:true} },
+>>>>>>> ccf5cd231d306d1e3f3e1f5f5cf0f5eea53694dd
   { path: 'category/create', component: CategoryEditComponent, data: { newInstance: true } },
   { path: 'category/:slug', component: CategoryEditComponent },
   { path: 'login', component: LoginComponent },
