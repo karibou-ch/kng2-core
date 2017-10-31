@@ -38,41 +38,33 @@ export class OrderService {
     this.config = ConfigService.defaultConfig;
     this.headers = new Headers();
     this.headers.append('Content-Type', 'application/json');
+    this.cache={
+      list:[],map:new Map()
+    };
   }
 
 
   //
   // common cache functions
-  private cache: {
+  public cache: {
     list: Order[];
-    map: Map<string, Order>; //key is a slug
+    map: Map<number, Order>; //key is a slug
   }
 
   private updateCache(order: Order) {
-    if (this.cache.map[order.oid])
-      return Object.assign(this.cache.map[order.oid], order);
+    if(!this.cache.map[order.oid]){
+      this.cache.map.set(order.oid,new Order(order))
+      return this.cache.map.get(order.oid);
+    }
+    return Object.assign(this.cache.map[order.oid], order);
   }
 
   private deleteCache(order: Order) {
     if (this.cache.map[order.oid]) {
-      let index = this.cache.list.indexOf(order)
-      if (index > -1)
-        this.cache.list.splice(index, 1);
       delete this.cache.map[order.oid];
     }
   }
 
-  private addCache(order: Order) {
-    //
-    //check if already exist on cache and add in it if not the case
-    if (!this.cache.map[order.oid]) {
-      this.cache.map[order.oid] = order;
-      this.cache.list.push(order);
-      return order;
-    }
-    //update existing entry
-    return Object.assign(this.cache.map[order.oid], order);
-  }
 
 
   //
@@ -89,9 +81,7 @@ export class OrderService {
       headers: this.headers,
       withCredentials: true
     })
-      .map(res => res.json() as Order)
-      //.map(order => this.updateCache(order))
-      .catch(err => Observable.of(this.defaultOrder));
+      .map(res => this.updateCache(res.json()));
   }
 
   //
@@ -101,26 +91,11 @@ export class OrderService {
   informShopToOrders(shop: string, when: Date, fulfillment: EnumFulfillments): Observable<any> {
     shop = shop || 'shops'; // specified shop or all shops
     //return this.chain(backend.$order.inform({action:shop,id:'email'},{when:when,fulfillments:fulfillment}).$promise);
-    return this.http.post(this.config.API_SERVER + '/v1/orders/' + shop + '/email', { when: when, fulfillments: fulfillment }, {
+    return this.http.post(this.config.API_SERVER + '/v1/orders/' + shop + '/email', { when: when, fulfillments: EnumFulfillments[fulfillment] }, {
       headers: this.headers,
       withCredentials: true
     })
 
-  }
-
-  // update effective bags for this order
-  // role:logistic
-  // app.post('/v1/orders/:oid/shipping', auth.ensureLogisticOrAdmin, orders.updateShipping);
-  updateBagsCount(order: Order, value: number): Observable<Order> {
-    var status = order.shipping.shipped;
-    //return this.chain(backend.$order.save({action:this.oid,id:'shipping'},{bags:value,status:status}).$promise);
-    return this.http.post(this.config.API_SERVER + '/v1/orders/' + order.oid + '/shipping', { bags: value, status: status }, {
-      headers: this.headers,
-      withCredentials: true
-    })
-      .map(res => res.json() as Order)
-      .map(order => this.updateCache(order))
-      .catch(err => Observable.of(this.defaultOrder));
   }
 
   // remove this order
@@ -132,7 +107,8 @@ export class OrderService {
     return this.http.post(this.config.API_SERVER + '/v1/orders/' + order.oid + '/remove', null, {
       headers: this.headers,
       withCredentials: true
-    });
+    })
+      .map(res => this.deleteCache(order));
   }
 
   // capture this order
@@ -145,7 +121,8 @@ export class OrderService {
     return this.http.post(this.config.API_SERVER + '/v1/orders/' + order.oid + '/capture', opts, {
       headers: this.headers,
       withCredentials: true
-    });
+    })
+      .map(res => this.updateCache(res.json()));
   }
 
   // refund an order
@@ -157,9 +134,7 @@ export class OrderService {
       headers: this.headers,
       withCredentials: true
     })
-      .map(res => res.json() as Order)
-      //.map(order => this.updateCache(order))
-      .catch(err => Observable.of(this.defaultOrder));
+      .map(res => this.updateCache(res.json()));
   }
 
   // order can be canceled
@@ -173,10 +148,7 @@ export class OrderService {
       headers: this.headers,
       withCredentials: true
     })
-      .map(res => res.json() as Order)
-      //.map(order => this.updateCache(order))
-      .catch(err => Observable.of(this.defaultOrder));
-
+      .map(res => this.updateCache(res.json()));
   };
 
   //
@@ -184,9 +156,9 @@ export class OrderService {
   // role:shop:admin
   // app.post('/v1/orders/:oid/items', orders.ensureShopOwnerOrAdmin, queued(orders.updateItem));
   updateItem(order: Order, item, fulfillment: EnumFulfillments): Observable<Order> {
-    var tosave = Object.assign({}, item);
-    tosave.fulfillment.finalprice = parseFloat(item.fulfillment.finalprice);
-    tosave.fulfillment.status = fulfillment;
+    let tosave = Object.assign({}, item);
+    tosave.finalprice = parseFloat(item.finalprice);
+    tosave.fulfillment.status = EnumFulfillments[fulfillment];
     // this.chain(backend.$order.save({action:this.oid,id:'items'},[tosave]).$promise).$promise.then(function () {
     //   _.find(me.items,function(i){return i.sku===item.sku;}).fulfillment.status=fulfillment;
     // });
@@ -194,13 +166,12 @@ export class OrderService {
       headers: this.headers,
       withCredentials: true
     })
-      .map((res) => {
-        order.items.find(i => i.sku === item.sku).fulfillment.status = fulfillment;
-        return res;
-      })
-      .map(res => res.json() as Order)
-      .catch(err => Observable.of(this.defaultOrder));
-
+      // .map((res) => {
+      //   let item:any=order.items.find(i => i.sku === item.sku);
+      //   item.fulfillment.status = EnumFulfillments[fulfillment];
+      //   return res;
+      // })
+      .map(res => this.updateCache(res.json()));
   };
 
   // update order with specific issue made by one shop
@@ -216,12 +187,24 @@ export class OrderService {
       headers: this.headers,
       withCredentials: true
     })
-      .map((res) => {
-        order.items.find(i => i.sku === item.sku).fulfillment.issue = issue;
-        return res;
-      })
-      .map(res => res.json() as Order)
-      .catch(err => Observable.of(this.defaultOrder));
+      // .map((res) => {
+      //   order.items.find(i => i.sku === item.sku).fulfillment.issue = issue;
+      //   return res;
+      // })
+      .map(res => this.updateCache(res.json()));
+  }
+
+  // update effective bags for this order
+  // role:logistic
+  // app.post('/v1/orders/:oid/shipping', auth.ensureLogisticOrAdmin, orders.updateShipping);
+  updateBagsCount(order: Order, value: number): Observable<Order> {
+    var status = order.shipping.shipped;
+    //return this.chain(backend.$order.save({action:this.oid,id:'shipping'},{bags:value,status:status}).$promise);
+    return this.http.post(this.config.API_SERVER + '/v1/orders/' + order.oid + '/shipping', { bags: value, status: status }, {
+      headers: this.headers,
+      withCredentials: true
+    })
+      .map(res => this.updateCache(res.json()));
   }
 
 
@@ -234,22 +217,24 @@ export class OrderService {
       headers: this.headers,
       withCredentials: true
     })
-      .map(res => res.json() as Order)
-      .catch(err => Observable.of(this.defaultOrder));
+      .map(res => this.updateCache(res.json()));
 
   }
 
   // update shopper  
   // role:logistic
   // app.post('/v1/orders/:oid/shipper', auth.ensureLogisticOrAdmin, orders.updateShippingShopper);
-  updateShippingShopper(order: Order) {
+  updateShippingShopper(order: Order,priority:number,position:number) {
+    let params={
+      priority:priority,
+      position:position
+    };
     //return this.chain(backend.$order.save({ action: oid, id: 'shipping' }, { amount: status }).$promise);
-    return this.http.post(this.config.API_SERVER + '/v1/orders/' + order.oid + '/shopper', {  }, {
+    return this.http.post(this.config.API_SERVER + '/v1/orders/' + order.oid + '/shopper', params, {
       headers: this.headers,
       withCredentials: true
     })
-      .map(res => res.json() as Order)
-      .catch(err => Observable.of(this.defaultOrder));
+      .map(res => this.updateCache(res.json()));
 
   }
 
@@ -261,8 +246,7 @@ export class OrderService {
       headers: this.headers,
       withCredentials: true
     })
-      .map(res => res.json() as Order)
-      .catch(err => Observable.of(this.defaultOrder));
+      .map(res => this.updateCache(res.json()));
   };
 
   // validate shop products collect
@@ -274,7 +258,7 @@ export class OrderService {
       headers: this.headers,
       withCredentials: true
     })
-      .map(res => res.json().map(obj => new Order(obj)));
+      .map(res => res.json().map(this.updateCache.bind(this)));
   }
 
   // find all orders by user
@@ -286,19 +270,21 @@ export class OrderService {
       headers: this.headers,
       withCredentials: true
     })
-      .map(res => res.json().map(obj => new Order(obj)));
+      .map(res => res.json().map(this.updateCache.bind(this)));
   }
 
   // find all order filtered by filter
   // role:admin?
   findAllOrders(filter) {
     //return this.chainAll(backend.$order.query(filter).$promise);
+    let self=this;
     return this.http.get(this.config.API_SERVER + '/v1/orders', {
       params: filter,
       headers: this.headers,
       withCredentials: true
     })
-      .map(res => res.json().map(obj => new Order(obj)));
+      .map(res => res.json().map(this.updateCache.bind(this)));
+//      .map(res => res.json().map(this.updateCache.bind(this)));
       //.map(orders => orders.map(order => this.updateCache(order)));
   }
 
@@ -313,7 +299,7 @@ export class OrderService {
       headers: this.headers,
       withCredentials: true
     })
-      .map(res => res.json().map(obj => new Order(obj)));
+      .map(res => res.json().map(this.updateCache.bind(this)));
       //.map(orders => orders.map(order => this.updateCache(order)));
   }
 

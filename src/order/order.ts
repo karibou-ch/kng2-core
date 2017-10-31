@@ -60,13 +60,22 @@ export interface OrderItem{
 
 
 export class Order {
+  defaultOrder={
+    customer:{},
+    payment:{},
+    fulfillments:{},
+    cancel:{},
+    items:[],
+    vendors:[],
+    shipping:{}
+  };
 
   constructor(json?:any){
-    if(json !== undefined){
-      Object.assign(this,json);
-    }else{
-      //TODO empty new order
-    }
+    Object.assign(this,json||this.defaultOrder);
+    
+    //
+    // default order position
+    this.shipping.position=this.shipping.position||parseInt(this.shipping.postalCode)*10;
   }
 
   /** order identifier */
@@ -115,7 +124,7 @@ export class Order {
     status:EnumFulfillments
   };
 
-  items:[OrderItem];
+  items:OrderItem[];
 
   vendors:[{
     //
@@ -156,7 +165,11 @@ export class Order {
       lng:number
     },
     shipped?:boolean,
-    bags?:number
+    shopper?:string,
+    priority?:number,
+    position?:number,
+    bags?:number,
+    estimated?:number
   }
 
   //

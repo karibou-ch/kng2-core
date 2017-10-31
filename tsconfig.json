@@ -3,14 +3,13 @@
         "emitDecoratorMetadata": true,
         "experimentalDecorators": true,
         "allowSyntheticDefaultImports":true,
-        "target": "es2015",
-        "module": "commonjs",
+        "target": "es6",
+        "module": "es6",
         "moduleResolution": "node",
         "removeComments": true,
         "noImplicitAny": false,
         "sourceMap": true,
-        "declaration": true,
-        "outDir": "./dist"        
+        "declaration": true
     },
     "files": [
         "index.ts"

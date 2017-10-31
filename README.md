@@ -6,11 +6,14 @@ The module goal mainly provide a kickstart kit to make every new idea/motivation
 [![Build Status](https://travis-ci.org/karibou-ch/kng2-core.svg?branch=master)](https://travis-ci.org/karibou-ch/kng2-core)
 [![Gitter](https://badges.gitter.im/karibou-ch/kng2-core.svg)](https://gitter.im/karibou-ch/kng2-core?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 
-# Authors & spcial thanks :heart:
+# Authors & special thanks :heart:
 
 - David Gonzalez, https://github.com/GonzalD
+- Matthieu Vallat, https://github.com/VallatMa 
+- Yann Doudin, https://github.com/doudiny 
 - Evalet Olivier, https://github.com/evaletolab
 - Noria Foukia Enseignante en mathématiques @HEPIA 
+- Arnaud Deglise Fondateur de Panier Local @Fribourg
 
 ## Installation as library
     npm install kng2-core

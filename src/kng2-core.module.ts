@@ -11,7 +11,7 @@ import { ConfigService } from './config.service';
 import { config } from './config';
 import { LoaderService } from './loader.service';
 import { OrderService } from './order/order.service';
-import { Order } from './order/order';
+import { Order, OrderItem } from './order/order';
 import { UserPipe } from './user.pipe';
 import { User, UserCard, UserAddress, UserService } from './user.service';
 import { Shop, ShopService } from './shop.service';
@@ -67,7 +67,7 @@ export {
   ProductService, Product,
   ConfigService, config,
   LoaderService,
-  OrderService, Order, OrderEnum,
+  OrderService, Order, OrderItem, OrderEnum,
   UserPipe,
   UserService, User, UserAddress, UserCard, ShopService, Shop
 }
