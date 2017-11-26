@@ -8,7 +8,7 @@ import {
     Category,
     CategoryService,
     config
-}  from '../../../../dist'
+}  from '../../../../'
 
 @Component({
     selector: 'app-product-list',
@@ -21,7 +21,7 @@ export class ProductListComponent implements OnInit {
     config: any;
     products: Product[] = [];
     password: string;
-    catalogs: Array<Category> = new Array;
+    categories: Array<Category> = new Array;
     selectCat: Category;
 
     constructor(
@@ -37,9 +37,10 @@ export class ProductListComponent implements OnInit {
             this.isReady = true;
             this.config = loader[0];
             //this.loadLovedProduct(); //pour un test
-            this.loadProducts();
             this.$category.select().subscribe(res => {
-                this.catalogs = res.filter(res => res.type == "Category").sort();
+                this.categories = res.filter(res => res.type == "Category").sort();
+                this.selectCat=this.categories[1];
+                this.filterProduct();
             });
         });
     }

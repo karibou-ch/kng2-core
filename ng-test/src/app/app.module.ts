@@ -33,7 +33,7 @@ import { UserPasswordComponent } from './user.password/user-password.component';
 import { UserOrdersComponent } from './user.orders/user-orders.component';
 
 import { ProductListComponent } from './product.list/product-list.component';
-import { ProductComponent } from './product/product.component';
+import { ProductComponent, ProductThumbnailComponent, ProductTinyComponent } from './product/product.component';
 import { ProductEditComponent } from './product.edit/product-edit.component';
 import { ProductCreateComponent } from './product.create/product-create.component';
 
@@ -52,6 +52,8 @@ import { ProductCreateComponent } from './product.create/product-create.componen
     CategoryEditComponent,
     ProductListComponent,
     ProductComponent,
+    ProductThumbnailComponent,
+    ProductTinyComponent,
     ProductEditComponent,
     ProductCreateComponent,
     UserOrdersComponent,

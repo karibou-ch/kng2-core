@@ -1,11 +1,12 @@
 <div class="container">
 	<h2>Product list</h2>
-	<label class="control-label">Product category</label> <select
+	<label class="control-label">Product category</label> 
+	<select
 		[ngModel]="product?.categories"
 		(ngModelChange)="selectCat = $event"
 		[ngModelOptions]="{standalone: true}">
 		<option
-			*ngFor="let cat of catalogs "
+			*ngFor="let cat of categories "
 			[ngValue]="cat">{{cat.name}}</option>
 	</select>
 	<button
@@ -14,8 +15,10 @@
 		(click)="filterProduct();"
 		class="btn btn-block">Filter Product</button>
 	<table class="table">
-		<tr *ngFor="let product of products">
-			<td><a [routerLink]="['/product',product.sku]">{{product.title}}</a></td>
+		<tr *ngFor="let product of products;let i=index">
+
+			<td>
+				<app-product-tiny [sku]="product.sku"></app-product-tiny></td>
 			<td><input
 					id="pswd"
 					type="password"
