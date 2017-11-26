@@ -26,6 +26,7 @@ export class ConfigService {
 
     shared:{
     },
+    loader:[],
     loginPath:['/admin', '/account'],
     readonlyPath:['/wallet/create'],
     avoidShopUIIn:['/admin', '/login', '/signup', '/content']

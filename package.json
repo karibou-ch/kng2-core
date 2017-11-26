@@ -1,6 +1,6 @@
 {
   "name": "kng2-core",
-  "version": "0.19.0",
+  "version": "0.20.0",
   "description": "The module goal mainly provide a kickstart kit to make every new idea/motivation web application/ionic declinaison for karibou.ch without friction!",
   "main": "index.js",
   "types": "index.d.ts",
@@ -13,7 +13,8 @@
   "dependencies": {
     "@angular/common": "^4.0.0",
     "moment": "^2.18.1",
-    "rxjs": "^5.1.0"
+    "rxjs": "^5.1.0",
+    "showdown": "^1.8.1"
   },
   "devDependencies": {
     "@angular/common": "^4.0.0",

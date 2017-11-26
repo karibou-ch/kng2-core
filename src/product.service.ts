@@ -20,31 +20,27 @@ export class ProductService {
         this.config = ConfigService.defaultConfig;
         this.headers = new Headers();
         this.headers.append('Content-Type', 'application/json');
-
+        this.cache=new Cache();
         //
         // 1 means to keep the last value
         this.product$ = new ReplaySubject(1);
     }
 
-    private deleteCache(product: Product) {
-        if (this.cache.map[product.sku]) {
-            this.cache.map.delete(product.sku);
-            let index = this.cache.list.indexOf(product)
-            if (index > -1)
-                this.cache.list.splice(index, 1);
+    private updateCache(product: Product) {
+        if(!this.cache.map.get(product.sku)){
+            this.cache.map.set(product.sku,new Product(product))
+            return this.cache.map.get(product.sku);
         }
+        return Object.assign(this.cache.map.get(product.sku), product);
     }
 
-    private updateCache(product: Product) {
-        //
-        //check if already exist on cache and add in it if not the case
-        if (!this.cache.map[product.sku]) {
-            this.cache.map[product.sku] = product;
-            this.cache.list.push(product);
-            return product;
+    private deleteCache(product: Product) {
+        let incache=this.cache.map.get(product.sku);
+        if (this.cache.map.get(product.sku)) {
+            incache.deleted=true;
+            this.cache.map.delete(product.sku);
         }
-        //update existing entry
-        return Object.assign(this.cache.map[product.sku], product);
+        return incache;
     }
 
 
@@ -59,9 +55,7 @@ export class ProductService {
             headers: this.headers,
             withCredentials: true
         })
-            .map(res => res.json().map(obj => new Product(obj)))
-        //.map(products => products.map(this.updateCache.bind(this)))
-        //.catch(this.handleError);
+         .map(res => res.json().map(this.updateCache.bind(this)));
     };
 
     findByLocationCategoryAndDetail(category, detail): Observable<Product[]> {
@@ -69,9 +63,7 @@ export class ProductService {
             headers: this.headers,
             withCredentials: true
         })
-            .map(res => res.json().map(obj => new Product(obj)))
-        //.map(products => products.map(this.updateCache.bind(this)))
-        //.catch(this.handleError);
+         .map(res => res.json().map(this.updateCache.bind(this)));
     };
 
     findByCategoryAndDetail(category, detail): Observable<Product[]> {
@@ -79,9 +71,7 @@ export class ProductService {
             headers: this.headers,
             withCredentials: true
         })
-            .map(res => res.json().map(obj => new Product(obj)))
-        //.map(products => products.map(this.updateCache.bind(this)))
-        //.catch(this.handleError);
+         .map(res => res.json().map(this.updateCache.bind(this)));
     };
 
     findByLocationAndCategory(location, category): Observable<Product[]> {
@@ -89,9 +79,7 @@ export class ProductService {
             headers: this.headers,
             withCredentials: true
         })
-            .map(res => res.json().map(obj => new Product(obj)))
-        //.map(products => products.map(this.updateCache.bind(this)))
-        //.catch(this.handleError);
+         .map(res => res.json().map(this.updateCache.bind(this)));
     };
 
     findLove(): Observable<Product[]> {
@@ -99,9 +87,7 @@ export class ProductService {
             headers: this.headers,
             withCredentials: true
         })
-            .map(res => res.json().map(obj => new Product(obj)))
-        //.map(products => products.map(this.updateCache.bind(this)))
-        //.catch(this.handleError);
+         .map(res => res.json().map(this.updateCache.bind(this)));
     };
 
     findByLocation(location): Observable<Product[]> {
@@ -109,9 +95,7 @@ export class ProductService {
             headers: this.headers,
             withCredentials: true
         })
-            .map(res => res.json().map(obj => new Product(obj)))
-        //.map(products => products.map(this.updateCache.bind(this)))
-        //.catch(this.handleError);
+         .map(res => res.json().map(this.updateCache.bind(this)));
     };
 
     findByCategory(category): Observable<Product[]> {
@@ -119,9 +103,7 @@ export class ProductService {
             headers: this.headers,
             withCredentials: true
         })
-            .map(res => res.json().map(obj => new Product(obj)))
-        //.map(products => products.map(this.updateCache.bind(this)))
-        //.catch(this.handleError);
+         .map(res => res.json().map(this.updateCache.bind(this)));
     };
 
     findBySku(sku): Observable<Product> {
@@ -134,33 +116,25 @@ export class ProductService {
         let cached: Observable<Product>;
 
         // check if in the cache
-        if (this.cache.map[sku]) {
-            return Observable.of(this.cache.map[sku]);
+        if (this.cache.map.get(sku)) {
+            return Observable.of(this.cache.map.get(sku));
         }
         return this.http.get(this.config.API_SERVER + '/v1/products/' + sku, {
             headers: this.headers,
             withCredentials: true
         })
-            //.map(res => res.json() as Product[])
-            //.map(res => res.json() as Product)
-            .map(res => new Product(res.json()))
-            //.map(this.updateCache)
-            //.do(this.product$.next)
-            .catch(this.handleError);
+          .map(res => this.updateCache(res.json()))
+          .do(this.product$.next.bind(this.product$))
     };
 
     remove(sku:number,password:string):Observable<any>{
-      console.log(sku);
-      console.log(password);
       var passwordJson = {"password":password};
       return this.http.put(this.config.API_SERVER + '/v1/products/'+sku, passwordJson, {
         headers: this.headers,
         withCredentials: true
       })
-        .map(res => res.json() as Product)
-        .map(this.deleteCache)
-        // TODO what to callback on delete
-        .do(()=>this.product$.next(new Product()))
+      .map(res => this.deleteCache(res.json()))
+        .do(this.product$.next.bind(this.product$))
     };
 
     create(prod: Product): Observable<Product> {
@@ -168,11 +142,8 @@ export class ProductService {
             headers: this.headers,
             withCredentials: true
         })
-            .map(res => new Product(res.json()))
-            //.map(res => res.json().map(obj => new Product(obj)))
-            //.map(this.updateCache)
-            //.do(this.product$.next)
-            .catch(this.handleError);
+            .map(res=>this.updateCache(res.json()))
+            .do(this.product$.next.bind(this.product$));
     };
 
     save(prod: Product): Observable<Product> {
@@ -180,11 +151,8 @@ export class ProductService {
             headers: this.headers,
             withCredentials: true
         })
-            .map(res => res.json() as Product)
-            //.map(res => new Product(res.json()))
-            //.map(this.updateCache)
-            //.do(this.product$.next)
-            .catch(this.handleError);
+            .map(res => this.updateCache(res.json()))
+            .do(this.product$.next.bind(this.product$));
     };
 
     private handleError(error: Response | any) {
@@ -214,129 +182,33 @@ class Cache {
 
 
 export class Product {
+    private defaultProduct={
+        attributes:{},
+        details:{},
+        photo:{},
+        pricing:{},
+        categories:{},
+        shelflife:{},
+        vendor:{},
+        quantity:{}
+    }
 
     constructor(json?: any) {
-        if (json !== undefined) {
-            Object.assign(this, json);
-        } else {
-            let defaultProduct = {
-                attributes: {
-                    available: false,
-                    comment: false,
-                    discount: false,
-                    home: false,
-                    weigth: 0
-                },
-                categories: "",
-                details: {
-                    description: "",
-                    origin: "",
-                    biodegradable: false,
-                    vegetarian: false,
-                    bioconvertion: false,
-                    biodynamic: false,
-                    grta: false,
-                    bio: false,
-                    local: false,
-                    natural: false,
-                    homemade: false,
-                    cold: false,
-                    gluten: false,
-                    lactose: false
-                },
-                photo: {
-                    url: "//ucarecdn.com/2a857236-1943-4f57-89f6-f1da02cd39dc/"
-                },
-                pricing: {
-                    part: "",
-                    price: "",
-                    stock: ""
-                },
-                quantity: {
-                    display: false,
-                    comment: ""
-                },
-                title: "",
-                urlshop: "chocolat-de-villars-sur-glane"
-            }
-            Object.assign(this, defaultProduct);
+        Object.assign(this,json||this.defaultProduct);        
+        if(json){
+            this.updated=new Date(json.updated);
+            this.created=new Date(json.created);
         }
     };
-
-    _id;
+    deleted:boolean;
     title: string;
-    variants;
+    variants:any[];
     sku: number;
     slug: string;
     updated: Date;
     created: Date;
-    categories: {
-        _id;
-        name: string;
-        weight: number;
-    };
-    vendor: {
-        _id;
-        urlpath: string;
-        catalog;
-        name: string;
-        description: string;
-        owner: any;
-        status: boolean;
-        url: string;
-        created: Date;
-        marketplace;
-        scoring: {
-            score: number;
-            issues: number;
-            weight: number;
-        };
-        account: {
-            updated: Date;
-        };
-        info: {
-            detailledOrder: boolean;
-            active: boolean;
-        };
-        discount: {
-            active: boolean;
-        };
-        available: {
-            active: boolean;
-            from: Date,
-            to: Date,
-            weekdays: [number],
-            comment: string
-        };
-        faq?: [{
-            q: string;
-            a: string;
-            updated: Date;
-        }];
-        address: {
-            name: string;
-            phone: string;
-            streetAdress: string;
-            floor: string;
-            postalCode: string;
-            geo: {
-                lat: number;
-                lng: number;
-            };
-            region: string;
-        };
-        detail: {
-            local: boolean;
-            vegetarian: boolean;
-            lactose: boolean;
-            gluten: boolean;
-            bio: boolean;
-        };
-        photo: {
-            gallery;
-        };
-        version: number;
-    };
+    categories: any;
+    vendor:any;
     faq?: [{
         q: string;
         a: string;
@@ -346,6 +218,7 @@ export class Product {
         url: string;
     };
     pricing: {
+        discount:number;
         price: number;
         part: string;
         tva: number;
@@ -382,4 +255,29 @@ export class Product {
         gluten: boolean;
         lactose: boolean;
     };
+
+
+    hasFixedPortion(){
+        var weight=this.pricing.part||'';
+        var m=weight.match(/~([0-9.]+) ?(.+)/);
+        return(!m||m.length<2);
+    }
+
+    getPrice(){
+        if(this.attributes.discount && this.pricing.discount){
+        return this.pricing.discount;
+        }
+        return this.pricing.price;
+    }    
+
+    isDiscount(){
+        return(this.attributes.discount && this.pricing.discount);
+    }    
+
+    isAvailableForOrder() {
+        var ok=(this.attributes.available && this.vendor &&
+                this.vendor.status===true);
+        return ok;
+    }
+    
 }
