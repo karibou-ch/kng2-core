@@ -2,7 +2,11 @@ import { Component } from '@angular/core';
 import { ConfigService, LoaderService } from '../../../';
 
 ConfigService.setDefaultConfig({
-    API_SERVER:'http://api.panierlocal.evaletolab.ch'
+    API_SERVER:'http://api.karibou.evaletolab.ch',
+    loader:[
+      "categories",
+      "shops"
+    ]
 });
 
 @Component({
@@ -20,6 +24,7 @@ export class AppComponent {
 
 
   ngOnInit(){
-    this.loader.ready().subscribe();
+    this.loader.ready().subscribe(()=>{
+    });
   }
 }

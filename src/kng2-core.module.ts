@@ -6,15 +6,24 @@ import { HttpModule } from '@angular/http';
 import { AuthGuardService } from './auth-guard.service';
 
 import { Category, CategoryService } from './category.service';
+import { Product, ProductService } from './product.service';
 import { ConfigService } from './config.service';
 import { config } from './config';
 import { LoaderService } from './loader.service';
 import { OrderService } from './order/order.service';
 import { Order, OrderItem } from './order/order';
-import { UserPipe } from './user.pipe';
 import { User, UserCard, UserAddress, UserService } from './user.service';
 import { Shop, ShopService } from './shop.service';
+
 import *  as OrderEnum from './order/order.enum';
+
+//
+// directives & pipes
+import { UserPipe } from './user.pipe';
+import { bgSrcDirective } from './util.bg-src.directive';
+import { confirmDeleteDirective } from './util.confirm-delete.directive';
+import { OrderPortionPipe, OrderBasepricePipe } from './order/order.pipe.portion';
+import { MarkdownDirective } from './util.markdown.directive';
 
 
 @NgModule({
@@ -23,14 +32,15 @@ import *  as OrderEnum from './order/order.enum';
     HttpModule
   ],
   declarations: [
-    UserPipe
+    bgSrcDirective, confirmDeleteDirective, MarkdownDirective, UserPipe, OrderPortionPipe, OrderBasepricePipe
   ],
   exports: [
-    UserPipe
+    bgSrcDirective, confirmDeleteDirective, MarkdownDirective, UserPipe, OrderPortionPipe, OrderBasepricePipe  
   ],
   providers: [
         AuthGuardService,
         CategoryService,
+        ProductService,
         ConfigService,
         LoaderService,
         OrderService,
@@ -62,9 +72,10 @@ export class Kng2CoreModule {
 export {
   AuthGuardService,
   CategoryService, Category,
+  ProductService, Product,
   ConfigService, config,
   LoaderService,
-  OrderService, Order, OrderItem, OrderEnum,
+  OrderService, Order, OrderItem, OrderEnum, OrderPortionPipe,
   UserPipe,
   UserService, User, UserAddress, UserCard, ShopService, Shop
 }

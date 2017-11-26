@@ -46,7 +46,7 @@ export class OrderService {
 
   //
   // common cache functions
-  public cache: {
+  private cache: {
     list: Order[];
     map: Map<number, Order>; //key is a slug
   }
@@ -60,9 +60,11 @@ export class OrderService {
   }
 
   private deleteCache(order: Order) {
+    let incache=this.cache.map[order.oid];
     if (this.cache.map[order.oid]) {
       delete this.cache.map[order.oid];
     }
+    return incache;
   }
 
 

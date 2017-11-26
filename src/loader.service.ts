@@ -7,6 +7,7 @@ import { ConnectableObservable } from 'rxjs/observable/ConnectableObservable'
 import 'rxjs/Rx';
 
 import { Config } from './config';
+import { Product, ProductService  } from './product.service';
 import { ConfigService } from './config.service';
 
 import { User, UserCard, UserAddress, UserService } from './user.service';
@@ -21,9 +22,11 @@ export class LoaderService {
   //private loader: BehaviorSubject<[Config, User]> = new BehaviorSubject<[Config, User]>([null,null]);
   private loader: Observable<[Config, User]>;
 
+
   constructor(
     private http: Http,
     private config: ConfigService,
+    private $product: ProductService,
     private $user: UserService,
     private $category: CategoryService,
     private $shop: ShopService
@@ -32,16 +35,8 @@ export class LoaderService {
     //
     //create a multicast Observable with the caching property of BehaviorSubject (publishbehavior)
     //every subscribing component will be connected to the same request and get the last item received
-
     this.loader = this.config.init()
-      .flatMap(config =>
-        //
-        //combineLatest to get array with last item of each when one emits an item
-        Observable.combineLatest(
-          Observable.of(config),
-          this.$user.me()
-        )
-      )
+      .flatMap(this.preloader.bind(this))
       //
       // transform observable to ConnectableObservable (multicasting)
       .publishReplay(1)
@@ -50,6 +45,24 @@ export class LoaderService {
       .refCount();
   }
 
+  private preloader(config){
+    let loaders=[
+      Observable.of(config),
+      this.$user.me()
+    ];
+    ConfigService.defaultConfig.loader.forEach(loader=>{
+      if(loader==="shops"){
+        loaders.push(this.$shop.query());
+      }
+      if(loader==="categories"){
+        loaders.push(this.$category.select())
+      }
+    })
+    //
+    //combineLatest to get array with last item of each when one emits an item
+    return Observable.combineLatest(loaders);      
+  }
+  
 
   ready() {
     return this.loader;

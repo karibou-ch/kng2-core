@@ -1,7 +1,11 @@
 import { RouterModule, Routes } from '@angular/router';
 import { AuthGuardService, Kng2CoreModule } from '../../../';
 
-import { ConfigComponent } from './config/config.component';
+import { ConfigComponent }  from './config/config.component';
+import { ProductListComponent }  from './product.list/product-list.component';
+import { ProductEditComponent }  from './product.edit/product-edit.component';
+import { ProductCreateComponent } from './product.create/product-create.component';
+import { ProductComponent }  from './product/product.component';
 import { CategoryComponent } from './category/category.component';
 import { CategoryEditComponent } from './category.edit/category-edit.component';
 import { DashboardComponent } from './user.dashboard/dashboard.component';
@@ -21,7 +25,11 @@ import { RecoveryComponent } from './user.recovery/recovery.component';
 export const appRoutes: Routes = [
   { path: 'config', component: ConfigComponent },
   { path: 'category', component: CategoryComponent },
-  { path: 'category/create', component: CategoryEditComponent, data: { newInstance: true } },
+  { path: 'product', component: ProductListComponent },
+  { path: 'product/create', component: ProductCreateComponent },
+  { path: 'product/:sku', component: ProductComponent },
+  { path: 'product/edit/:sku', component: ProductEditComponent },
+  { path: 'category/create', component: CategoryEditComponent, data:{newInstance:true} },
   { path: 'category/:slug', component: CategoryEditComponent },
   { path: 'login', component: LoginComponent },
   { path: 'register', component: RegisterComponent },
