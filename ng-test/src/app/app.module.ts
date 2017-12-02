@@ -18,7 +18,7 @@ import { ShopListComponent } from './shop.list/shop-list.component';
 import { ShopEditComponent } from './shop.edit/shop-edit.component';
 import { ShopCreateComponent } from './shop.create/shop-create.component';
 
-import { AuthGuardService, Kng2CoreModule } from '../../../';
+import { IsAuthenticated, Kng2CoreModule } from '../../../';
 
 import { appRoutes } from './app.routes';
 import { AddressComponent } from './user.address/address.component';
@@ -36,6 +36,7 @@ import { ProductListComponent } from './product.list/product-list.component';
 import { ProductComponent, ProductThumbnailComponent, ProductTinyComponent } from './product/product.component';
 import { ProductEditComponent } from './product.edit/product-edit.component';
 import { ProductCreateComponent } from './product.create/product-create.component';
+import { HomeComponent } from './home/home.component';
 
 @NgModule({
   declarations: [
@@ -64,7 +65,8 @@ import { ProductCreateComponent } from './product.create/product-create.componen
     ShopComponent,
     ShopEditComponent,
     ShopCreateComponent,
-    ShopListComponent
+    ShopListComponent,
+    HomeComponent
   ],
   imports: [
     BrowserModule,

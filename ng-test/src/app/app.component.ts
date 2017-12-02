@@ -18,13 +18,12 @@ ConfigService.setDefaultConfig({
 export class AppComponent {
 
   constructor(
-    private config: ConfigService,
-    private loader: LoaderService
+    private $loader: LoaderService
   ) {}
 
 
   ngOnInit(){
-    this.loader.ready().subscribe(()=>{
+    this.$loader.ready().subscribe(()=>{
     });
   }
 }

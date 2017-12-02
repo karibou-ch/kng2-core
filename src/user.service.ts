@@ -358,7 +358,8 @@ export class UserService {
     this.headers = new Headers();
     this.headers.append('Content-Type', 'application/json');
     Object.assign(this.currentUser, this.defaultUser);
-    this.user$ = new ReplaySubject(1);
+    this.user$ = new ReplaySubject<User>(1);
+    this.user$.next(this.currentUser);
   }
 
   // token
@@ -402,8 +403,8 @@ export class UserService {
     })
       .map(res => new User(res.json()))
       .catch(err => Observable.of(this.defaultUser))
-      .map(user => this.updateCache(user))
-      .flatMap(() => this.user$.asObservable());
+      .map(user => this.updateCache(user));
+//      .flatMap(() => this.user$.asObservable());
 
 
     //     // angular.extend(self,defaultUser);
@@ -572,6 +573,7 @@ export class UserService {
       .map(user => {
         this.cache.list.find(u => u.id === user.id).likes = user.likes.slice();
         this.cache.map.get(user.id).likes = user.likes.slice();
+        return user;
       })
       .catch(err => Observable.of(this.defaultUser));
     //self.copy(u);

@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { HttpModule } from '@angular/http';
 
 
-import { AuthGuardService } from './auth-guard.service';
+import { IsAuthenticated } from './is-authenticated.service';
 
 import { Category, CategoryService } from './category.service';
 import { Product, ProductService } from './product.service';
@@ -38,7 +38,7 @@ import { MarkdownDirective } from './util.markdown.directive';
     bgSrcDirective, confirmDeleteDirective, MarkdownDirective, UserPipe, OrderPortionPipe, OrderBasepricePipe  
   ],
   providers: [
-        AuthGuardService,
+        IsAuthenticated,
         CategoryService,
         ProductService,
         ConfigService,
@@ -70,7 +70,7 @@ export class Kng2CoreModule {
 //
 //
 export {
-  AuthGuardService,
+  IsAuthenticated,
   CategoryService, Category,
   ProductService, Product,
   ConfigService, config,
