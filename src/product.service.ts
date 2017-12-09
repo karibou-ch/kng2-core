@@ -36,7 +36,7 @@ export class ProductService {
 
     private deleteCache(product: Product) {
         let incache=this.cache.map.get(product.sku);
-        if (this.cache.map.get(product.sku)) {
+        if (incache) {
             incache.deleted=true;
             this.cache.map.delete(product.sku);
         }

@@ -3,7 +3,10 @@ import { Injectable } from '@angular/core';
 import { Observable, BehaviorSubject, ReplaySubject } from 'rxjs/Rx';
 import 'rxjs/add/observable/from';
 
-import * as moment from 'moment';
+// Cannot call a namespace ('moment')
+// import * as moment from 'moment';
+// https://stackoverflow.com/questions/39519823/using-rollup-for-angular-2s-aot-compiler-and-importing-moment-js
+import  moment from 'moment';
 //import Moment from 'moment';
 import 'moment/locale/fr';
 
@@ -43,6 +46,7 @@ export class UserCard {
 
 export class User {
 
+  deleted:boolean;
   id: string;
 
   /* The provider which with the user authenticated (facebook, twitter, etc.) */
@@ -118,50 +122,28 @@ export class User {
   rank: string;
 
   constructor(json?: any) {
-    if (json !== undefined) {
-      Object.assign(this, json);
-    } else {
-      let defaultUser = {
-        id: '',
-        displayName: '',
+    let defaultUser = {
 
-        name: {
-          givenName: '',
-          familyName: ''
-        },
+      name: {},
+      tags: [],
+      email: {
+      },
 
-        birthday: new Date(),
-        gender: '',
-        tags: [],
-        email: {
-          address: '',
-          cc: '',
-          status: ''
-        },
+      reminder: {
+        weekdays: []
+      },
 
-        reminder: {
-          active: false,
-          weekdays: [],
-          time: null
-        },
+      roles: [],
+      shops: [],
+      phoneNumbers: [{
+        number: '',
+        what: 'mobile'
+      }],
 
-        roles: [],
-        shops: [],
-        provider: '',
-        url: '',
-        phoneNumbers: [{
-          number: '',
-          what: 'mobile'
-        }],
 
-        photo: '',
-
-        logistic: {
-          postalCode: ''
-        }
-      }
-      Object.assign(this, defaultUser);
+      logistic: {}
     }
+    Object.assign(this, json||defaultUser);
 
   }
 
@@ -203,7 +185,7 @@ export class User {
   }
 
   isAuthenticated() {
-    return this.id !== '';
+    return this.id!==null;
   }
 
   isAdmin() {
@@ -301,6 +283,15 @@ export class User {
 
 }
 
+class Cache {
+    list: User[];
+    map: Map<string, User>
+    constructor() {
+        this.list = [];
+        this.map = new Map();
+    }
+}
+
 @Injectable()
 export class UserService {
 
@@ -309,43 +300,25 @@ export class UserService {
   // TODO make observable content !!
   config: any;
   currentUser: User = new User();
-
-
-  private cache = {
-    list: [],
-    map: new Map<string, User>()
-  };
-
-  private deleteCache(user: User) {
-    if (this.cache.map[user.id]) {
-      this.cache.map.delete(user.id);
-      let index = this.cache.list.indexOf(user)
-      if (index > -1)
-        this.cache.list.splice(index, 1);
-
-    }
-  }
-
-
+  private cache = new Cache();
 
   private updateCache(user: User) {
-    //
-    // notify
-    this.user$.next(user);
-    Object.assign(this.currentUser, user);
-
-
-    //
-    //check if already exist on cache and add in it if not the case
-    if (!this.cache.map[user.id]) {
-      this.cache.map[user.id] = user;
-      this.cache.list.push(user);
-      return user;
-    }
-    //update existing entry
-    return Object.assign(this.cache.map[user.id], user);
-
+      if(!this.cache.map.get(user.id)){
+          this.cache.map.set(user.id,new User(user))
+          return this.cache.map.get(user.id);
+      }
+      return Object.assign(this.cache.map.get(user.id), user);
   }
+
+  private deleteCache(user: User) {
+      let incache=this.cache.map.get(user.id);
+      if (incache) {
+          incache.deleted=true;
+          this.cache.map.delete(user.id);
+      }
+      return incache;
+  }
+
 
   private headers: Headers;
   private user$: ReplaySubject<User>;
@@ -394,19 +367,14 @@ export class UserService {
 
   // app.get('/v1/users/me', auth.ensureAuthenticated, users.me);
   me(): Observable<User> {
-    //var self=this;
-
-
     return this.http.get(this.config.API_SERVER + '/v1/users/me', {
       headers: this.headers,
       withCredentials: true
     })
-      .map(res => new User(res.json()))
-      .catch(err => Observable.of(this.defaultUser))
-      .map(user => this.updateCache(user));
-//      .flatMap(() => this.user$.asObservable());
+      .map(res => this.updateCache(res.json()))
+      .catch(err => Observable.of(this.defaultUser));
 
-
+    // TODO check and remove those comments bellow
     //     // angular.extend(self,defaultUser);
     //     self.wrap(_u);
     //     // FIXME bad dependency circle
@@ -429,7 +397,6 @@ export class UserService {
     //   }
     //
     // );
-
   }
 
   // app.get('/v1/users', auth.ensureAdmin, users.list);
@@ -441,9 +408,7 @@ export class UserService {
       headers: this.headers,
       withCredentials: true
     })
-      .map(res => res.json().map(obj => new User(obj)))
-      //TODO fix the cache, that ligne trow an infinity of request
-      //.map(users => users.map(user => this.updateCache(user)));
+      .map(res => res.json().map(this.updateCache.bind(this)));
   }
 
   // Reçoit un statut de requête http
@@ -482,7 +447,7 @@ export class UserService {
       headers: this.headers,
       withCredentials: true
     })
-      .map(res => new User(res.json()))
+      .map(res => this.updateCache(res.json()))
       .catch(err => Observable.of(this.defaultUser));
 
     // TODO inform consumers of user change
@@ -498,25 +463,20 @@ export class UserService {
     })
       .map(res => this.defaultUser)
       .catch(err => Observable.of(this.defaultUser))
-      .map(user => this.updateCache(user));
-
     // TODO inform consumers of user change
     // $rootScope.$broadcast("user.update",_user);
-
   }
 
   // TODO voir lignes commentées (updateGeoCode etc.)
   // app.post('/register', queued(auth.register_post));
   register(user): Observable<User> {
-
     // TODO deprecated, this should be done in component
     //user.populateAdresseName();
     return this.http.post(this.config.API_SERVER + '/register', user, {
       headers: this.headers,
       withCredentials: true
     })
-      .map(res => new User(res.json()))
-      .map(user => this.updateCache(user))
+      .map(res => this.updateCache(res.json()))
       .catch(err => Observable.of(this.defaultUser));
     // _user.copy(u);
     // _user.updateGeoCode();
@@ -537,11 +497,10 @@ export class UserService {
       headers: this.headers,
       withCredentials: true
     })
-      .map(res => new User(res.json()))
-      .catch(err => Observable.of(this.defaultUser))
-      .map(user => this.updateCache(user));
-
+      .map(res => this.updateCache(res.json()))
+      .catch(err => Observable.of(this.defaultUser));
     /*
+    TODO check and remove comments bellow
     _user.copy(u);
     _user.updateGeoCode();
     $rootScope.$broadcast("user.init",self);
@@ -555,12 +514,10 @@ export class UserService {
       headers: this.headers,
       withCredentials: true
     })
-      .map(res => new User(res.json()))
-      .map(user => this.deleteCache(user));
+      .map(res => this.deleteCache(res.json()));
     //self.delete();
     //$rootScope.$broadcast("user.remove",self);
-
-  };
+  }
 
   // app.post('/v1/users/:id/like/:sku', users.ensureMe, users.like);
   love(id, product): Observable<User> {
@@ -569,18 +526,14 @@ export class UserService {
       headers: this.headers,
       withCredentials: true
     })
-      .map(res => res.json() as User)
-      .map(user => {
-        this.cache.list.find(u => u.id === user.id).likes = user.likes.slice();
-        this.cache.map.get(user.id).likes = user.likes.slice();
-        return user;
-      })
-      .catch(err => Observable.of(this.defaultUser));
-    //self.copy(u);
-    //$rootScope.$broadcast("user.update.love",self);
-
-    // return this;
-  };
+      .map(res => this.updateCache(res.json()))
+    // TODO check updateCache and user likes
+    // .map(user => {
+    //   this.cache.list.find(u => u.id === user.id).likes = user.likes.slice();
+    //   this.cache.map.get(user.id).likes = user.likes.slice();
+    //   return user;
+    // })
+  }
   //================================================
 
   geocode(street, postal, region): Observable<any> {
@@ -594,23 +547,25 @@ export class UserService {
 
   //boucle observables, map met a jour l'adresse, liste observable, merge ou concat, subscribe(TODO notify success or error)
   updateGeoCode(user: User): Observable<any> {
-    let obs = [], self = this;
+    let obs:any[] = [], self = this;
     //let dirty = false;
     // check state
     if ("obj" in user) {
-      return;
+      return Observable.of(user);
     }
     if (user.addresses.length === 0 || user.addresses.length && user.addresses[0].geo && user.addresses[0].geo.lat) {
-      return;
+      return Observable.of(user);
     }
 
     // get geo lt/lng
-    if (!user.addresses[0].geo) user.addresses[0].geo = { lat: null, lng: null };
+    // TODO default value for GeoLocation
+    if (!user.addresses[0].geo) user.addresses[0].geo = { lat: 0, lng: 0};
 
-    //on construit le tableau d'observables
-    //TODO demander différence entre code dans "map" ou dans "subscribe"
+    //build an array of observables
+    //TODO please refactor this code !
     user.addresses.forEach((address, i) => {
-      obs.push(this.geocode(address.streetAdress, address.postalCode, address.region)
+      obs.push(
+        this.geocode(address.streetAdress, address.postalCode, address.region)
         .map(geo => {
           if (!geo.results.length || !geo.results[0].geometry) {
             return;
@@ -618,11 +573,12 @@ export class UserService {
           if (!geo.results[0].geometry.lat) {
             return;
           }
-          address.geo = { lat: null, lng: null };
-          address.geo.lat = geo.results[0].geometry.location.lat;
-          address.geo.lng = geo.results[0].geometry.location.lng;
-
-        }));
+          address.geo = { 
+            lat: geo.results[0].geometry.location.lat, 
+            lng: geo.results[0].geometry.location.lng 
+          };
+        })
+      );
     });
 
     //on encapsule tout dans un observable et on y souscrit
@@ -662,12 +618,9 @@ export class UserService {
       headers: this.headers,
       withCredentials: true
     })
-      .map(res => new User(res.json()))
-      .map(user => this.updateCache(user))
-      .catch(err => Observable.of(this.defaultUser));;
-
-
+      .map(res => this.updateCache(res.json()));
     /*
+    TODO check comment bellow concerning payment method check
     var self = this, allAlias = [], alias;
     if (!self.payments || !self.payments.length) {
       return cb({});
@@ -690,14 +643,11 @@ export class UserService {
 
   // app.post('/v1/users/:id/payment', users.ensureMeOrAdmin,users.addPayment);
   addPaymentMethod(payment, uid): Observable<User> {
-
     return this.http.post(this.config.API_SERVER + '/v1/users/' + uid + '/payment', payment, {
       headers: this.headers,
       withCredentials: true
     })
-      .map(res => new User(res.json()))
-      .map(user => this.updateCache(user))
-      .catch(err => Observable.of(this.defaultUser));
+      .map(res => this.updateCache(res.json()));
     /*
     var self = this, params = {};
     //
@@ -715,14 +665,11 @@ export class UserService {
 
   // app.post('/v1/users/:id/payment/:alias/delete', users.ensureMeOrAdmin,users.deletePayment);
   deletePaymentMethod(alias, uid): Observable<User> {
-
     return this.http.post(this.config.API_SERVER + '/v1/users/' + uid + '/payment/' + alias + '/delete', null, {
       headers: this.headers,
       withCredentials: true
     })
-      .map(res => new User(res.json()))
-      .map(user => this.updateCache(user))
-      .catch(err => Observable.of(this.defaultUser));
+      .map(res => this.updateCache(res.json()))
     /*
     var self = this, params = {};
     //
@@ -752,12 +699,9 @@ export class UserService {
       headers: this.headers,
       withCredentials: true
     })
-      .map(res => new User(res.json()))
-      .map(user => this.updateCache(user))
-      .catch(err => Observable.of(this.defaultUser));
+      .map(res => this.updateCache(res.json()));
   }
-  //self.copy(u);
-
+  
 
 
 }

@@ -48,7 +48,7 @@ export class LoaderService {
       .refCount();      
   }
 
-  private preloader(config){
+  private preloader(config:Config){
     let loaders:any[]=[
       Observable.of(config),
       this.$user.me()
