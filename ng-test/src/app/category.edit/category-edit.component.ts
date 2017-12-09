@@ -9,7 +9,7 @@ import {
   User,
   UserService,
   config
-}  from '../../../../';
+}  from '../../../../dist/';
 
 @Component({
   selector: 'app-category-edit',

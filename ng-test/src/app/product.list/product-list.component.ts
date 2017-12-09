@@ -8,7 +8,7 @@ import {
     Category,
     CategoryService,
     config
-}  from '../../../../'
+}  from '../../../../dist/'
 
 @Component({
     selector: 'app-product-list',

@@ -18,7 +18,7 @@ import { ShopListComponent } from './shop.list/shop-list.component';
 import { ShopEditComponent } from './shop.edit/shop-edit.component';
 import { ShopCreateComponent } from './shop.create/shop-create.component';
 
-import { IsAuthenticated, Kng2CoreModule } from '../../../';
+import { IsAuthenticated, Kng2CoreModule } from '../../../dist/';
 
 import { appRoutes } from './app.routes';
 import { AddressComponent } from './user.address/address.component';
@@ -37,6 +37,14 @@ import { ProductComponent, ProductThumbnailComponent, ProductTinyComponent } fro
 import { ProductEditComponent } from './product.edit/product-edit.component';
 import { ProductCreateComponent } from './product.create/product-create.component';
 import { HomeComponent } from './home/home.component';
+
+let kng2Config={
+  API_SERVER:'http://api.karibou.evaletolab.ch',
+  loader:[
+    "categories",
+    "shops"
+  ]
+};
 
 @NgModule({
   declarations: [
@@ -71,7 +79,7 @@ import { HomeComponent } from './home/home.component';
   imports: [
     BrowserModule,
     FormsModule,
-    Kng2CoreModule,
+    Kng2CoreModule.forRoot(kng2Config),
     HttpClientModule,
     RouterModule.forRoot(appRoutes)
   ],
@@ -79,3 +87,4 @@ import { HomeComponent } from './home/home.component';
   bootstrap: [AppComponent]
 })
 export class AppModule { }
+

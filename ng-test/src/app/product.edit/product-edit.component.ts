@@ -10,7 +10,7 @@ import {
     User,
     UserService,
     config
-}  from '../../../../'
+}  from '../../../../dist/'
 
 @Component({
     selector: 'app-product-edit',

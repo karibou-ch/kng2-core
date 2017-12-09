@@ -9,7 +9,7 @@ import { LoaderService,
     UserService,
     Category,
     CategoryService,
-    config } from '../../../../';
+    config } from '../../../../dist/';
 
 @Component({
     selector: 'app-product-create',

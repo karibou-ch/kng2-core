@@ -1,13 +1,6 @@
 import { Component } from '@angular/core';
-import { ConfigService, LoaderService } from '../../../';
+import { ConfigService, LoaderService } from '../../../dist/';
 
-ConfigService.setDefaultConfig({
-    API_SERVER:'http://api.karibou.evaletolab.ch',
-    loader:[
-      "categories",
-      "shops"
-    ]
-});
 
 @Component({
   selector: 'app-root',

@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { Http } from '@angular/http';
 import { Observable } from 'rxjs/Rx';
-import { LoaderService, Order, OrderService, User, UserService } from '../../../../';
+import { LoaderService, Order, OrderService, User, UserService } from '../../../../dist/';
 
 @Component({
   selector: 'app-user-orders',
