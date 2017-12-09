@@ -185,7 +185,7 @@ export class User {
   }
 
   isAuthenticated() {
-    return this.id!==null;
+    return this.id&&this.id.length;
   }
 
   isAdmin() {

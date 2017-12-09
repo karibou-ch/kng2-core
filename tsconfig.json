@@ -4,10 +4,13 @@
     "baseUrl": "",
     "paths": {
       "moment/*":[
-        "node_modules/moment/*"
+        "../node_modules/moment/*"
       ],
       "@angular/*": [
-        "node_modules/@angular/*"
+        "../node_modules/@angular/*"
+      ],
+      "rxjs/*":[
+        "../node_modules/rxjs/*"        
       ]
     },      
     "target": "es5",

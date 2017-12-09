@@ -40,12 +40,17 @@ gulp.task('build:esm', ['inline-templates'], (callback) => {
   });
 });
 
+
+gulp.task('package', function () {
+    gulp.src('./package.json')
+        .pipe(gulp.dest('./dist/'));
+});
 /**
  * Implements ESM build watch mode.
  * This is a temporary solution until ngc is supported --watch mode.
  * @see: https://github.com/angular/angular/issues/12867
  */
-gulp.task('build:esm:watch', ['build:esm'], () => {
+gulp.task('build:esm:watch', ['build:esm','package'], () => {
   gulp.watch('src/**/*', ['build:esm']);
 });
 

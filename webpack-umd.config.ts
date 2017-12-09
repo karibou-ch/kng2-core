@@ -1,6 +1,7 @@
 import * as webpack from 'webpack';
 import * as path from 'path';
 import * as fs from 'fs';
+import * as CopyWebpackPlugin from 'copy-webpack-plugin';  
 import * as angularExternals from 'webpack-angular-externals';
 import * as rxjsExternals from 'webpack-rxjs-externals';
 
@@ -90,7 +91,11 @@ export default {
       `.trim(),
       raw: true,
       entryOnly: true
-    })
+    }),
 
+   new CopyWebpackPlugin([{
+     from:'./package.json',
+     to:'./dist/package.json'
+   }]) 
   ]
 } as webpack.Configuration;

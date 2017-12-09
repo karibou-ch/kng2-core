@@ -55,12 +55,12 @@
     "url": "https://github.com/karibou-ch/kng2-core/issues"
   },
   "dependencies": {
-    "moment": "^2.18.1",
-    "showdown": "^1.8.1"
   },
   "peerDependencies": {
     "@angular/common": "^4.0.0",
-    "@angular/core": "^4.0.0"
+    "@angular/core": "^4.0.0",
+    "moment": "^2.18.1",    
+    "showdown": "^1.8.1"    
   },
   "devDependencies": {
     "@angular/common": "^4.0.0",
@@ -74,6 +74,7 @@
     "@types/jasmine": "^2.5.47",
     "@types/karma": "^1.7.0",
     "@types/node": "^8.0.0",
+    "@types/copy-webpack-plugin": "^4.0.1",
     "@types/webpack": "^3.0.13",
     "@types/webpack-env": "^1.13.0",
     "angular2-template-loader": "^0.6.2",
@@ -81,6 +82,7 @@
     "codecov": "^2.2.0",
     "codelyzer": "^3.0.1",
     "concurrently": "^3.4.0",
+    "copy-webpack-plugin": "^4.2.3",
     "css-loader": "^0.28.1",
     "gh-pages": "^1.0.0",
     "gulp": "^3.9.1",
