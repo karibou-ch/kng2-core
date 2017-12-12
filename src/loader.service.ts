@@ -4,7 +4,6 @@ import { Subject } from 'rxjs/Subject';
 import { ReplaySubject } from "rxjs/Rx";
 import { Observable } from 'rxjs/Observable';
 import { ConnectableObservable } from 'rxjs/observable/ConnectableObservable'
-import 'rxjs/Rx';
 
 import { Config } from './config';
 import { Product, ProductService  } from './product.service';

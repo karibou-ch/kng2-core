@@ -3,6 +3,7 @@ import { NgModule } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { HttpClientModule } from '@angular/common/http';
 import { RouterModule, Routes } from '@angular/router';
+import { appRoutes } from './app.routes';
 
 import { AppComponent } from './app.component';
 import { ConfigComponent } from './config/config.component';
@@ -20,7 +21,6 @@ import { ShopCreateComponent } from './shop.create/shop-create.component';
 
 import { IsAuthenticated, Kng2CoreModule } from '../../../dist/';
 
-import { appRoutes } from './app.routes';
 import { AddressComponent } from './user.address/address.component';
 import { CardComponent } from './user.card/card.component';
 import { CategoryComponent } from './category/category.component';
