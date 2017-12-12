@@ -1,6 +1,6 @@
 {
   "name": "kng2-core",
-  "version": "0.20.0",
+  "version": "1.0.3",
   "description": "The module goal mainly provide a kickstart kit to make every new idea/motivation web application/ionic declinaison for karibou.ch without friction!",
   "main": "./index.umd.js",
   "module": "./index.js",
@@ -24,15 +24,11 @@
     "postversion": "git push && git push --tags",
     "prebuild": "rimraf dist tmp",
     "prebuild:watch": "rimraf dist tmp",
-    "prepublishOnly": "npm run ci",
     "preversion": "npm run ci",
     "test": "karma start",
     "test:watch": "karma start --auto-watch --no-single-run",
     "tslint": "tslint"
   },
-  "files": [
-    "dist"
-  ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/karibou-ch/kng2-core.git"
@@ -55,12 +51,14 @@
     "url": "https://github.com/karibou-ch/kng2-core/issues"
   },
   "dependencies": {
+    "moment": "^2.18.1",
+    "showdown": "^1.8.1"
   },
   "peerDependencies": {
-    "@angular/common": "^4.0.0",
-    "@angular/core": "^4.0.0",
-    "moment": "^2.18.1",    
-    "showdown": "^1.8.1"    
+    "@angular/common": ">=4.0.0",
+    "@angular/core": ">=4.0.0",
+    "moment": "^2.18.1",
+    "showdown": "^1.8.1"
   },
   "devDependencies": {
     "@angular/common": "^4.0.0",
@@ -71,10 +69,10 @@
     "@angular/platform-browser": "^4.0.0",
     "@angular/platform-browser-dynamic": "^4.0.0",
     "@compodoc/compodoc": "^1.0.0-beta.9",
+    "@types/copy-webpack-plugin": "^4.0.1",
     "@types/jasmine": "^2.5.47",
     "@types/karma": "^1.7.0",
     "@types/node": "^8.0.0",
-    "@types/copy-webpack-plugin": "^4.0.1",
     "@types/webpack": "^3.0.13",
     "@types/webpack-env": "^1.13.0",
     "angular2-template-loader": "^0.6.2",
@@ -100,7 +98,7 @@
     "node-sass": "^4.5.2",
     "raw-loader": "^0.5.1",
     "rimraf": "^2.6.1",
-    "rxjs": "^5.3.1",
+    "rxjs": "^5.4.1",
     "sass-loader": "^6.0.5",
     "source-map-explorer": "^1.3.3",
     "to-string-loader": "^1.1.5",
@@ -109,6 +107,7 @@
     "typescript": "^2.3.2",
     "webpack": "^3.6.0",
     "webpack-angular-externals": "^1.0.2",
+    "webpack-bundle-analyzer": "^2.9.1",
     "webpack-rxjs-externals": "^1.0.0",
     "zone.js": "^0.8.10"
   }

@@ -46,7 +46,8 @@ Before using the library, you must check or set your default config in bootstrap
 ```
 
 
-
+## AoT
+* https://gist.github.com/chuckjaz/65dcc2fd5f4f5463e492ed0cb93bca60
 
 ## Unit tests
 

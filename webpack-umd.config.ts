@@ -4,6 +4,7 @@ import * as fs from 'fs';
 import * as CopyWebpackPlugin from 'copy-webpack-plugin';  
 import * as angularExternals from 'webpack-angular-externals';
 import * as rxjsExternals from 'webpack-rxjs-externals';
+import BundleAnalyzerPlugin from 'webpack-bundle-analyzer';
 
 const pkg = JSON.parse(fs.readFileSync('./package.json').toString());
 
@@ -74,6 +75,12 @@ export default {
       path.join(__dirname, 'src')
     ),
 
+    new webpack.ContextReplacementPlugin(
+      /moment[\/\\]locale$/, 
+      /fr|en/
+    ),
+    
+
     new webpack.optimize.UglifyJsPlugin({
       include: /\.min\.js$/,
       sourceMap: true
@@ -94,8 +101,8 @@ export default {
     }),
 
    new CopyWebpackPlugin([{
-     from:'./package.json',
-     to:'./dist/package.json'
-   }]) 
+     from:'package.json',
+     to:'./'     
+   }],{debug:'debug'}) 
   ]
 } as webpack.Configuration;

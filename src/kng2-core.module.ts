@@ -44,7 +44,9 @@ export class Kng2CoreModule {
   // in root module : import Kng2CoreModule.forRoot() to have only one instance of services when lazy loaded
   //https://angular-2-training-book.rangle.io/handout/modules/feature-modules.html
   public static forRoot(options?:any): ModuleWithProviders {
-    ConfigService.setDefaultConfig(options||{});
+    //AoT
+    //https://gist.github.com/chuckjaz/65dcc2fd5f4f5463e492ed0cb93bca60
+    //ConfigService.setDefaultConfig(options||{});
     
     return {
       ngModule: Kng2CoreModule,
@@ -59,7 +61,7 @@ export class Kng2CoreModule {
         ShopService,
         {
           provide:"KNG2_OPTIONS",
-          useValue:options
+          useValue:options||{}
         }
       ]
     };
