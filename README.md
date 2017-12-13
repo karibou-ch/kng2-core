@@ -1,4 +1,4 @@
-# Kng2Core (AKA King Kong II) means karibou.ch Angular 2 kore Library :rocket:
+# Kng2Core (AKA King Kong II) means karibou.ch Angular 2 (>=4.1.0) kore Library :rocket:
 This project will provide a standalone angular2 library that implement all core features (API mapping) of karibou.ch. 
 The module goal mainly provide a kickstart kit to make every new idea/motivation web application/ionic declinaison without friction.
 
@@ -15,21 +15,62 @@ The module goal mainly provide a kickstart kit to make every new idea/motivation
 - Noria Foukia Enseignante en mathématiques @HEPIA 
 - Arnaud Deglise Fondateur de Panier Local @Fribourg
 
-## Installation as library
+## Install and using Karibou king kong II 
+First, create or use a new application
+```bash
+    npm install -g @angular/cli
+    ng new karibou-super-idea && cd karibou-super-idea
+```
+    
+Next, install King Kong II    
+```bash
     npm install kng2-core
+```
+
+Before using the library, you must set default configuration in your application, eg. `app.component.ts` 
+```javascript
+// importing King Kong II
+import { IsAuthenticated, Kng2CoreModule } from 'kng2-core';
+
+// activate routes
+const appRoutes: Routes = [
+  { path: 'edit/routes', canActivate: [IsAuthenticated], [...] },
+  ...
+];
+
+//
+// configure King Kong II module
+@NgModule({
+  declarations: [
+    AppComponent,
+    ...
+  ],
+  imports: [
+    BrowserModule,
+    HttpClientModule,
+    Kng2CoreModule.forRoot(kng2Config),
+    RouterModule.forRoot(appRoutes)
+  ],
+  providers: [],
+  bootstrap: [AppComponent]
+})
+export class AppModule {}
+```
+
+
 
 ## Prerequisites for development 
 install node.js with [NVM](https://github.com/creationix/nvm) (required). 
 
-    nvm install v6.9.5
-    nvm use v6.9.5
+    nvm install stable # currently v9.2.0
+    nvm use stable
 
 Get sources
 
     git clone https://github.com/karibou-ch/kng2-core
     cd kng2-core
     npm install
-    npm run watch
+    npm run build:watch
     
 # Application example
     cd ng-test
@@ -37,24 +78,5 @@ Get sources
     ng serve
     chromium `http://localhost:4200/`
 
-Before using the library, you must check or set your default config in bootstrap application, `app.component.ts` in our example
-```javascript
-    this.config.setDefaultConfig({
-       API_SERVER:'http://you.api.point.here',
-       others....
-    });
-```
 
-
-## AoT
-* https://gist.github.com/chuckjaz/65dcc2fd5f4f5463e492ed0cb93bca60
-
-## Unit tests
-
-Run `ng test` to execute the unit tests via [Karma](https://karma-runner.github.io).
-
-## End-to-end tests
-
-Run `ng e2e` to execute the end-to-end tests via [Protractor](http://www.protractortest.org/).
-Before running the tests make sure you are serving the app via `ng serve`.
 

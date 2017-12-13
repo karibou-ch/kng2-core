@@ -19,7 +19,7 @@ import { ShopListComponent } from './shop.list/shop-list.component';
 import { ShopEditComponent } from './shop.edit/shop-edit.component';
 import { ShopCreateComponent } from './shop.create/shop-create.component';
 
-import { IsAuthenticated, Kng2CoreModule } from '../../../dist/';
+import { Kng2CoreModule } from '../../../dist/';
 
 import { AddressComponent } from './user.address/address.component';
 import { CardComponent } from './user.card/card.component';
