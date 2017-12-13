@@ -16,13 +16,13 @@ The module goal mainly provide a kickstart kit to make every new idea/motivation
 - Arnaud Deglise Fondateur de Panier Local @Fribourg
 
 ## Install and using Karibou king kong II 
-First, create or use a new application
+First, create a new application (or use existing one)
 ```bash
     npm install -g @angular/cli
     ng new karibou-super-idea && cd karibou-super-idea
 ```
     
-Next, install King Kong II    
+Next, install Karibou King Kong II :fire   
 ```bash
     npm install kng2-core
 ```
@@ -38,6 +38,15 @@ const appRoutes: Routes = [
   ...
 ];
 
+//
+// set default backend, and preload some data
+const kng2Config={
+  API_SERVER:'http://api.karibou.evaletolab.ch',
+  loader:[
+    "categories",
+    "shops"
+  ]
+};
 //
 // configure King Kong II module
 @NgModule({
