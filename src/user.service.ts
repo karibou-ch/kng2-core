@@ -46,7 +46,7 @@ export class UserCard {
 export class User {
 
   deleted:boolean;
-  id: string;
+  id: number;
 
   /* The provider which with the user authenticated (facebook, twitter, etc.) */
   provider: string;
@@ -183,8 +183,8 @@ export class User {
     return this.isOwner(shopname);
   }
 
-  isAuthenticated() {
-    return this.id&&this.id.length;
+  isAuthenticated():boolean {
+    return this.id>0;
   }
 
   isAdmin() {
@@ -284,7 +284,7 @@ export class User {
 
 class Cache {
     list: User[];
-    map: Map<string, User>
+    map: Map<number, User>
     constructor() {
         this.list = [];
         this.map = new Map();
