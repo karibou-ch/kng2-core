@@ -1,7 +1,8 @@
 import { RouterModule, Routes } from '@angular/router';
-import { AuthGuardService, Kng2CoreModule } from '../../../';
+import { IsAuthenticated, Kng2CoreModule } from '../../../dist/';
 
 import { ConfigComponent }  from './config/config.component';
+import { HomeComponent } from './home/home.component';
 import { ProductListComponent }  from './product.list/product-list.component';
 import { ProductEditComponent }  from './product.edit/product-edit.component';
 import { ProductCreateComponent } from './product.create/product-create.component';
@@ -36,17 +37,18 @@ export const appRoutes: Routes = [
   { path: 'order', component: OrderComponent },
   { path: 'user/:id', component: UserComponent },
   { path: 'user/password/:id', component: UserComponent },
-  { path: 'users', component: UserListComponent },
+  { path: 'users', component: UserListComponent, canActivate: [IsAuthenticated] },
   { path: 'shop/edit/:slug', component: ShopEditComponent },
   { path: 'shop/create', component: ShopCreateComponent},
   { path: 'shop/:slug', component: ShopComponent },
   { path: 'shop', component: ShopListComponent },
   { path: 'recovery', component: RecoveryComponent },
-  { path: 'dashboard', component: DashboardComponent, canActivate: [AuthGuardService] },
+//  { path: 'dashboard', component: DashboardComponent },
+  { path: 'dashboard', component: DashboardComponent, canActivate: [IsAuthenticated] },
   {
     path: '',
-    redirectTo: '/',
-    pathMatch: 'full'
+    pathMatch: 'full',
+    component: HomeComponent
   },
   // { path: '**', component: PageNotFoundComponent }
 ];

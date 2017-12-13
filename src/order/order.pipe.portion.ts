@@ -5,7 +5,7 @@ import { Pipe, PipeTransform } from '@angular/core';
 })
 export class OrderPortionPipe implements PipeTransform {
 
-  roundN(val){
+  roundN(val:number){
     if(val<=5){
       return val.toFixed(1);
     }

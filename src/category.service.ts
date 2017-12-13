@@ -1,47 +1,36 @@
 import { Http, Headers, RequestOptions } from '@angular/http';
 import { Injectable } from '@angular/core';
-import { Observable, BehaviorSubject, ReplaySubject } from 'rxjs/Rx';
+import { ReplaySubject } from 'rxjs/ReplaySubject';
+import { Observable } from 'rxjs/Observable';
 import { config } from './config';
 
 
 export class Category {
-
-  constructor(json?: any) {
-    if (json !== undefined) {
-      Object.assign(this, json);
-    } else {
-      let defaultCat = {
-      slug: '',
-      group: '',
-      cover: '',
-      description: '',
-      image: '',
-      name: '',
-      type: '',
-      home: false,
-      active: false,
-    }
-    Object.assign(this, defaultCat);
+  defaultCategory={
+    tags:[],
+    weight:0
   }
-}
-
+  constructor(json?: any) {
+    Object.assign(this, json||this.defaultCategory);
+  }
+  deleted:boolean;
+  _id:string;
   slug: string;
   group: string;  /* permet de grouper une catégorie (toutes les catégories des artisans, producteurs*/
-  _id;
   cover: string;  /* image de la catégorie */
   description: string;
   image: string; /* icon associé à la catégorie */
   name: string;
-  weight; /*permet d'ordonner les cat les plus légère en haut */
+  weight:number; /*permet d'ordonner les cat les plus légère en haut */
   type: string;
   home: boolean; /* afficher une sélection de cat sur la home */
   active: boolean;
-
+  tags:string[]
 }
 
 //
 // Internal cache of request
-// TODO check if ServiceWorker is the best solution for caching JSON request
+// simple way to share instance between components
 class Cache{
   list: Category[];
   map: Map<string, Category> //key is a slug
@@ -60,13 +49,6 @@ export class CategoryService {
 
   config:any;
 
-  private defaultCategory = {
-    name: '',
-    weight: 0,
-    description: "",
-    group: ""
-  };
-
 
   private cache:Cache=new Cache();
   private headers: Headers;
@@ -79,26 +61,21 @@ export class CategoryService {
     this.config = config;
   }
 
-  private deleteCache(cat: Category) {
-    if (this.cache.map[cat.slug]) {
-      this.cache.map.delete(cat.slug);
-      let index = this.cache.list.indexOf(cat)
-      if (index > -1)
-        this.cache.list.splice(index, 1);
-    }
+  private deleteCache(category: Category) {
+      let incache=this.cache.map.get(category.slug);
+      if (incache) {
+          incache.deleted=true;
+          this.cache.map.delete(category.slug);
+      }
+      return incache;
   }
 
-  private updateCache(category:Category){
-
-    //check if already exist on cache and add in it if not the case
-    if (!this.cache.map[category.slug]){
-      this.cache.map[category.slug] = category;
-      this.cache.list.push(category);
-      return category;
+  private updateCache(category: Category) {
+    if(!this.cache.map.get(category.slug)){
+        this.cache.map.set(category.slug,new Category(category))
+        return this.cache.map.get(category.slug);
     }
-    //update existing entry
-    return Object.assign(this.cache.map[category.slug],category);
-    //return category;
+    return Object.assign(this.cache.map.get(category.slug), category);
   }
 
 
@@ -109,18 +86,18 @@ export class CategoryService {
 
   //
   // retourne le Nom de la catégorie ou un message d'erreur
-  findNameBySlug(slug):Observable<string> {
+  findNameBySlug(slug:string):Observable<string> {
     return this.get(slug)
       .map(c=>c.name)
       // TODO manage i18n
       .catch(err=>"Catégorie Inconnue")
   };
 
-  findBySlug(slug):Observable<Category> {
+  findBySlug(slug:string):Observable<Category> {
     return this.get(slug)
   };
 
-  findByGroup(name):Category[] {
+  findByGroup(name:string):Category[] {
     // TODO load if `this.cache.list` is empty?
     return this.cache.list.filter(category => category.group === name);
   }
@@ -134,43 +111,32 @@ export class CategoryService {
       headers: this.headers,
       withCredentials: true
     })
-      .map(res => res.json().map(obj => new Category(obj)))
-      .map(categories => categories.map(this.updateCache.bind(this)))
-      .catch(this.handleError);
+    .map(res => res.json().map(this.updateCache.bind(this)));
   }
 
   //get category based on his slug
-  get(slug):Observable<Category> {
+  get(slug:string):Observable<Category> {
     // check if in the cache
-    if (this.cache.map[slug]){
-      return Observable.of(this.cache.map[slug]);
+    if (this.cache.map.get(slug)){
+      return Observable.of(this.cache.map.get(slug));
     }
 
     return this.http.get(this.config.API_SERVER + '/v1/category/'+slug, {
       headers: this.headers,
       withCredentials: true
     })
-      .map(res => res.json().map(obj => new Category(obj)))
-      .map(this.updateCache)
-      //TODO should run next here!
-      //.do(this.category$.next)
-      .catch(this.handleError);
-
+    .map(res => this.updateCache(res.json()))
   }
 
 
   //   app.post('/v1/category/:category', auth.ensureAdmin, categories.update);
-  save(slug, cat:Category):Observable<Category> {
+  save(slug:string, cat:Category):Observable<Category> {
 
     return this.http.post(this.config.API_SERVER + '/v1/category/'+slug, cat, {
       headers: this.headers,
       withCredentials: true
     })
-    .map(res  => new Category(res.json))
-    .map(this.updateCache)
-    //TODO should run next here!
-    //.do(this.category$.next)
-    .catch(this.handleError);
+    .map(res => this.updateCache(res.json()))
 
   }
 
@@ -180,23 +146,17 @@ export class CategoryService {
       headers: this.headers,
       withCredentials: true
     })
-    .map(res  => new Category(res.json))
-    .map(this.updateCache)
-    // .do(this.category$.next)
-    .catch(this.handleError);
+    .map(res => this.updateCache(res.json()))
   }
 
 //  app.put('/v1/category/:category', auth.ensureAdmin, auth.checkPassword, categories.remove);
-  remove(slug, password) {
+  remove(slug:string, password:string) {
     return this.http.put(this.config.API_SERVER + '/v1/category/' + slug, {
       headers: this.headers,
       withCredentials: true,
       password:password
     })
-    .map(res  => new Category(res.json))
-    .do(this.category$.next)
-    .map(this.deleteCache)
-    .catch(this.handleError);
+    .map(res => this.deleteCache(res.json()))
   }
 
 

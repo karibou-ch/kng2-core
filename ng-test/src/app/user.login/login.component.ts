@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
-import { LoaderService, User, UserService } from '../../../..'
+import { LoaderService, User, UserService } from '../../../../dist'
 
 
 @Component({
@@ -19,15 +19,15 @@ export class LoginComponent implements OnInit {
 
 
   constructor(
-    private userSrv: UserService,
-    private loaderSrv: LoaderService,
+    private $user: UserService,
+    private $loader: LoaderService,
     private _router: Router
   ) {
 
   }
 
   ngOnInit() {
-    this.loaderSrv.ready().subscribe((loader) => {
+    this.$loader.ready().subscribe((loader) => {
       Object.assign(this.user, loader[1]);
       this.isReady=true;
     })
@@ -36,7 +36,7 @@ export class LoginComponent implements OnInit {
 
   login() {
     this.loading = true;  //to hide submit button after submitting
-    this.userSrv.login({
+    this.$user.login({
       email: this.model.email,
       password: this.model.password,
       provider: "local"
@@ -47,7 +47,7 @@ export class LoginComponent implements OnInit {
   }
 
   logout() {
-    this.userSrv.logout().subscribe(
+    this.$user.logout().subscribe(
       () => this._router.navigate(['/login'])
     );
   }

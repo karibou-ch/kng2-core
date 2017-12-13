@@ -38,8 +38,8 @@ Date.prototype.monthDiff=function(d1:Date):number {
 //
 // give an array of days (in the form [0..6]) and return the ordered dates corresponding (starting from new Date())
 // Sun(0), Mon, tuesday, wednesday, thursday, Freeday, Saterday
-Date.prototype.dayToDates=function(days:number[],limit?:number):Date[]{
-  var now=this, today=now.getDay(), h24=86400000, week=86400000*7, result=[], potential;    
+Date.prototype.dayToDates=function(days?:number[],limit?:number):Date[]{
+  var now=this, today=now.getDay(), h24=86400000, week=86400000*7, result:any[]=[], potential;    
   days=days||[];
   days=days.sort(); // sort days in a week
 

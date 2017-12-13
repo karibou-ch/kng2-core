@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
-import { config, LoaderService, User, UserService } from '../../../../';
+import { config, LoaderService, User, UserService } from '../../../../dist/';
 
 @Component({
   selector: 'app-header',
@@ -12,17 +12,16 @@ export class HeaderComponent implements OnInit {
   config;
 
   constructor(
-    private loaderSrv: LoaderService,
-    private userSrv: UserService,
-    private _router: Router
+    private $loader: LoaderService,
+    private $user: UserService,
+    private $router: Router
   ) {
 
 
   }
 
   ngOnInit() {
-
-    this.loaderSrv.ready().subscribe(loader =>{
+    this.$loader.ready().subscribe(loader =>{
       this.config = config;
       Object.assign(this.user, loader[1]);
     });
@@ -30,7 +29,7 @@ export class HeaderComponent implements OnInit {
   }
 
   logout() {
-    this.userSrv.logout().subscribe(() => this._router.navigateByUrl('/login'));
+    this.$user.logout().subscribe(() => this.$router.navigateByUrl('/login'));
   }
 
 }

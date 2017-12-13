@@ -1,5 +1,5 @@
 import { Component, OnInit, Input } from '@angular/core';
-import { Observable } from 'rxjs/Rx';
+import { Observable } from 'rxjs/Observable';
 import { ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { LoaderService,
@@ -9,7 +9,7 @@ import { LoaderService,
     UserService,
     Category,
     CategoryService,
-    config } from '../../../../';
+    config } from '../../../../dist/';
 
 @Component({
     selector: 'app-product-create',

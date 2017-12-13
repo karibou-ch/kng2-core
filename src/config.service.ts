@@ -1,7 +1,6 @@
 import { Http, Headers } from '@angular/http';
-import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs/Rx';
-import 'rxjs/add/operator/map'
+import { Injectable, Inject } from '@angular/core';
+import { Observable } from 'rxjs/Observable';
 
 import { Config, config } from './config';
 
@@ -37,8 +36,10 @@ export class ConfigService {
   public config:Observable<Config>;
 
   constructor(
+    @Inject('KNG2_OPTIONS') private customConfig:any,
     public http: Http
   ) {
+    Object.assign(ConfigService.defaultConfig,customConfig||{});
     this.headers = new Headers();
     this.headers.append('Content-Type', 'application/json');
 

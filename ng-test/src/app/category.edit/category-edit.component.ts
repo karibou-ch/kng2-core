@@ -1,7 +1,7 @@
 import { Component, OnInit, Input } from '@angular/core';
 import {ActivatedRoute} from '@angular/router';
 
-import { Observable } from 'rxjs/Rx';
+import { Observable } from 'rxjs/Observable';
 import {
   CategoryService,
   Category,
@@ -9,7 +9,7 @@ import {
   User,
   UserService,
   config
-}  from '../../../../';
+}  from '../../../../dist/';
 
 @Component({
   selector: 'app-category-edit',

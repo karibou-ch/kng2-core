@@ -1,9 +1,9 @@
 import { Component, OnInit, Input } from '@angular/core';
-import { Observable } from 'rxjs/Rx';
+import { Observable } from 'rxjs/Observable';
 import { ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
-import { LoaderService, ShopService, Shop, User, UserService, Category, CategoryService, config } from '../../../../';
+import { LoaderService, ShopService, Shop, User, UserService, Category, CategoryService, config } from '../../../../dist/';
 
 @Component({
   selector: 'app-shop-create',
@@ -47,7 +47,7 @@ export class ShopCreateComponent implements OnInit {
 
   onCreate() {
 
-    this.shop.catalog = this.shop.catalog._id;
+//    this.shop.catalog = this.shop.catalog._id;
     if (!this.shop.address.region)
       this.shop.address.region = "Suisse";
     var fulladdress = this.shop.address.streetAdress + "," + this.shop.address.postalCode + ", " + this.shop.address.region;

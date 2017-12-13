@@ -8,7 +8,7 @@ import {
     User,
     UserService,
     config
-}  from '../../../../'
+}  from '../../../../dist/'
 
 
 @Component({

@@ -1,17 +1,49 @@
 {
-    "compilerOptions": {
-        "emitDecoratorMetadata": true,
-        "experimentalDecorators": true,
-        "allowSyntheticDefaultImports":true,
-        "target": "es6",
-        "module": "es6",
-        "moduleResolution": "node",
-        "removeComments": true,
-        "noImplicitAny": false,
-        "sourceMap": true,
-        "declaration": true
-    },
-    "files": [
-        "index.ts"
+  "compilerOptions": {
+    "allowSyntheticDefaultImports":true,
+    "baseUrl": "",
+    "paths": {
+      "moment/*":[
+        "../node_modules/moment/*"
+      ],
+      "@angular/*": [
+        "../node_modules/@angular/*"
+      ],
+      "rxjs/*":[
+        "../node_modules/rxjs/*"        
+      ]
+    },      
+    "target": "es5",
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "noEmit": true,
+    "sourceMap": true,
+    "declaration": false,
+    "noImplicitAny": false,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "lib": [
+      "es2015",
+      "dom"
+    ],
+    "typeRoots" : [
+      "./node_modules/@types"
+    ],
+    "types": [
+      "jasmine",
+      "karma",
+      "node",
+      "webpack",
+      "webpack-env"
     ]
+  },
+  "include": [
+    "src/**/*.ts"
+  ],
+  "exclude": [
+    "src/**/*.spec.ts",
+    "node_modules",
+    "demo",
+    "dist"
+  ]
 }

@@ -1,29 +1,25 @@
-import { NgModule } from '@angular/core';
+import { NgModule, ModuleWithProviders } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpModule } from '@angular/http';
 
 
-import { AuthGuardService } from './auth-guard.service';
+import { IsAuthenticated } from './is-authenticated.service';
 
-import { Category, CategoryService } from './category.service';
-import { Product, ProductService } from './product.service';
+import { CategoryService } from './category.service';
+import { ProductService } from './product.service';
 import { ConfigService } from './config.service';
-import { config } from './config';
 import { LoaderService } from './loader.service';
 import { OrderService } from './order/order.service';
-import { Order, OrderItem } from './order/order';
-import { User, UserCard, UserAddress, UserService } from './user.service';
-import { Shop, ShopService } from './shop.service';
+import { UserService } from './user.service';
+import { ShopService } from './shop.service';
 
-import *  as OrderEnum from './order/order.enum';
 
 //
 // directives & pipes
-import { UserPipe } from './user.pipe';
 import { bgSrcDirective } from './util.bg-src.directive';
-import { confirmDeleteDirective } from './util.confirm-delete.directive';
+import { ConfirmDeleteDirective } from './util.confirm-delete.directive';
 import { OrderPortionPipe, OrderBasepricePipe } from './order/order.pipe.portion';
-import { MarkdownDirective } from './util.markdown.directive';
+// import { MarkdownDirective } from './util.markdown.directive';
 
 
 @NgModule({
@@ -32,52 +28,42 @@ import { MarkdownDirective } from './util.markdown.directive';
     HttpModule
   ],
   declarations: [
-    bgSrcDirective, confirmDeleteDirective, MarkdownDirective, UserPipe, OrderPortionPipe, OrderBasepricePipe
+    bgSrcDirective, 
+    ConfirmDeleteDirective, 
+    OrderPortionPipe, 
+    OrderBasepricePipe
   ],
   exports: [
-    bgSrcDirective, confirmDeleteDirective, MarkdownDirective, UserPipe, OrderPortionPipe, OrderBasepricePipe  
-  ],
-  providers: [
-        AuthGuardService,
+    bgSrcDirective, 
+    ConfirmDeleteDirective, 
+    OrderPortionPipe, 
+    OrderBasepricePipe
+  ]
+})
+export class Kng2CoreModule {
+  // in root module : import Kng2CoreModule.forRoot() to have only one instance of services when lazy loaded
+  //https://angular-2-training-book.rangle.io/handout/modules/feature-modules.html
+  public static forRoot(options?:any): ModuleWithProviders {
+    //AoT
+    //https://gist.github.com/chuckjaz/65dcc2fd5f4f5463e492ed0cb93bca60
+    //ConfigService.setDefaultConfig(options||{});
+    
+    return {
+      ngModule: Kng2CoreModule,
+      providers: [
+        IsAuthenticated,
         CategoryService,
         ProductService,
         ConfigService,
         LoaderService,
         OrderService,
         UserService,
-        ShopService
+        ShopService,
+        {
+          provide:"KNG2_OPTIONS",
+          useValue:options||{}
+        }
       ]
-})
-export class Kng2CoreModule {
-
-  // in root module : import Kng2CoreModule.forRoot() to have only one instance of services when lazy loaded
-  //https://angular-2-training-book.rangle.io/handout/modules/feature-modules.html
-
-  // static forRoot() {
-  //   return {
-  //     ngModule: Kng2CoreModule,
-  //     providers: [
-  //       AuthGuardService,
-  //       CategoryService,
-  //       ConfigService,
-  //       LoaderService,
-  //       OrderService,
-  //       UserService
-  //     ]
-  //   }
-  // }
+    };
+  }  
 }
-//
-//
-export {
-  AuthGuardService,
-  CategoryService, Category,
-  ProductService, Product,
-  ConfigService, config,
-  LoaderService,
-  OrderService, Order, OrderItem, OrderEnum, OrderPortionPipe,
-  UserPipe,
-  UserService, User, UserAddress, UserCard, ShopService, Shop
-}
-
-export * from './order/order.enum';
