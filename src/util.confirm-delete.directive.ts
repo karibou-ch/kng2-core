@@ -14,7 +14,7 @@ import { Observable } from 'rxjs/Rx';
 
 //
 // https://stackoverflow.com/questions/41274603/observable-of-component-attribute-changes-in-angular2
-export class confirmDeleteDirective implements OnInit{
+export class ConfirmDeleteDirective implements OnInit{
   @Output() onconfirm: EventEmitter<any> = new EventEmitter();
   element;
   style;
@@ -31,20 +31,20 @@ export class confirmDeleteDirective implements OnInit{
   }
 
   ngOnInit(){
-    this.element.keyup(function(e) {
+    this.element.keyup((e)=> {
       if (e.keyCode == 27) {
         this.element.next('.prompt-passwd').remove();  
       }
     });
-    this.element.bind('click', function(event) {
+    this.element.bind('click', (event)=> {
       //
       //angular.element('.prompt-passwd').hide();
       this.element.next().show();
     });
-    this.element.next().submit(function(){
-      var pwd=this.element.next().find('input[type=password]').val();
+    this.element.next().submit(()=>{
+      let pwd=this.element.next().find('input[type=password]').val();
       //scope.action({password:pwd});
-      this.onconfirm.emit(this.count);
+      this.onconfirm.emit(this.id);
       this.element.next().hide('.prompt-passwd');
       return false;
     });

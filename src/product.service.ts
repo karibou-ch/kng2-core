@@ -36,7 +36,7 @@ export class ProductService {
 
     private deleteCache(product: Product) {
         let incache=this.cache.map.get(product.sku);
-        if (this.cache.map.get(product.sku)) {
+        if (incache) {
             incache.deleted=true;
             this.cache.map.delete(product.sku);
         }
@@ -48,10 +48,10 @@ export class ProductService {
     // REST api wrapper
     //
 
-    select(filter?: any): Observable<Product[]> {
-        filter = filter || {};
+    select(params?: any): Observable<Product[]> {
+        params = params || {};
         return this.http.get(this.config.API_SERVER + '/v1/products', {
-            search: filter,
+            search: params,
             headers: this.headers,
             withCredentials: true
         })
@@ -82,8 +82,10 @@ export class ProductService {
          .map(res => res.json().map(this.updateCache.bind(this)));
     };
 
-    findLove(): Observable<Product[]> {
+    findLove(params?:any): Observable<Product[]> {
+        params = params || {};
         return this.http.get(this.config.API_SERVER + '/v1/products/love', {
+            search:params,
             headers: this.headers,
             withCredentials: true
         })
@@ -98,8 +100,10 @@ export class ProductService {
          .map(res => res.json().map(this.updateCache.bind(this)));
     };
 
-    findByCategory(category): Observable<Product[]> {
+    findByCategory(category:string,params?:any): Observable<Product[]> {
+        params = params || {};
         return this.http.get(this.config.API_SERVER + '/v1/products/category/' + category, {
+            search:params,
             headers: this.headers,
             withCredentials: true
         })
@@ -138,6 +142,8 @@ export class ProductService {
     };
 
     create(prod: Product): Observable<Product> {
+        //
+        // FIXME creattion code is not correct
         return this.http.post(this.config.API_SERVER + '/v1/shops/chocolat-de-villars-sur-glane/products/', prod, {
             headers: this.headers,
             withCredentials: true
