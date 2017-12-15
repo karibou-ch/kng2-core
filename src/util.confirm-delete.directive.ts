@@ -1,11 +1,11 @@
 import { Component, ElementRef, EventEmitter, Input, Output, OnInit } from '@angular/core';
 
-import { Observable } from 'rxjs/Rx';
+import { Observable } from 'rxjs/Observable';
 
 @Component({
   selector: '[confirm-delete]',
   template: `
-    <form id="passwd-{{$id}}" style="'+style+'" class="form-inline prompt-passwd" validate>
+    <form id="passwd-{{id}}" style="'+style+'" class="form-inline prompt-passwd" validate>
       <input type="password" class="form-control" placeholder="valider avec votre mot de passe" required autofocus="true" style="width: 280px;">
       <button class="btn btn-primary" ><i class="fa fa-unlock"></i></button>
     </form>

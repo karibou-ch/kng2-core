@@ -1,7 +1,7 @@
 import { Component, OnInit, Input } from '@angular/core';
-import { Observable } from 'rxjs/Rx';
+import { Observable } from 'rxjs/Observable';
 import { ActivatedRoute } from '@angular/router';
-import { LoaderService, ShopService, Shop, User, UserService, config } from '../../../../';
+import { LoaderService, ShopService, Shop, User, UserService, config } from '../../../../dist/';
 
 @Component({
   selector: 'app-shop',

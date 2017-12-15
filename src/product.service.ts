@@ -1,7 +1,7 @@
 import { Http, Headers, RequestOptions } from '@angular/http';
 import { Injectable } from '@angular/core';
-import { Observable, BehaviorSubject, ReplaySubject } from 'rxjs/Rx';
-import 'rxjs/add/operator/map';
+import { ReplaySubject } from 'rxjs/ReplaySubject';
+import { Observable } from 'rxjs/Observable';
 import { config } from './config';
 import { ConfigService } from './config.service';
 
@@ -232,9 +232,11 @@ export class Product {
     };
     shelflife: {
         display: boolean;
+        comment:string;
     };
     quantity: {
         display: boolean;
+        comment:string;
     };
     attributes: {
         discount: boolean;
@@ -247,7 +249,7 @@ export class Product {
         keywords: string;
         internal: string;
         description: string;
-        origine: string;
+        origin: string;
         biodegradable: boolean;
         vegetarian: boolean;
         bioconvertion: boolean;

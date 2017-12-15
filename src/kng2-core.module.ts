@@ -16,7 +16,6 @@ import { ShopService } from './shop.service';
 
 //
 // directives & pipes
-import { UserPipe } from './user.pipe';
 import { bgSrcDirective } from './util.bg-src.directive';
 import { ConfirmDeleteDirective } from './util.confirm-delete.directive';
 import { OrderPortionPipe, OrderBasepricePipe } from './order/order.pipe.portion';
@@ -32,21 +31,22 @@ import { OrderPortionPipe, OrderBasepricePipe } from './order/order.pipe.portion
     bgSrcDirective, 
     ConfirmDeleteDirective, 
     OrderPortionPipe, 
-    OrderBasepricePipe,
-    UserPipe
+    OrderBasepricePipe
   ],
   exports: [
     bgSrcDirective, 
     ConfirmDeleteDirective, 
     OrderPortionPipe, 
-    OrderBasepricePipe,
-    UserPipe
+    OrderBasepricePipe
   ]
 })
 export class Kng2CoreModule {
   // in root module : import Kng2CoreModule.forRoot() to have only one instance of services when lazy loaded
   //https://angular-2-training-book.rangle.io/handout/modules/feature-modules.html
   public static forRoot(options?:any): ModuleWithProviders {
+    //AoT
+    //https://gist.github.com/chuckjaz/65dcc2fd5f4f5463e492ed0cb93bca60
+    //ConfigService.setDefaultConfig(options||{});    
     return {
       ngModule: Kng2CoreModule,
       providers: [
@@ -60,7 +60,7 @@ export class Kng2CoreModule {
         ShopService,
         {
           provide:"KNG2_OPTIONS",
-          useValue:options
+          useValue:options||{}
         }
       ]
     };

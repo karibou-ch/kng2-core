@@ -1,13 +1,12 @@
 import { Http, Headers } from '@angular/http';
 import { Injectable } from '@angular/core';
-import { Observable, BehaviorSubject, ReplaySubject } from 'rxjs/Rx';
-import 'rxjs/add/observable/from';
+import { ReplaySubject } from 'rxjs/ReplaySubject';
+import { Observable } from 'rxjs/Observable';
 
 // Cannot call a namespace ('moment')
 // import * as moment from 'moment';
 // https://stackoverflow.com/questions/39519823/using-rollup-for-angular-2s-aot-compiler-and-importing-moment-js
 import  moment from 'moment';
-//import Moment from 'moment';
 import 'moment/locale/fr';
 
 //
@@ -47,7 +46,7 @@ export class UserCard {
 export class User {
 
   deleted:boolean;
-  id: string;
+  id: number;
 
   /* The provider which with the user authenticated (facebook, twitter, etc.) */
   provider: string;
@@ -184,8 +183,8 @@ export class User {
     return this.isOwner(shopname);
   }
 
-  isAuthenticated() {
-    return this.id !== '';
+  isAuthenticated():boolean {
+    return this.id>0;
   }
 
   isAdmin() {
@@ -232,7 +231,7 @@ export class User {
     if (this.email.status === true)
       return true;
 
-    return moment(this.email.status).format('ddd DD MMM YYYY');
+    //return moment(this.email.status).format('ddd DD MMM YYYY');
 
   }
 
@@ -285,7 +284,7 @@ export class User {
 
 class Cache {
     list: User[];
-    map: Map<string, User>
+    map: Map<number, User>
     constructor() {
         this.list = [];
         this.map = new Map();
