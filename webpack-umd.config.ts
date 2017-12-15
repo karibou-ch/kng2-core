@@ -100,9 +100,8 @@ export default {
       entryOnly: true
     }),
 
-   new CopyWebpackPlugin([{
-     from:'package.json',
-     to:'./'     
-   }],{debug:'debug'}) 
+   new CopyWebpackPlugin([
+    { from: 'package.json' },     
+    { from: 'README.md' }]) 
   ]
 } as webpack.Configuration;

@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { ConfigService, LoaderService } from '../../../dist/';
+import { LoaderService } from '../../../dist/';
 
 
 @Component({

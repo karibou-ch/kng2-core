@@ -3,7 +3,6 @@ This project will provide a standalone angular2 library that implement all core 
 The module goal mainly provide a kickstart kit to make every new idea/motivation web application/ionic declinaison without friction.
 
 [![David](https://img.shields.io/david/karibou-ch/kng2-core.svg?style=flat)](https://david-dm.org/karibou-ch/kng2-core)
-[![Build Status](https://travis-ci.org/karibou-ch/kng2-core.svg?branch=master)](https://travis-ci.org/karibou-ch/kng2-core)
 [![Gitter](https://badges.gitter.im/karibou-ch/kng2-core.svg)](https://gitter.im/karibou-ch/kng2-core?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 
 # Authors & special thanks :heart:

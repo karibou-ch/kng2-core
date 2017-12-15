@@ -36,7 +36,7 @@ export class ConfigService {
   public config:Observable<Config>;
 
   constructor(
-    @Inject('KNG2_OPTIONS') private customConfig:any,
+    @Inject('KNG2_OPTIONS') public customConfig:any,
     public http: Http
   ) {
     Object.assign(ConfigService.defaultConfig,customConfig||{});
