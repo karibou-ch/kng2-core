@@ -1,7 +1,6 @@
-import { NgModule, ModuleWithProviders } from '@angular/core';
+import { NgModule, ModuleWithProviders, InjectionToken } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { HttpModule } from '@angular/http';
-
+import { HttpClientModule } from '@angular/common/http';
 
 import { IsAuthenticated } from './is-authenticated.service';
 
@@ -13,33 +12,45 @@ import { OrderService } from './order/order.service';
 import { UserService } from './user.service';
 import { ShopService } from './shop.service';
 
+import { Config } from './config';
+
 
 //
 // directives & pipes
 import { bgSrcDirective } from './util.bg-src.directive';
 import { ConfirmDeleteDirective } from './util.confirm-delete.directive';
 import { OrderPortionPipe, OrderBasepricePipe } from './order/order.pipe.portion';
-// import { MarkdownDirective } from './util.markdown.directive';
+import { MarkdownDirective } from './util.markdown.directive';
+
+//
+// dynamic injection of module configuration
+const KNG2_OPTIONS = new InjectionToken<any>('app.config');
 
 
 @NgModule({
   imports: [
     CommonModule,
-    HttpModule
+    HttpClientModule
   ],
   declarations: [
     bgSrcDirective, 
     ConfirmDeleteDirective, 
+    MarkdownDirective,
     OrderPortionPipe, 
     OrderBasepricePipe
   ],
   exports: [
     bgSrcDirective, 
     ConfirmDeleteDirective, 
+    MarkdownDirective,
     OrderPortionPipe, 
     OrderBasepricePipe
   ]
 })
+
+
+
+
 export class Kng2CoreModule {
   // in root module : import Kng2CoreModule.forRoot() to have only one instance of services when lazy loaded
   //https://angular-2-training-book.rangle.io/handout/modules/feature-modules.html
@@ -59,7 +70,7 @@ export class Kng2CoreModule {
         UserService,
         ShopService,
         {
-          provide:"KNG2_OPTIONS",
+          provide:KNG2_OPTIONS,
           useValue:options||{}
         }
       ]

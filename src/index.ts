@@ -43,5 +43,5 @@ export { OrderPortionPipe, OrderBasepricePipe } from './order/order.pipe.portion
 
 //
 // export variable instance
-export { config } from './config';
+export { Config, config } from './config';
 
