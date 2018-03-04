@@ -1,9 +1,5 @@
 import { EventEmitter, Injectable } from '@angular/core';
 import { Http, Headers } from '@angular/http';
-import { Subject } from 'rxjs/Subject';
-import { ReplaySubject } from "rxjs/Rx";
-import { Observable } from 'rxjs/Observable';
-import { ConnectableObservable } from 'rxjs/observable/ConnectableObservable'
 
 import { Config } from './config';
 import { Product, ProductService  } from './product.service';
@@ -13,13 +9,25 @@ import { User, UserCard, UserAddress, UserService } from './user.service';
 import { Category, CategoryService } from './category.service';
 import { Shop, ShopService } from './shop.service';
 
+import { ReplaySubject } from "rxjs/ReplaySubject";
+import { Observable } from 'rxjs/Observable';
+import { ConnectableObservable } from 'rxjs/observable/ConnectableObservable'
+import { flatMap, combineLatest } from 'rxjs/operators';
+
+import 'rxjs/add/observable/of';
+import 'rxjs/add/observable/combineLatest';
+import 'rxjs/add/operator/mergeMap';
+import 'rxjs/add/operator/publishReplay';
+
+
+
 //manage the first requests needed when bootstrapping the application. Used by the components.
 @Injectable()
 export class LoaderService {
 
   // a BehaviorSubject can cache the last emited value so clients subscribing later can access the previously emitted data
   //private loader: BehaviorSubject<[Config, User]> = new BehaviorSubject<[Config, User]>([null,null]);
-  private loader: Observable<any[]>;
+  private loader: Observable<any>;
 
 
   constructor(
@@ -64,7 +72,6 @@ export class LoaderService {
     //combineLatest to get array with last item of each when one emits an item
     return Observable.combineLatest(loaders);      
   }
-  
 
   ready() {
     return this.loader;
