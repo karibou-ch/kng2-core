@@ -2,16 +2,20 @@ import { Http, Headers } from '@angular/http';
 import { Injectable } from '@angular/core';
 import { ReplaySubject } from 'rxjs/ReplaySubject';
 import { Observable } from 'rxjs/Observable';
+import 'rxjs/add/observable/of';
+import 'rxjs/add/observable/from';
+
 
 // Cannot call a namespace ('moment')
 // import * as moment from 'moment';
 // https://stackoverflow.com/questions/39519823/using-rollup-for-angular-2s-aot-compiler-and-importing-moment-js
-import  moment from 'moment';
-import 'moment/locale/fr';
+//import  moment from 'moment';
+//import 'moment/locale/fr';
 
 //
 import { ConfigService } from './config.service';
 import { Shop } from './shop.service';
+import { ISubscription } from 'rxjs/Subscription';
 
 
 export class UserAddress {
@@ -122,7 +126,7 @@ export class User {
 
   constructor(json?: any) {
     let defaultUser = {
-
+      id:null,
       name: {},
       tags: [],
       email: {
@@ -184,7 +188,7 @@ export class User {
   }
 
   isAuthenticated():boolean {
-    return this.id>0;
+    return this.id>0||this.id!==null;
   }
 
   isAdmin() {
@@ -231,6 +235,7 @@ export class User {
     if (this.email.status === true)
       return true;
 
+    return new Date(this.email.status).toLocaleString();
     //return moment(this.email.status).format('ddd DD MMM YYYY');
 
   }
@@ -331,7 +336,6 @@ export class UserService {
     this.headers.append('Content-Type', 'application/json');
     Object.assign(this.currentUser, this.defaultUser);
     this.user$ = new ReplaySubject<User>(1);
-    this.user$.next(this.currentUser);
   }
 
   // token
@@ -429,8 +433,8 @@ export class UserService {
   }
 
   // app.post('/v1/recover/:token/:email/password', users.recover);
-  recover(token, email, recover): Observable<any> {
-    return this.http.post(this.config.API_SERVER + '/v1/recover/' + token + '/' + email + '/password', recover, {
+  recover(email): Observable<any> {
+    return this.http.post(this.config.API_SERVER + '/v1/recover/' + this.config.shared.token + '/' + email + '/password', {
       headers: this.headers,
       withCredentials: true
     });
@@ -447,11 +451,7 @@ export class UserService {
       withCredentials: true
     })
       .map(res => this.updateCache(res.json()))
-      .catch(err => Observable.of(this.defaultUser));
-
-    // TODO inform consumers of user change
-    // $rootScope.$broadcast("user.update",_user);
-
+      .do(user=>this.user$.next(user));
   }
 
   // app.get ('/logout', auth.logout);
@@ -460,10 +460,8 @@ export class UserService {
       headers: this.headers,
       withCredentials: true
     })
-      .map(res => this.defaultUser)
-      .catch(err => Observable.of(this.defaultUser))
-    // TODO inform consumers of user change
-    // $rootScope.$broadcast("user.update",_user);
+      .map(res => this.currentUser=this.defaultUser)
+      .do(user=>this.user$.next(user));
   }
 
   // TODO voir lignes commentées (updateGeoCode etc.)
@@ -476,7 +474,7 @@ export class UserService {
       withCredentials: true
     })
       .map(res => this.updateCache(res.json()))
-      .catch(err => Observable.of(this.defaultUser));
+    //  .catch(err => Observable.of(this.defaultUser));
     // _user.copy(u);
     // _user.updateGeoCode();
   };
@@ -497,13 +495,7 @@ export class UserService {
       withCredentials: true
     })
       .map(res => this.updateCache(res.json()))
-      .catch(err => Observable.of(this.defaultUser));
-    /*
-    TODO check and remove comments bellow
-    _user.copy(u);
-    _user.updateGeoCode();
-    $rootScope.$broadcast("user.init",self);
-    */
+      .do(user=>this.user$.next(user));
   };
 
 
@@ -526,6 +518,7 @@ export class UserService {
       withCredentials: true
     })
       .map(res => this.updateCache(res.json()))
+      .do(user=>this.user$.next(user));
     // TODO check updateCache and user likes
     // .map(user => {
     //   this.cache.list.find(u => u.id === user.id).likes = user.likes.slice();
@@ -702,5 +695,13 @@ export class UserService {
   }
   
 
+  /**
+   * Subscribe to the user stream.
+   */
+  subscribe(
+    onNext, onThrow?: ((exception: any) => void)|null,
+    onReturn?: (() => void)|null): ISubscription {
+      return this.user$.subscribe({next: onNext, error: onThrow, complete: onReturn});
+  }  
 
 }
