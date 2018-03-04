@@ -9,7 +9,10 @@ export { ConfigService } from './config.service';
 export { Category, 
          CategoryService } from './category.service';
 
-export { IsAuthenticated } from './is-authenticated.service';
+export { Document, 
+         DocumentService } from './document.service';
+          
+export { IsAuthenticated, IsAdmin } from './is-authenticated.service';
 
 export { LoaderService } from './loader.service';
 
