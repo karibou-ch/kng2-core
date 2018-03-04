@@ -1,12 +1,18 @@
 import { Http, Headers, RequestOptions } from '@angular/http';
 import { Injectable } from '@angular/core';
-import { ReplaySubject } from 'rxjs/ReplaySubject';
-import { Observable } from 'rxjs/Observable';
 import { config } from './config';
 
 
+import { ReplaySubject } from 'rxjs/ReplaySubject';
+import { Observable } from 'rxjs/Observable';
+import { map, catchError } from 'rxjs/operators';
+import 'rxjs/add/observable/of';
+import 'rxjs/add/operator/map';
+import 'rxjs/add/operator/catch';
+
+
 export class Category {
-  defaultCategory={
+  private defaultCategory={
     tags:[],
     weight:0
   }
@@ -18,13 +24,14 @@ export class Category {
   slug: string;
   group: string;  /* permet de grouper une catégorie (toutes les catégories des artisans, producteurs*/
   cover: string;  /* image de la catégorie */
-  description: string;
+  description?: string;
   image: string; /* icon associé à la catégorie */
   name: string;
   weight:number; /*permet d'ordonner les cat les plus légère en haut */
   type: string;
   home: boolean; /* afficher une sélection de cat sur la home */
   active: boolean;
+  usedBy?:number[];
   tags:string[]
 }
 
@@ -61,11 +68,11 @@ export class CategoryService {
     this.config = config;
   }
 
-  private deleteCache(category: Category) {
-      let incache=this.cache.map.get(category.slug);
+  private deleteCache(slug: string) {
+      let incache=this.cache.map.get(slug);
       if (incache) {
           incache.deleted=true;
-          this.cache.map.delete(category.slug);
+          this.cache.map.delete(slug);
       }
       return incache;
   }
@@ -151,12 +158,11 @@ export class CategoryService {
 
 //  app.put('/v1/category/:category', auth.ensureAdmin, auth.checkPassword, categories.remove);
   remove(slug:string, password:string) {
-    return this.http.put(this.config.API_SERVER + '/v1/category/' + slug, {
+    return this.http.put(this.config.API_SERVER + '/v1/category/' + slug,{password:password}, {
       headers: this.headers,
-      withCredentials: true,
-      password:password
+      withCredentials: true
     })
-    .map(res => this.deleteCache(res.json()))
+    .map(res => this.deleteCache(slug))
   }
 
 
@@ -171,7 +177,6 @@ export class CategoryService {
     } else {
       errMsg = error.message ? error.message : error.toString();
     }
-    console.error(errMsg);
     return Observable.throw(errMsg);
   }
 
