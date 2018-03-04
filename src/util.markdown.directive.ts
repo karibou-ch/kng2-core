@@ -1,59 +1,41 @@
-import { Directive,OnInit, ElementRef } from '@angular/core';
+import { AfterViewInit, Directive,Input, ElementRef } from '@angular/core';
 import { Http } from '@angular/http';
 
-// external
 import Showdown from 'showdown';
 // import { Prism } from 'prism';
 // import 'prism/themes/prism-okaidia.css!css';
 
-//@Directive({
 @Directive({
-  selector: 'ng2-markdown',
-  inputs: [ 'src', 'data' ],
-//  providers: [ HTTP_PROVIDERS ]
+  selector: '[kng-markdown]'
 })
+export class MarkdownDirective implements AfterViewInit{
 
-export class MarkdownDirective implements OnInit{
+  @Input()
+  removeRoot:boolean=false;
+
+  @Input()
   src;
-  data;
+
+  @Input()
+  set data(value: string) {
+    this.fromData(value||'');
+  }  
+
   element;
 
   constructor (
     private elementRef:ElementRef, 
     private http:Http
   ) {
-    // used for http requests
-    // reference to the DOM element
-    this.element = elementRef.nativeElement;
+    this.element = this.elementRef.nativeElement;
   }
 
-  ngOnInit () {
-    // element with 'src' attribute set
-    if (this.src) {
-      this.fromFile(this.src);
-    }
-    // element with 'data' attribute set
-    if (this.data) {
-      this.fromData(this.data);
-    }
+  ngAfterViewInit () {
+
     // element containing markdown
-    if (!this.src) {
-      this.fromRAW();
-    }
-  }
-
-  fromFile(src) {
-    this.http.get(src).toPromise()
-    .then((res) => {
-       return this.prepare(res);
-    })
-    .then((markdown) => {
-      return this.process(markdown);
-    })
-    .then((html) => {
-      this.element.innerHTML = html;
-      this.highlight(html);
-    })
+    // if (!this.src) {
+    //   this.fromRAW();
+    // }
   }
 
   fromData(data) {
@@ -75,8 +57,15 @@ export class MarkdownDirective implements OnInit{
   }
 
   process(markdown) {
-    let converter = new Showdown.converter();
-    return converter.makeHtml(markdown)
+    let converter = new Showdown.Converter();
+    let md=converter.makeHtml(markdown),end;
+    //
+    // so nice hack to remove root paragraph
+    // TODO should be 
+    if(md.indexOf('<p>')===0&&this.removeRoot){
+      return md.substring(3, md.length - 5);      
+    }
+    return md;
   }
 
   highlight(html){
