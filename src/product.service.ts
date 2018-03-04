@@ -5,6 +5,10 @@ import { Observable } from 'rxjs/Observable';
 import { config } from './config';
 import { ConfigService } from './config.service';
 
+import 'rxjs/add/observable/of';
+import 'rxjs/add/operator/map';
+import 'rxjs/add/operator/do';
+
 @Injectable()
 export class ProductService {
 
