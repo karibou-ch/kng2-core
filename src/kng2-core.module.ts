@@ -1,10 +1,13 @@
-import { NgModule, ModuleWithProviders, InjectionToken } from '@angular/core';
+import { NgModule, ModuleWithProviders } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { HttpClientModule } from '@angular/common/http';
+import { HttpModule } from '@angular/http';
+// TODO
+// import { HttpClientModule } from '@angular/common/http';
 
-import { IsAuthenticated } from './is-authenticated.service';
+import { IsAuthenticated, IsAdmin } from './is-authenticated.service';
 
 import { CategoryService } from './category.service';
+import { DocumentService } from './document.service';
 import { ProductService } from './product.service';
 import { ConfigService } from './config.service';
 import { LoaderService } from './loader.service';
@@ -24,13 +27,13 @@ import { MarkdownDirective } from './util.markdown.directive';
 
 //
 // dynamic injection of module configuration
-const KNG2_OPTIONS = new InjectionToken<any>('app.config');
+// export const KNG2_OPTIONS = new InjectionToken<any>('KNG2_OPTIONS');
 
 
 @NgModule({
   imports: [
     CommonModule,
-    HttpClientModule
+    HttpModule
   ],
   declarations: [
     bgSrcDirective, 
@@ -47,32 +50,26 @@ const KNG2_OPTIONS = new InjectionToken<any>('app.config');
     OrderBasepricePipe
   ]
 })
-
-
-
-
 export class Kng2CoreModule {
-  // in root module : import Kng2CoreModule.forRoot() to have only one instance of services when lazy loaded
   //https://angular-2-training-book.rangle.io/handout/modules/feature-modules.html
-  public static forRoot(options?:any): ModuleWithProviders {
-    //AoT
-    //https://gist.github.com/chuckjaz/65dcc2fd5f4f5463e492ed0cb93bca60
-    //ConfigService.setDefaultConfig(options||{});    
+  public static forRoot(options:any): ModuleWithProviders {
     return {
       ngModule: Kng2CoreModule,
       providers: [
+        {
+          provide:"KNG2_OPTIONS",
+          useValue:options||{}
+        },
+        ConfigService,
         IsAuthenticated,
+        IsAdmin,
+        DocumentService,
         CategoryService,
         ProductService,
-        ConfigService,
         LoaderService,
         OrderService,
         UserService,
-        ShopService,
-        {
-          provide:KNG2_OPTIONS,
-          useValue:options||{}
-        }
+        ShopService
       ]
     };
   }  
