@@ -5,6 +5,8 @@ import { Observable } from 'rxjs/Observable';
 import { config } from './config';
 import { ConfigService } from './config.service';
 
+import { Utils } from './util';
+
 import 'rxjs/add/observable/of';
 import 'rxjs/add/operator/map';
 import 'rxjs/add/operator/do';
@@ -204,7 +206,8 @@ export class Product {
     }
 
     constructor(json?: any) {
-        Object.assign(this,json||this.defaultProduct);        
+        Object.assign(this, Utils.merge(this.defaultProduct,json||{}));          
+        
         if(json){
             this.updated=new Date(json.updated);
             this.created=new Date(json.created);

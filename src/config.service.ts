@@ -1,7 +1,7 @@
 import { Http, Headers } from '@angular/http';
 import { Injectable, Inject } from '@angular/core';
 
-import { Config, config } from './config';
+import { Config, config, ConfigKeyStoreEnum } from './config';
 
 
 import { Observable } from 'rxjs/Observable';
@@ -80,6 +80,8 @@ export class ConfigService {
     this.headers = new Headers();
     this.headers.append('Content-Type', 'application/json');
     this.config$ = new ReplaySubject<Config>(1);
+
+
 
   }
 
@@ -161,7 +163,5 @@ export class ConfigService {
     onReturn?: (() => void)|null): ISubscription {
       return this.config$.subscribe({next: onNext, error: onThrow, complete: onReturn});
   }  
-  
-  
 
 }

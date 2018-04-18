@@ -6,6 +6,12 @@ export { Kng2CoreModule } from './kng2-core.module';
 // services
 export { ConfigService } from './config.service';
 
+export { CartAction,
+         CartConfig,
+         CartItem,
+         CartService,
+         CartState } from './cart.service';
+
 export { Category, 
          CategoryService } from './category.service';
 
@@ -46,5 +52,5 @@ export { OrderPortionPipe, OrderBasepricePipe } from './order/order.pipe.portion
 
 //
 // export variable instance
-export { Config, config } from './config';
+export { Config, ConfigKeyStoreEnum, config } from './config';
 

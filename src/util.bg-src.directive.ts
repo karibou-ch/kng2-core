@@ -9,7 +9,14 @@ import { Observable } from 'rxjs/Observable';
 //
 // https://stackoverflow.com/questions/41274603/observable-of-component-attribute-changes-in-angular2
 export class bgSrcDirective implements OnInit{
-  @Input() bgSmall : Observable<string>;
+
+  grandient:string=`linear-gradient(
+    rgba(0, 0, 0, 0.0),
+    rgba(0, 0, 0, 0.5)
+  ),`;
+
+  @Input() bgSmall : string;
+  @Input() bgGradient : boolean;
   element;
 
   constructor(el: ElementRef) { 
@@ -17,16 +24,17 @@ export class bgSrcDirective implements OnInit{
   }
 
   @Input() set bgSrc(url) {
+    //
+    // safe approach
     if(!url)return;
+    let prefix=(this.bgGradient)?this.grandient:'';
     if(this.bgSmall) {
-      // url='http://cdn.filter.to/300x1000/'+url.replace('https','http')
-      // url=config.API_SERVER+'/v1/cdn/image/305x1000?source='+url.replace('https','http')
       url+='-/resize/300x/';
     }else{
       url+='-/progressive/yes/';
     }
     
-    this.element.style.backgroundImage = "url("+url+")";
+    this.element.style.backgroundImage = prefix+"url("+url+")";
 
   }
 

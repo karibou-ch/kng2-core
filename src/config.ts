@@ -25,4 +25,8 @@ export class Config{
   avoidShopUIIn:string[];
 }
 
+export enum ConfigKeyStoreEnum{
+  KIO2_LOGIN_REMEMBER   = 0,
+  KIO2_SERVER           = 1
+}
 export var config:Config = new Config();

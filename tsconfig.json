@@ -2,17 +2,6 @@
   "compilerOptions": {
     "allowSyntheticDefaultImports":true,
     "baseUrl": "",
-    "paths": {
-      "moment/*":[
-        "../node_modules/moment/*"
-      ],
-      "@angular/*": [
-        "../node_modules/@angular/*"
-      ],
-      "rxjs/*":[
-        "../node_modules/rxjs/*"        
-      ]
-    },      
     "target": "es5",
     "module": "commonjs",
     "moduleResolution": "node",
@@ -43,7 +32,7 @@
   "exclude": [
     "src/**/*.spec.ts",
     "node_modules",
-    "demo",
+    "ng-test",
     "dist"
   ]
 }

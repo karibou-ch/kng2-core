@@ -6,10 +6,12 @@ import { Category } from './category.service';
 import { User } from './user.service';
 
 import { ConfigService } from './config.service';
+import { Utils } from './util'
 
 //https://stackoverflow.com/questions/13142635/how-can-i-create-an-object-based-on-an-interface-file-definition-in-typescript
 
 export class Shop {
+  deleted:boolean;
   urlpath: string;
   name: string;
   description: string;
@@ -118,7 +120,7 @@ export class Shop {
     score: number;
   };
   created: Date;
-  marketplace: [any];
+  marketplace: string[];
 
   //
   // Object methods
@@ -194,8 +196,8 @@ export class Shop {
     description: "",
     name: ""
   }*/
-    Object.assign(this, defaultShop, json || {});
-
+    json=json||{};
+    Object.assign(this,Utils.merge(defaultShop,json));      
   }
 }
 
@@ -234,20 +236,25 @@ export class ShopService {
 
   //
   // simple cache manager
-  private deleteCache(cat: Shop) {
-    if (this.cache.map[cat.urlpath]) {
-      this.cache.map.delete(cat.urlpath);
+  private deleteCache(shop: Shop, propagate:boolean=false) {
+    shop.deleted=true;
+    if (this.cache.map[shop.urlpath]) {
+      delete this.cache.map[shop.urlpath];
     }
+    if(propagate)this.shop$.next(shop);    
+    return shop;
   }
 
-  private updateCache(shop: Shop) {
+  private updateCache(shop: Shop, propagate:boolean=false) {
     if (!this.cache.map[shop.urlpath]) {
       this.cache.map[shop.urlpath] = new Shop(shop);
       return this.cache.map[shop.urlpath];
     }
     //
     //update existing entry
-    return Object.assign(this.cache.map[shop.urlpath],shop);
+    Object.assign(this.cache.map[shop.urlpath],shop)
+    if(propagate)this.shop$.next(shop);
+    return this.cache.map[shop.urlpath];
   }
 
 
@@ -261,8 +268,7 @@ export class ShopService {
       withCredentials: true,
       search: filter,
     })
-      .map(res => res.json().map(obj => new Shop(obj)));
-    //.map(shops => shops.map(this.updateCache.bind(this)));
+    .map(res => res.json().map(this.updateCache.bind(this)));
 };
 
   findByCatalog(cat, filter): Observable<Shop[]> {
@@ -270,8 +276,7 @@ export class ShopService {
       headers: this.headers,
       withCredentials: true
     })
-      .map(res => res.json().map(obj => new Shop(obj)))
-      .map(shops => shops.map(this.updateCache));
+    .map(res => res.json().map(this.updateCache.bind(this)));
   };
 
   //
@@ -281,10 +286,7 @@ export class ShopService {
       headers: this.headers,
       withCredentials: true
     })
-    .map(res => new Shop(res.json()))
-    //.map(shop => this.updateCache(shop));
-    //.map(this.updateCache)
-    //.do(this.shop$.next)
+    .map(res => this.updateCache(res.json()));
   };
 
   //
@@ -294,9 +296,7 @@ export class ShopService {
       headers: this.headers,
       withCredentials: true
     })
-      .map(res => new Shop(res.json()))
-      .map(this.updateCache)
-      .do(this.shop$.next)
+    .map(res => this.updateCache(res.json(),true));
   };
 
   //
@@ -316,9 +316,7 @@ export class ShopService {
       headers: this.headers,
       withCredentials: true
     })
-      .map(res => new Shop(res.json()))
-      .map(this.updateCache)
-      .do(this.shop$.next)
+    .map(res => this.updateCache(res.json(),true))
   };
 
   //
@@ -329,10 +327,7 @@ export class ShopService {
       headers: this.headers,
       withCredentials: true
     })
-      .map(res => new Shop(res.json()))
-      //.map(shop => this.updateCache(shop))
-      .do(this.shop$.next)
-      // TODO shop.create => user.shops.push(shop);
+    .map(res => this.updateCache(res.json(),true));
   };
 
   //
@@ -347,10 +342,7 @@ export class ShopService {
       headers: this.headers,
       withCredentials: true,
     })
-      .map(res => new Shop(res.json()))
-      .map(this.deleteCache)
-      // TODO what to callback on delete
-      .do(() => this.shop$.next(new Shop()))
-    };
+    .map(res => this.deleteCache(res.json(),true))
+};
 
 }

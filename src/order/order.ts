@@ -6,13 +6,15 @@ import {
   EnumShippingMode
 } from './order.enum';
 
+import { Utils } from '../util';
+
 //
 // get global configuration
 import { config } from '../config';
 
 //
-// load utils API
-import '../util';
+// load es5 hooks
+import '../es5';
 
 //
 // Define an item of this order
@@ -36,7 +38,7 @@ export interface OrderItem {
 
   //
   // customer note
-  note?: number;
+  note?: string;
 
   //
   // product variation is not yet implemented
@@ -47,9 +49,9 @@ export interface OrderItem {
 
   /* where is the product now? */
   fulfillment: {
-    issue: EnumOrderIssue;
-    status: EnumFulfillments;
-    shipping: EnumShippingMode;
+    issue: string;//string|EnumOrderIssue;
+    status: string;//string|EnumFulfillments;
+    shipping: string;//string|EnumShippingMode;
     note?: string;
     //
     // date/time for the first activity is saved
@@ -200,7 +202,7 @@ export class Order {
   }
 
   /* default values */  
-  defaultOrder = {
+  private defaultOrder = {
     customer: {},
     payment: {},
     fulfillments: {},
@@ -226,7 +228,7 @@ export class Order {
 
   /* order canceled reason and dates */
   cancel?: {
-    reason: EnumCancelReason;
+    reason: string;//string|EnumCancelReason;
     when: Date;
   };
 
@@ -238,7 +240,7 @@ export class Order {
     number: string;
     expiry: string;
     issuer: string;
-    status: EnumFinancialStatus;
+    status: string;//string|EnumFinancialStatus;
     handle?: string;
     provider?: string;
     logs: string[],
@@ -253,7 +255,7 @@ export class Order {
 
 
   fulfillments: {
-    status: EnumFulfillments
+    status: string;//string|EnumFulfillments;
   };
 
   items: OrderItem[];
@@ -305,7 +307,7 @@ export class Order {
   }
 
   constructor(json?: any) {
-    Object.assign(this, json || this.defaultOrder);
+    Object.assign(this, Utils.merge(this.defaultOrder,json||{}));          
 
     //
     // default order position
@@ -357,13 +359,13 @@ export class Order {
       this.items.forEach(function (item) {
         //
         // item should not be failure (fulfillment)
-        if (item.fulfillment.status !== EnumFulfillments.failure) {
+        if (item.fulfillment.status !== EnumFulfillments[EnumFulfillments.failure]) {
           total += item.finalprice;
         }
       });
     }
 
-    return parseFloat((Math.round(total * 20) / 20).toFixed(2));
+    return Utils.roundAmount(total);
   }
 
 
@@ -377,7 +379,7 @@ export class Order {
       this.items.forEach(function (item) {
         //
         // item should not be failure (fulfillment)
-        if (item.fulfillment.status !== EnumFulfillments.failure) {
+        if (item.fulfillment.status !== EnumFulfillments[EnumFulfillments.failure]) {
           total += item.finalprice;
         }
       });
@@ -397,7 +399,7 @@ export class Order {
     // add mul factor
     if (factor) { total *= factor; }
 
-    return parseFloat((Math.round(total * 20) / 20).toFixed(2));
+    return Utils.roundAmount(total);
   }
 
   getShippingPrice() {
@@ -422,7 +424,7 @@ export class Order {
       this.items.forEach(function (item) {
         //
         // item should not be failure (fulfillment)
-        if (item.fulfillment.status !== EnumFulfillments.failure) {
+        if (item.fulfillment.status !== EnumFulfillments[EnumFulfillments.failure]) {
           total += (item.price * item.quantity);
         }
       });
@@ -440,7 +442,7 @@ export class Order {
     if (factor) { total *= factor; }
 
 
-    return parseFloat((Math.round(total * 20) / 20).toFixed(2));
+    return Utils.roundAmount(total);
   }
 
 
@@ -450,7 +452,7 @@ export class Order {
       this.items.forEach(function (item) {
         //
         // item should not be failure (fulfillment)
-        if (item.fulfillment.status !== EnumFulfillments.failure) {
+        if (item.fulfillment.status !== EnumFulfillments[EnumFulfillments.failure]) {
           original += (item.price * item.quantity);
           validated += (item.finalprice);
         }
@@ -480,19 +482,19 @@ export class Order {
     var progress = 0;
     //
     // failure, create, partial, fulfilled
-    if ([EnumFulfillments.fulfilled, EnumFulfillments.failure].indexOf(this.fulfillments.status) !== -1) {
+    if ([EnumFulfillments[EnumFulfillments.fulfilled], EnumFulfillments[EnumFulfillments.failure]].indexOf(this.fulfillments.status) !== -1) {
       return 100.00;
     }
 
     //
     // pending, paid, voided, refunded
-    if (this.payment.status === EnumFinancialStatus.pending) {
+    if (this.payment.status === EnumFinancialStatus[EnumFinancialStatus.pending]) {
       return (progress / end * 100.00);
     }
     //
     // progress order items
     for (var i in this.items) {
-      if ([EnumFulfillments.fulfilled, EnumFulfillments.failure].indexOf(this.items[i].fulfillment.status) !== -1) {
+      if ([EnumFulfillments[EnumFulfillments.fulfilled], EnumFulfillments[EnumFulfillments.failure]].indexOf(this.items[i].fulfillment.status) !== -1) {
         progress++;
       }
     }
@@ -502,12 +504,22 @@ export class Order {
   getFulfilledStats() {
     var failure = 0;
     for (var i in this.items) {
-      if ([EnumFulfillments.failure].indexOf(this.items[i].fulfillment.status) !== -1) {
+      if ([EnumFulfillments[EnumFulfillments.failure]].indexOf(this.items[i].fulfillment.status) !== -1) {
         failure++;
       }
     }
     // count failure on initial order
     return failure + '/' + (this.items.length);
+
+  }
+  getFulfilledProgress() {
+    var progress = 0;
+    for (var i in this.items) {
+      if ([EnumFulfillments[EnumFulfillments.failure],EnumFulfillments[EnumFulfillments.fulfilled]].indexOf(this.items[i].fulfillment.status) !== -1) {
+        progress++;
+      }
+    }
+    return progress;
 
   }
 

@@ -87,20 +87,20 @@ export class DocumentService {
   }
 
   private deleteCache(category: Document) {
-      let incache=this.cache.map.get(category.slug);
+      let incache=this.cache.map.get(category.slug[0]);
       if (incache) {
           incache.deleted=true;
-          this.cache.map.delete(category.slug);
+          this.cache.map.delete(category.slug[0]);
       }
       return incache;
   }
 
   private updateCache(category: Document) {
-    if(!this.cache.map.get(category.slug)){
-        this.cache.map.set(category.slug,new Document(category))
-        return this.cache.map.get(category.slug);
+    if(!this.cache.map.get(category.slug[0])){
+        this.cache.map.set(category.slug[0],new Document(category))
+        return this.cache.map.get(category.slug[0]);
     }
-    return Object.assign(this.cache.map.get(category.slug), category);
+    return Object.assign(this.cache.map.get(category.slug[0]), category);
   }
 
 

@@ -117,10 +117,10 @@ export class OrderService {
   // role:admin only
   // TODO opts ??
   // app.post('/v1/orders/:oid/capture', auth.ensureAdmin, queued(orders.capture));
-  capture(order: Order, opts): Observable<any> {
+  capture(order: Order): Observable<any> {
     // opts=opts||{};
     // return this.chain(backend.$order.save({action:this.oid,id:'capture'},opts).$promise);
-    return this.http.post(this.config.API_SERVER + '/v1/orders/' + order.oid + '/capture', opts, {
+    return this.http.post(this.config.API_SERVER + '/v1/orders/' + order.oid + '/capture',  {
       headers: this.headers,
       withCredentials: true
     })
@@ -130,9 +130,10 @@ export class OrderService {
   // refund an order
   // role:admin or shop (when partial)
   // app.post('/v1/orders/:oid/refund', auth.ensureAdmin, queued(orders.refund));
-  refund(order: Order): Observable<Order> {
+  refund(order: Order, amount?:number): Observable<Order> {
     // return this.chain(backend.$order.save({action:this.oid,id:'refund'}).$promise);
-    return this.http.post(this.config.API_SERVER + '/v1/orders/' + order.oid + '/refund', null, {
+    let params=(amount)?{amount:amount}:{};
+    return this.http.post(this.config.API_SERVER + '/v1/orders/' + order.oid + '/refund', params, {
       headers: this.headers,
       withCredentials: true
     })
@@ -146,7 +147,7 @@ export class OrderService {
   // app.post('/v1/orders/:oid/cancel', orders.ensureOwnerOrAdmin, queued(orders.cancel));
   cancelWithReason(order: Order, reason: EnumCancelReason): Observable<Order> {
     // return this.chain(backend.$order.save({action:this.oid,id:'cancel'},{reason:reason}).$promise);
-    return this.http.post(this.config.API_SERVER + '/v1/orders/' + order.oid + '/cancel', { reason: reason }, {
+    return this.http.post(this.config.API_SERVER + '/v1/orders/' + order.oid + '/cancel', { reason: EnumCancelReason[reason] }, {
       headers: this.headers,
       withCredentials: true
     })
@@ -181,7 +182,7 @@ export class OrderService {
   // app.post('/v1/orders/:oid/issue', auth.ensureAdmin, orders.updateIssue);
   updateIssue(order: Order, item, issue: EnumOrderIssue): Observable<Order> {
     let tosave = Object.assign({}, item);
-    tosave.fulfillment.issue = issue;
+    tosave.fulfillment.issue = EnumOrderIssue[issue];
     // this.chain(backend.$order.save({action:this.oid,id:'issue'},[tosave]).$promise).$promise.then(function () {
     //   _.find(me.items,function(i){return i.sku===item.sku;}).fulfillment.issue=issue;
     // });
@@ -294,9 +295,8 @@ export class OrderService {
   // role:admin|shop
   // app.get('/v1/orders/shops/:shopname', shops.ensureOwnerOrAdmin, orders.listByShop);
   findOrdersByShop(shop, filter): Observable<Order[]> {
-    //let params = Object.assign({}, filter || {}, { id: shop.urlpath, action: 'shops' });
-    //return this.chainAll(backend.$order.query(params).$promise);
-    return this.http.get('/v1/orders/shops/'+shop.urlpath,{
+    shop=(shop)?('/'+shop.urlpath):'';
+    return this.http.get(this.config.API_SERVER +'/v1/orders/shops'+shop,{
       params: filter,
       headers: this.headers,
       withCredentials: true
@@ -313,7 +313,7 @@ export class OrderService {
     let month = now.getMonth() + 1;
     let year = now.getFullYear()
     //let params = Object.assign({}, { month: now.getMonth() + 1, year: now.getFullYear() }, filter || {});
-    return this.http.get('/v1/orders/invoices/shops/'+ month +'/'+year, {
+    return this.http.get(this.config.API_SERVER +'/v1/orders/invoices/shops/'+ month +'/'+year, {
       search: filter,
       headers: this.headers,
       withCredentials: true

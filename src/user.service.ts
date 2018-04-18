@@ -2,6 +2,7 @@ import { Http, Headers } from '@angular/http';
 import { Injectable } from '@angular/core';
 import { ReplaySubject } from 'rxjs/ReplaySubject';
 import { Observable } from 'rxjs/Observable';
+import { ISubscription } from 'rxjs/Subscription';
 import 'rxjs/add/observable/of';
 import 'rxjs/add/observable/from';
 
@@ -15,7 +16,8 @@ import 'rxjs/add/observable/from';
 //
 import { ConfigService } from './config.service';
 import { Shop } from './shop.service';
-import { ISubscription } from 'rxjs/Subscription';
+import { Utils } from './util';
+
 
 
 export class UserAddress {
@@ -33,6 +35,7 @@ export class UserAddress {
     lat: number;
     lng: number;
   }
+
 }
 
 export class UserCard {
@@ -84,7 +87,7 @@ export class User {
 
   /* preferred postalCode*/
   logistic: {
-    postalCode: string;
+    postalCode: string[];
   };
 
 
@@ -144,9 +147,9 @@ export class User {
       }],
 
 
-      logistic: {}
+      logistic: {postalCode:[]}
     }
-    Object.assign(this, json||defaultUser);
+    Object.assign(this, Utils.merge(defaultUser,json||{}));          
 
   }
 
@@ -228,18 +231,34 @@ export class User {
   }
 
 
-  getEmailStatus() {
+  getEmailStatus():boolean|Date {
     if (!this.email || !this.email.status)
       return false;
 
     if (this.email.status === true)
       return true;
 
-    return new Date(this.email.status).toLocaleString();
+    return new Date(this.email.status);
     //return moment(this.email.status).format('ddd DD MMM YYYY');
 
   }
 
+  getDefaultAddress(){
+    let add=(this.addresses||[]).find(add=>add.primary);
+    if(add){
+      return add;
+    }
+    
+    //
+    // check with first address
+    if(this.addresses && this.addresses.length){
+      return this.addresses[0];
+    }
+
+    //
+    // return an empty
+    return new UserAddress();
+  }
 
   populateAdresseName() {
     // autofill the address name when available
@@ -307,11 +326,12 @@ export class UserService {
   private cache = new Cache();
 
   private updateCache(user: User) {
-      if(!this.cache.map.get(user.id)){
-          this.cache.map.set(user.id,new User(user))
-          return this.cache.map.get(user.id);
-      }
-      return Object.assign(this.cache.map.get(user.id), user);
+    Object.assign(this.currentUser, user);      
+    if(!this.cache.map.get(user.id)){
+        this.cache.map.set(user.id,new User(user))
+        return this.cache.map.get(user.id);
+    }
+    return Object.assign(this.cache.map.get(user.id), user);
   }
 
   private deleteCache(user: User) {
@@ -357,7 +377,6 @@ export class UserService {
       withCredentials: true
     })
       .map(res => new User(res.json()))
-      .map(user => this.updateCache(user))
       .catch(err => Observable.of(this.defaultUser));
     //   .map(res => res.json()).publishLast().refCount();
 
@@ -411,7 +430,7 @@ export class UserService {
       headers: this.headers,
       withCredentials: true
     })
-      .map(res => res.json().map(this.updateCache.bind(this)));
+      .map(res => res.json().map(user=>new User(user)));
   }
 
   // Reçoit un statut de requête http

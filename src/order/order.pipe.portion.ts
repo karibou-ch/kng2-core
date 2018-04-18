@@ -1,4 +1,5 @@
 import { Pipe, PipeTransform } from '@angular/core';
+import { Utils } from '../util';
 
 @Pipe({
   name: 'portion'
@@ -46,9 +47,7 @@ export class OrderBasepricePipe implements PipeTransform {
     if(unit!=='gr'){
       return;
     }
-
-    // round
-    let out=Math.round((100*price/w)*20)/20;
-    return out.toFixed(2);
+    
+    return Utils.roundAmount((100*price/w));
   }
 }

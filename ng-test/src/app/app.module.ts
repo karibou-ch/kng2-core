@@ -1,6 +1,7 @@
 import { BrowserModule } from '@angular/platform-browser';
 import { NgModule } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { HttpModule } from '@angular/http';
 import { HttpClientModule } from '@angular/common/http';
 import { RouterModule, Routes } from '@angular/router';
 import { appRoutes } from './app.routes';
@@ -19,8 +20,6 @@ import { ShopListComponent } from './shop.list/shop-list.component';
 import { ShopEditComponent } from './shop.edit/shop-edit.component';
 import { ShopCreateComponent } from './shop.create/shop-create.component';
 
-import { Kng2CoreModule } from '../../../dist/';
-
 import { AddressComponent } from './user.address/address.component';
 import { CardComponent } from './user.card/card.component';
 import { CategoryComponent } from './category/category.component';
@@ -38,7 +37,9 @@ import { ProductEditComponent } from './product.edit/product-edit.component';
 import { ProductCreateComponent } from './product.create/product-create.component';
 import { HomeComponent } from './home/home.component';
 
-let kng2Config={
+import { Kng2CoreModule } from '../../../dist/';
+
+const kng2Config={
   API_SERVER:'http://api.karibou.evaletolab.ch',
   loader:[
     "categories",
@@ -79,8 +80,9 @@ let kng2Config={
   imports: [
     BrowserModule,
     FormsModule,
-    Kng2CoreModule.forRoot(kng2Config),
+    HttpModule,
     HttpClientModule,
+    Kng2CoreModule.forRoot(kng2Config),
     RouterModule.forRoot(appRoutes)
   ],
   providers: [],

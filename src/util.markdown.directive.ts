@@ -38,6 +38,21 @@ export class MarkdownDirective implements AfterViewInit{
     // }
   }
 
+  // fromData(data) {
+  //   let raw = data;
+  //   this.process(this.prepare(data)).then(html=>{
+  //   this.element.innerHTML = html;
+  //   this.highlight(html);
+  //   });
+  // }
+
+  // fromRAW() {
+  //   this.process(this.prepare(this.element.innerHTML)).then(html=>{
+  //   this.element.innerHTML = html;
+  //   this.highlight(html);
+  //   });
+  // }
+
   fromData(data) {
     let raw = data;
     let html = this.process(this.prepare(raw));
@@ -51,7 +66,6 @@ export class MarkdownDirective implements AfterViewInit{
     this.element.innerHTML = html;
     this.highlight(html);
   }
-
   prepare(raw) {
     return raw.split('\n').map((line) => line.trim()).join('\n')
   }
@@ -68,6 +82,20 @@ export class MarkdownDirective implements AfterViewInit{
     return md;
   }
 
+  // process(markdown):Promise<string> {
+  //   return import("showdown").then(Showdown => {
+  //     let converter = new Showdown['Converter']();
+  //     let md=converter.makeHtml(markdown),end;
+  //     //
+  //     // so nice hack to remove root paragraph
+  //     // TODO should be 
+  //     if(md.indexOf('<p>')===0&&this.removeRoot){
+  //       return md.substring(3, md.length - 5);      
+  //     }
+  //     return md;        
+  //   });
+  // }
+  
   highlight(html){
     //Prism.highlightAll();
   }

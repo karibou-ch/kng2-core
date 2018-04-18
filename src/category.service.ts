@@ -1,6 +1,7 @@
 import { Http, Headers, RequestOptions } from '@angular/http';
 import { Injectable } from '@angular/core';
 import { config } from './config';
+import { Utils } from './util';
 
 
 import { ReplaySubject } from 'rxjs/ReplaySubject';
@@ -17,7 +18,7 @@ export class Category {
     weight:0
   }
   constructor(json?: any) {
-    Object.assign(this, json||this.defaultCategory);
+    Object.assign(this, Utils.merge(this.defaultCategory,json||{}));          
   }
   deleted:boolean;
   _id:string;
