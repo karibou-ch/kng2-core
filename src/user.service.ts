@@ -1,10 +1,14 @@
-import { Http, Headers } from '@angular/http';
-import { Injectable } from '@angular/core';
+import { HttpClient,HttpHeaders } from '@angular/common/http';
+import { Injectable, Inject } from '@angular/core';
 import { ReplaySubject } from 'rxjs/ReplaySubject';
 import { Observable } from 'rxjs/Observable';
 import { ISubscription } from 'rxjs/Subscription';
-import 'rxjs/add/observable/of';
-import 'rxjs/add/observable/from';
+
+import { of } from 'rxjs/observable/of';
+import { from } from 'rxjs/observable/from';
+import { _throw } from 'rxjs/observable/throw';
+import { catchError, map, tap } from 'rxjs/operators';
+
 
 
 // Cannot call a namespace ('moment')
@@ -14,7 +18,7 @@ import 'rxjs/add/observable/from';
 //import 'moment/locale/fr';
 
 //
-import { ConfigService } from './config.service';
+import { config } from './config';
 import { Shop } from './shop.service';
 import { Utils } from './util';
 
@@ -22,7 +26,24 @@ import { Utils } from './util';
 
 export class UserAddress {
 
-  constructor() {
+  constructor(
+    name?:string,
+    street?:string,
+    floor?:string,
+    region?:string,
+    postalCode?:string,
+    note?:string,
+    primary?:boolean,
+    geo?:any
+  ) {
+    this.name=name;
+    this.streetAdress=street;
+    this.floor=floor;
+    this.region=region;
+    this.postalCode=postalCode;
+    this.note=note;
+    this.primary=primary;
+    this.geo=geo||{lat:0,lng:0};
   }
   name: string;
   note: string;
@@ -36,18 +57,97 @@ export class UserAddress {
     lng: number;
   }
 
+  isEqual(address:UserAddress):boolean{
+    return this.streetAdress==address.streetAdress&&
+           this.name==address.name&&
+           this.postalCode==address.postalCode;
+  }
+  
+
+}
+
+
+export class DepositAddress extends UserAddress{
+  weight:number;
+  active:boolean;
+  fees:number;
+  constructor(
+    name?:string,
+    street?:string,
+    floor?:string,
+    region?:string,
+    postalCode?:string,
+    note?:string,
+    geo?:any,
+    weight?:number,
+    active?:boolean,
+    fees?:number
+  ){
+    super(name,street,floor,region,postalCode,note,false,geo);
+    this.weight=weight||0;
+    this.fees=fees||0;
+    this.active=active||false;  
+  }
 }
 
 export class UserCard {
 
-  constructor() {
+  constructor(json?:any) {
+    Object.assign(this,json||{});
+    if(!this.expiry){
+      this.error="Unvalid instance";
+      this.expiry=new Date(1970,0,0).toISOString();
+    }
+    this.updated=new Date(this.updated);
   }
-  type: string;
+
+  id?: string;
+  alias: string;
+  expiry: string;
+  issuer: string;
   name: string;
   number: string;
-  expiry: string;
   provider: string;
-  alias: string;
+  updated:Date;
+  error:string;
+
+  //
+  // display expiry
+  expiryToDate(){
+    let date=new Date(this.expiry);
+    let splitted=this.expiry.split('/');
+    let month,year;
+    if(!isNaN(date.getTime())){
+      return date;
+    }
+
+    if(splitted.length>0){
+      month = parseInt(splitted[0], 10);
+      year = parseInt(splitted[1], 10);
+      if(year<1000){
+        year+=2000;
+      }
+      return new Date(year,month);
+    }
+  }
+  //
+  // check if card is valid
+  isValid(){
+    if(this.error){
+      return false;
+    }
+
+    let now=new Date();
+    let date=this.expiryToDate();
+    now.setDate(1);
+    now.setHours(0,0,0,1);
+    return date>now;
+  }
+
+  isEqual(payment:UserCard){
+    return this.number==payment.number&&
+           this.alias==payment.alias;
+  }
 }
 
 export class User {
@@ -116,7 +216,7 @@ export class User {
   reminder: {
     active: boolean;
     weekdays: number[];
-    time: number;
+    time: Date;
   };
 
 
@@ -134,23 +234,32 @@ export class User {
       tags: [],
       email: {
       },
-
       reminder: {
         weekdays: []
       },
-
+      likes:[],
       roles: [],
       shops: [],
       phoneNumbers: [{
         number: '',
         what: 'mobile'
       }],
-
-
+      addresses:[],
+      payments:[],
       logistic: {postalCode:[]}
     }
-    Object.assign(this, Utils.merge(defaultUser,json||{}));          
-
+    Object.assign(this, defaultUser,json||{});          
+    this.payments=this.payments.map(payment=>new UserCard(payment));
+    this.addresses=this.addresses.map(add=>new UserAddress(
+      add.name,
+      add.streetAdress,
+      add.floor,
+      add.region,
+      add.postalCode,
+      add.note,
+      add.primary,
+      add.geo
+    ));
   }
 
   //
@@ -203,29 +312,22 @@ export class User {
   }
 
   hasRole(role) {
-    for (var i in this.roles) {
-      if (this.roles[i] === role) return true;
-    }
-    return false;
+    return (this.roles.indexOf(role)!=-1);
   }
 
   hasLike(product) {
-    if (this.likes && this.likes.length) {
-      if (this.likes.indexOf(product.sku) !== -1) {
-        return true;
-      }
+    if (!this.likes || !this.likes.length) {
+      return false;
     }
-    // for (var i in this.likes){
-    //   if (this.likes[i]==product.sku) return true;
-    // }
-    return false;
+    return (this.likes.indexOf(product.sku) != -1);
   }
 
-  hasPrimaryAddress() {
-    if (this.addresses && this.addresses.length == 1) return 0;
+  hasPrimaryAddress():boolean|UserAddress {
+    if (this.addresses && this.addresses.length == 1) return this.addresses[0];
+    //this.addresses.some(add=>add.primary)
     for (var i in this.addresses) {
       if (this.addresses[i].primary === true)
-        return i;
+        return this.addresses[i];
     }
     return false;
   }
@@ -318,7 +420,7 @@ class Cache {
 @Injectable()
 export class UserService {
 
-  defaultUser: User = new User();
+  private defaultUser: User = new User();
 
   // TODO make observable content !!
   config: any;
@@ -326,12 +428,14 @@ export class UserService {
   private cache = new Cache();
 
   private updateCache(user: User) {
-    Object.assign(this.currentUser, user);      
     if(!this.cache.map.get(user.id)){
-        this.cache.map.set(user.id,new User(user))
-        return this.cache.map.get(user.id);
+      // TODO unit test of payments/address Class existances after updates
+      Object.assign(this.currentUser, new User(user));      
+      this.cache.map.set(user.id,this.currentUser)
+      return this.cache.map.get(user.id);
     }
-    return Object.assign(this.cache.map.get(user.id), user);
+    //Object.assign(this.currentUser, new User(user));      
+    return Object.assign(this.cache.map.get(user.id), new User(user));
   }
 
   private deleteCache(user: User) {
@@ -344,15 +448,17 @@ export class UserService {
   }
 
 
-  private headers: Headers;
-  private user$: ReplaySubject<User>;
+  private headers: HttpHeaders;
+  public  user$: ReplaySubject<User>;
 
   constructor(
-    public configSrv: ConfigService,
-    public http: Http
+    @Inject('KNG2_OPTIONS') private customConfig:any,
+    public http: HttpClient
   ) {
-    this.config = ConfigService.defaultConfig;
-    this.headers = new Headers();
+    // FIXME remove this hugly config propagation
+    Object.assign(config,customConfig);
+    this.config = config;
+    this.headers = new HttpHeaders();
     this.headers.append('Content-Type', 'application/json');
     Object.assign(this.currentUser, this.defaultUser);
     this.user$ = new ReplaySubject<User>(1);
@@ -369,16 +475,16 @@ export class UserService {
   get(id: number): Observable<User> {
 
     if (this.cache.map[id]) {
-      return Observable.from(this.cache.map[id]);
+      return of(this.cache.map[id]);
     }
 
-    return this.http.get(this.config.API_SERVER + '/v1/users/' + id, {
+    return this.http.get<User>(this.config.API_SERVER + '/v1/users/' + id, {
       headers: this.headers,
       withCredentials: true
-    })
-      .map(res => new User(res.json()))
-      .catch(err => Observable.of(this.defaultUser));
-    //   .map(res => res.json()).publishLast().refCount();
+    }).pipe(
+      map((user) => new User(user)),
+      catchError(err => of(this.defaultUser))
+    );
 
   }
 
@@ -389,53 +495,41 @@ export class UserService {
 
   // app.get('/v1/users/me', auth.ensureAuthenticated, users.me);
   me(): Observable<User> {
-    return this.http.get(this.config.API_SERVER + '/v1/users/me', {
+    if(!this.config.API_SERVER){
+      throw new Error("Issue with uninitialized server context");
+    }
+    return this.http.get<User>(this.config.API_SERVER + '/v1/users/me', {
       headers: this.headers,
       withCredentials: true
-    })
-      .map(res => this.updateCache(res.json()))
-      .catch(err => Observable.of(this.defaultUser));
-
-    // TODO check and remove those comments bellow
-    //     // angular.extend(self,defaultUser);
-    //     self.wrap(_u);
-    //     // FIXME bad dependency circle
-    //     self.shops=shop.wrapArray(self.shops);
-
-    //     //
-    //     // init
-    //     self.init();
-
-    //     //
-    //     // broadcast info
-    //     $rootScope.$broadcast("user.init",self);
-    //     window.currentUser=self.email&&self.email.address||'Anonymous';
-
-    //     if(cb)cb(self);
-    //     return self;
-    //   },(error) {
-    //   if([0,401].indexOf(error.status)!==-1){
-    //     self.copy(defaultUser);
-    //   }
-    //
-    // );
+    }).pipe(
+      map(user => {
+        this.updateCache(user);
+        return this.currentUser;
+      }),
+      catchError(err => of(this.defaultUser))
+    );
   }
 
   // app.get('/v1/users', auth.ensureAdmin, users.list);
   query(filter?: any): Observable<User[]> {
     filter = filter || {};
 
-    return this.http.get(this.config.API_SERVER + '/v1/users/', {
-      search: filter,
+    return this.http.get<User[]>(this.config.API_SERVER + '/v1/users/', {
+      params: filter,
       headers: this.headers,
       withCredentials: true
-    })
-      .map(res => res.json().map(user=>new User(user)));
+    }).pipe(
+      map(users => users.map(user=>new User(user)))
+    );
   }
 
   // Reçoit un statut de requête http
   // app.get ('/v1/validate/:uid/:email', emails.validate);
   validate(id, email): Observable<any> {
+    if (!id||!email) {
+      return _throw(new Error("validate, missing parameter id or email"));
+    }
+    
     return this.http.get(this.config.API_SERVER + '/v1/validate/' + id + '/' + email, {
       headers: this.headers,
       withCredentials: true
@@ -444,8 +538,8 @@ export class UserService {
   }
 
   // app.post('/v1/validate/create',auth.ensureAuthenticated, emails.create);
-  validateEmail(email): Observable<any> {
-    return this.http.post(this.config.API_SERVER + '/v1/validate/create', email, {
+  validateEmail(params?:any): Observable<any> {
+    return this.http.post<{created:Date,email:string}>(this.config.API_SERVER + '/v1/validate/create',params||{}, {
       headers: this.headers,
       withCredentials: true
     });
@@ -465,42 +559,42 @@ export class UserService {
   save(user): Observable<User> {
     // autofill the address name when available
     user.populateAdresseName();
-    return this.http.post(this.config.API_SERVER + '/v1/users/' + user.id, user, {
+    return this.http.post<User>(this.config.API_SERVER + '/v1/users/' + user.id, user, {
       headers: this.headers,
       withCredentials: true
-    })
-      .map(res => this.updateCache(res.json()))
-      .do(user=>this.user$.next(user));
+    }).pipe(
+      map(user => this.updateCache(user)),
+      tap(user=>this.user$.next(user))
+    );
   }
 
   // app.get ('/logout', auth.logout);
   logout(): Observable<User> {
-    return this.http.get(this.config.API_SERVER + '/logout/', {
+    return this.http.get<User>(this.config.API_SERVER + '/logout/', {
       headers: this.headers,
       withCredentials: true
-    })
-      .map(res => this.currentUser=this.defaultUser)
-      .do(user=>this.user$.next(user));
+    }).pipe(
+      map(user => Object.assign(this.currentUser,this.defaultUser)),
+      tap(user=>this.user$.next(user))
+    )
   }
 
   // TODO voir lignes commentées (updateGeoCode etc.)
   // app.post('/register', queued(auth.register_post));
   register(user): Observable<User> {
-    // TODO deprecated, this should be done in component
     //user.populateAdresseName();
-    return this.http.post(this.config.API_SERVER + '/register', user, {
+    return this.http.post<User>(this.config.API_SERVER + '/register', user, {
       headers: this.headers,
       withCredentials: true
-    })
-      .map(res => this.updateCache(res.json()))
-    //  .catch(err => Observable.of(this.defaultUser));
-    // _user.copy(u);
-    // _user.updateGeoCode();
+    }).pipe(
+      map(user => this.updateCache(user))
+    );
+      
   };
 
   // app.post('/v1/users/:id/password',users.ensureMe, users.password);
-  newpassword(id, change): Observable<any> {
-    return this.http.post(this.config.API_SERVER + '/v1/users/' + id + '/password', change, {
+  newpassword(id:number, change): Observable<User> {
+    return this.http.post<User>(this.config.API_SERVER + '/v1/users/' + id + '/password', change, {
       headers: this.headers,
       withCredentials: true
     });
@@ -509,156 +603,77 @@ export class UserService {
   // TODO voir lignes commentées (updateGeoCode etc.) + Broadcast
   // app.post('/login', queued(auth.login_post));
   login(data): Observable<User> {
-    return this.http.post(this.config.API_SERVER + '/login', data, {
+    return this.http.post<User>(this.config.API_SERVER + '/login', data, {
       headers: this.headers,
       withCredentials: true
-    })
-      .map(res => this.updateCache(res.json()))
-      .do(user=>this.user$.next(user));
+    }).pipe(
+      map(user => this.updateCache(user)),
+      tap(user=>this.user$.next(user))
+    );
   };
 
 
   // app.put('/v1/users/:id', auth.ensureAdmin, auth.checkPassword, users.remove);
   remove(id, password): Observable<any> {
-    return this.http.put(this.config.API_SERVER + '/v1/users/', { password: password }, {
+    return this.http.put<User>(this.config.API_SERVER + '/v1/users/', { password: password }, {
       headers: this.headers,
       withCredentials: true
-    })
-      .map(res => this.deleteCache(res.json()));
-    //self.delete();
-    //$rootScope.$broadcast("user.remove",self);
+    }).pipe(
+      map(user => this.deleteCache(user))
+    );
   }
 
   // app.post('/v1/users/:id/like/:sku', users.ensureMe, users.like);
   love(id, product): Observable<User> {
     //var self=this, params={};
-    return this.http.post(this.config.API_SERVER + '/v1/users/' + id + '/like/' + product.sku, null, {
+    return this.http.post<User>(this.config.API_SERVER + '/v1/users/' + id + '/like/' + product.sku, null, {
       headers: this.headers,
       withCredentials: true
-    })
-      .map(res => this.updateCache(res.json()))
-      .do(user=>this.user$.next(user));
-    // TODO check updateCache and user likes
-    // .map(user => {
-    //   this.cache.list.find(u => u.id === user.id).likes = user.likes.slice();
-    //   this.cache.map.get(user.id).likes = user.likes.slice();
-    //   return user;
-    // })
+    }).pipe(
+      map(user => this.updateCache(user)),
+      tap(user=>this.user$.next(user))
+    );
   }
   //================================================
 
-  geocode(street, postal, region): Observable<any> {
-    // google format: Route de Chêne 34, 1208 Genève, Suisse
-    if (!region) region = "Suisse";
-    var fulladdress = street + "," + postal + ", " + region;//"34+route+de+chêne,+Genève,+Suisse
-    var url = "//maps.googleapis.com/maps/api/geocode/json?address=" + fulladdress + "&sensor=false";
-    return this.http.get(url, { withCredentials: false })
-      .map(res => res.json());
-  }
-
-  //boucle observables, map met a jour l'adresse, liste observable, merge ou concat, subscribe(TODO notify success or error)
-  updateGeoCode(user: User): Observable<any> {
-    let obs:any[] = [], self = this;
-    //let dirty = false;
-    // check state
-    if ("obj" in user) {
-      return Observable.of(user);
-    }
-    if (user.addresses.length === 0 || user.addresses.length && user.addresses[0].geo && user.addresses[0].geo.lat) {
-      return Observable.of(user);
-    }
-
-    // get geo lt/lng
-    // TODO default value for GeoLocation
-    if (!user.addresses[0].geo) user.addresses[0].geo = { lat: 0, lng: 0};
-
-    //build an array of observables
-    //TODO please refactor this code !
-    user.addresses.forEach((address, i) => {
-      obs.push(
-        this.geocode(address.streetAdress, address.postalCode, address.region)
-        .map(geo => {
-          if (!geo.results.length || !geo.results[0].geometry) {
-            return;
-          }
-          if (!geo.results[0].geometry.lat) {
-            return;
-          }
-          address.geo = { 
-            lat: geo.results[0].geometry.location.lat, 
-            lng: geo.results[0].geometry.location.lng 
-          };
-        })
-      );
-    });
-
-    //on encapsule tout dans un observable et on y souscrit
-    return Observable.from(obs);
-
-    // ==== méthodes alternative pour ce cas là =========
-    /*
-      return Observable.from(user.addresses)
-        .concatMap(address => {
-          return this.geocode(address.streetAdress, address.postalCode, address.region);
-        })
-        .map((geo, i) => {
-          if (!geo.results.length || !geo.results[0].geometry) {
-              return;
-            }
-            if (!geo.results[0].geometry.lat) {
-              return;
-            }
-            user.addresses[i].geo = { lat: null, lng: null };
-            user.addresses[i].geo.lat = geo.results[0].geometry.location.lat;
-            user.addresses[i].geo.lng = geo.results[0].geometry.location.lng;
-        });
-      */
-
-  }
 
   /**
    * payment methods
    */
   // app.post('/v1/users/:id/payment/:alias/check', users.ensureMeOrAdmin,users.checkPaymentMethod);
   checkPaymentMethod(user): Observable<User> {
+    if(!user.payments.length){
+      return of(user);
+    }
 
     let allAlias = user.payments.map(payment => { return payment.alias; });
     let alias = allAlias.pop();
-
-    return this.http.post(this.config.API_SERVER + '/v1/users/' + user.id + '/payment/' + alias + '/check', allAlias, {
+    
+    return this.http.post<any>(this.config.API_SERVER + '/v1/users/' + user.id + '/payment/' + alias + '/check', {alias:allAlias}, {
       headers: this.headers,
       withCredentials: true
-    })
-      .map(res => this.updateCache(res.json()));
-    /*
-    TODO check comment bellow concerning payment method check
-    var self = this, allAlias = [], alias;
-    if (!self.payments || !self.payments.length) {
-      return cb({});
-    }
-    allAlias = self.payments.map(function (payment) {
-      return payment.alias;
-    });
-    alias = allAlias.pop();
-    backend.$user.save({ id: this.id, action: 'payment', aid: alias, detail: 'check' }, { alias: allAlias }, function (methodStatus) {
-      if (cb) cb(methodStatus);
-    }, function (error) {
-      if ([0, 401].indexOf(error.status) !== -1) {
-        self.copy(defaultUser);
-      }
-
-    });
-    return this;
-    */
+    }).pipe(
+      map(check => {
+        user.payments.forEach((payment,i)=>{
+          payment.error=check[payment.alias]&&check[payment.alias].error;
+        });
+        return this.updateCache(user);
+      })
+    );
   }
 
   // app.post('/v1/users/:id/payment', users.ensureMeOrAdmin,users.addPayment);
-  addPaymentMethod(payment, uid): Observable<User> {
-    return this.http.post(this.config.API_SERVER + '/v1/users/' + uid + '/payment', payment, {
+  addPaymentMethod(payment:UserCard, uid): Observable<User> {
+    if(!payment.id){
+      return _throw(new Error("addPaymentMethod missing payment id"));
+    }
+
+    return this.http.post<User>(this.config.API_SERVER + '/v1/users/' + uid + '/payment', payment, {
       headers: this.headers,
       withCredentials: true
-    })
-      .map(res => this.updateCache(res.json()));
+    }).pipe(
+      map(user => this.updateCache(user))
+    );
     /*
     var self = this, params = {};
     //
@@ -676,11 +691,15 @@ export class UserService {
 
   // app.post('/v1/users/:id/payment/:alias/delete', users.ensureMeOrAdmin,users.deletePayment);
   deletePaymentMethod(alias, uid): Observable<User> {
-    return this.http.post(this.config.API_SERVER + '/v1/users/' + uid + '/payment/' + alias + '/delete', null, {
+    if(!alias || !uid){
+      return _throw(new Error("deletePaymentMethod, missing params!"));
+    }
+    return this.http.post<User>(this.config.API_SERVER + '/v1/users/' + uid + '/payment/' + alias + '/delete', null, {
       headers: this.headers,
       withCredentials: true
-    })
-      .map(res => this.updateCache(res.json()))
+    }).pipe(
+      map(user => this.updateCache(user))
+    );
     /*
     var self = this, params = {};
     //
@@ -706,11 +725,12 @@ export class UserService {
   // app.post('/v1/users/:id/status', auth.ensureAdmin,users.status);
   updateStatus(id, status): Observable<User> {
     //var self = this, params = {};
-    return this.http.post(this.config.API_SERVER + '/v1/users/' + id + '/status', { status: status }, {
+    return this.http.post<User>(this.config.API_SERVER + '/v1/users/' + id + '/status', { status: status }, {
       headers: this.headers,
       withCredentials: true
-    })
-      .map(res => this.updateCache(res.json()));
+    }).pipe(
+      map(user => new User(user))
+    );
   }
   
 
