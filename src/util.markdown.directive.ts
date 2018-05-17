@@ -5,6 +5,15 @@ import Showdown from 'showdown';
 // import { Prism } from 'prism';
 // import 'prism/themes/prism-okaidia.css!css';
 
+
+// Showdown typescript
+// https://github.com/DefinitelyTyped/DefinitelyTyped/blob/7ba0c54fa401f1ccc969b4c6923ed0c636a86002/types/showdown/index.d.ts
+// declare namespace Showdown {
+//   export interface Converter{
+//     makeHtml(content:string);
+//   }
+// }
+
 @Directive({
   selector: '[kng-markdown]'
 })
@@ -22,12 +31,35 @@ export class MarkdownDirective implements AfterViewInit{
   }  
 
   element;
+  static converter=null;
+
+  // # Example inline style link with custom href attributes
+  // [No title or custom attributes](https://example.org)
+  // [Title & no custom attribute](https://example.org "A title")
+  // [No title but custom attribute](https://example.org)(rel="nofollow")
+  // [Title & custom attributes](https://example.org "A title")(rel="nofollow" class="btn btn-primary")
+  sdExtAttr;
 
   constructor (
     private elementRef:ElementRef, 
     private http:Http
   ) {
     this.element = this.elementRef.nativeElement;
+
+    var text = `
+    `;
+    
+    // https://guides.codechewing.com/add-custom-attributes-to-anchor-html-tag-showdown
+    // Our custom extension
+    this.sdExtAttr = {
+      type: 'output',
+      regex: /()\((.+=".+" ?)+\)/g,
+      replace: (match, $1, $2) => {
+        return $1.replace('">', `" ${$2}>`);
+      }
+    };
+    
+        
   }
 
   ngAfterViewInit () {
@@ -71,8 +103,13 @@ export class MarkdownDirective implements AfterViewInit{
   }
 
   process(markdown) {
-    let converter = new Showdown.Converter();
-    let md=converter.makeHtml(markdown),end;
+
+    if(!MarkdownDirective.converter){
+      Showdown.extension('extAttributes', this.sdExtAttr);
+      MarkdownDirective.converter = new Showdown.Converter({ extensions: ['extAttributes'] });  
+    }
+      
+    let md=MarkdownDirective.converter.makeHtml(markdown),end;
     //
     // so nice hack to remove root paragraph
     // TODO should be 
