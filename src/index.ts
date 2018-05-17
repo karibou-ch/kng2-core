@@ -16,13 +16,16 @@ export { Category,
          CategoryService } from './category.service';
 
 export { Document, 
+         DocumentHeader,
          DocumentService } from './document.service';
           
 export { IsAuthenticated, IsAdmin } from './is-authenticated.service';
 
-export { LoaderService } from './loader.service';
+export { LoaderService, 
+         LoaderResolve } from './loader.service';
 
 export { Order, 
+         OrderShipping,
          OrderItem } from './order/order';
 export { OrderService } from './order/order.service';
 
@@ -35,6 +38,7 @@ export { Shop,
 export { User, 
          UserCard, 
          UserAddress, 
+         DepositAddress,
          UserService } from './user.service';
 
 export { EnumCancelReason,
@@ -44,6 +48,8 @@ export { EnumCancelReason,
          EnumShippingMode
        } from './order/order.enum';
 
+
+export { Utils } from './util';      
 //
 // directives & pipes
 export { bgSrcDirective } from './util.bg-src.directive';
@@ -52,5 +58,8 @@ export { OrderPortionPipe, OrderBasepricePipe } from './order/order.pipe.portion
 
 //
 // export variable instance
-export { Config, ConfigKeyStoreEnum, config } from './config';
+export { Config, 
+         ConfigKeyStoreEnum, 
+         ConfigMenu,
+         config } from './config';
 
