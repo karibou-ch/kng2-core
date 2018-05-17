@@ -6,19 +6,6 @@ var sass = require('node-sass');
 
 // Add here external dependencies that actually you use.
 const globals = {
-    "@angular/platform-browser":'platform.browser',
-    '@angular/core': 'ng.core',
-    '@angular/common': 'ng.common',
-    'rxjs/Rx':'Rx',
-    'rxjs/add/observable/combineLatest': 'Rx',
-    'rxjs/add/observable/fromPromise': 'Rx',
-    'rxjs/add/operator/toPromise': 'Rx',
-    'rxjs/add/operator/map': 'Rx',
-    'rxjs/add/operator/filter': 'Rx',
-    'rxjs/add/operator/flatMap': 'Rx',
-    'rxjs/Observable': 'Rx',
-    'rxjs/ReplaySubject': 'Rx',
-    'rxjs/BehaviorSubject': 'Rx',
 };
 
 export default {

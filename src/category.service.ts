@@ -1,4 +1,4 @@
-import { Http, Headers, RequestOptions } from '@angular/http';
+import { HttpClient,HttpHeaders } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { config } from './config';
 import { Utils } from './util';
@@ -6,10 +6,9 @@ import { Utils } from './util';
 
 import { ReplaySubject } from 'rxjs/ReplaySubject';
 import { Observable } from 'rxjs/Observable';
+import { _throw } from 'rxjs/observable/throw';
+import { of } from 'rxjs/observable/of';
 import { map, catchError } from 'rxjs/operators';
-import 'rxjs/add/observable/of';
-import 'rxjs/add/operator/map';
-import 'rxjs/add/operator/catch';
 
 
 export class Category {
@@ -59,12 +58,12 @@ export class CategoryService {
 
 
   private cache:Cache=new Cache();
-  private headers: Headers;
+  private headers: HttpHeaders;
 
   constructor(
-    private http: Http
+    private http: HttpClient
     ) {
-    this.headers = new Headers();
+    this.headers = new HttpHeaders();
     this.headers.append('Content-Type', 'application/json');
     this.config = config;
   }
@@ -95,10 +94,10 @@ export class CategoryService {
   //
   // retourne le Nom de la catégorie ou un message d'erreur
   findNameBySlug(slug:string):Observable<string> {
-    return this.get(slug)
-      .map(c=>c.name)
-      // TODO manage i18n
-      .catch(err=>"Catégorie Inconnue")
+    return this.get(slug).pipe(
+      map(c=>c.name),
+      catchError(err=>of("Catégorie Inconnue"))
+    );
   };
 
   findBySlug(slug:string):Observable<Category> {
@@ -114,56 +113,61 @@ export class CategoryService {
   select(filter?: any):Observable<Category[]> {
     filter = filter || {};
 
-    return this.http.get(this.config.API_SERVER + '/v1/category', {
-      search: filter,
+    return this.http.get<Category[]>(this.config.API_SERVER + '/v1/category', {
+      params: filter,
       headers: this.headers,
       withCredentials: true
-    })
-    .map(res => res.json().map(this.updateCache.bind(this)));
+    }).pipe(
+      map(categories => categories.map(this.updateCache.bind(this)))
+    );
   }
 
   //get category based on his slug
   get(slug:string):Observable<Category> {
     // check if in the cache
     if (this.cache.map.get(slug)){
-      return Observable.of(this.cache.map.get(slug));
+      return of(this.cache.map.get(slug));
     }
 
-    return this.http.get(this.config.API_SERVER + '/v1/category/'+slug, {
+    return this.http.get<Category>(this.config.API_SERVER + '/v1/category/'+slug, {
       headers: this.headers,
       withCredentials: true
-    })
-    .map(res => this.updateCache(res.json()))
+    }).pipe(
+      map(cat => this.updateCache(cat))
+    );
   }
 
 
   //   app.post('/v1/category/:category', auth.ensureAdmin, categories.update);
   save(slug:string, cat:Category):Observable<Category> {
 
-    return this.http.post(this.config.API_SERVER + '/v1/category/'+slug, cat, {
+    return this.http.post<Category>(this.config.API_SERVER + '/v1/category/'+slug, cat, {
       headers: this.headers,
       withCredentials: true
-    })
-    .map(res => this.updateCache(res.json()))
+    }).pipe(
+      map(cat => this.updateCache(cat))
+    );
 
   }
 
-//  app.post('/v1/category', auth.ensureAdmin, categories.create);
+//  app.post<Category>('/v1/category', auth.ensureAdmin, categories.create);
   create(cat: Category):Observable<Category> {
-    return this.http.post(this.config.API_SERVER + '/v1/category', cat, {
+    return this.http.post<Category>(this.config.API_SERVER + '/v1/category', cat, {
       headers: this.headers,
       withCredentials: true
-    })
-    .map(res => this.updateCache(res.json()))
+    }).pipe(
+      map(cat => this.updateCache(cat))
+    );
   }
 
 //  app.put('/v1/category/:category', auth.ensureAdmin, auth.checkPassword, categories.remove);
   remove(slug:string, password:string) {
-    return this.http.put(this.config.API_SERVER + '/v1/category/' + slug,{password:password}, {
+    return this.http.put<Category>(this.config.API_SERVER + '/v1/category/' + slug,{password:password}, {
       headers: this.headers,
       withCredentials: true
-    })
-    .map(res => this.deleteCache(slug))
+    }).pipe(
+      map(cat => this.deleteCache(slug))
+    );
   }
 
 
@@ -178,7 +182,7 @@ export class CategoryService {
     } else {
       errMsg = error.message ? error.message : error.toString();
     }
-    return Observable.throw(errMsg);
+    return _throw(errMsg);
   }
 
 }

@@ -1,19 +1,14 @@
-import { Http, Headers } from '@angular/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Injectable, Inject } from '@angular/core';
 
 import { Config, config, ConfigKeyStoreEnum } from './config';
+import { UserAddress, DepositAddress } from './user.service';
 
 
 import { Observable } from 'rxjs/Observable';
 import { ReplaySubject } from 'rxjs/ReplaySubject';
-//import { map } from 'rxjs/operators';
-import 'rxjs/add/operator/map';
-import 'rxjs/add/operator/share';
-import 'rxjs/add/operator/mergeMap';
+import { map, tap } from 'rxjs/operators';
 import { ISubscription } from 'rxjs/Subscription';
-
-
-
 
 
 @Injectable()
@@ -68,42 +63,59 @@ export class ConfigService {
     },    
   }
 
-  private headers: Headers;
+  private headers: HttpHeaders;
   public config:Observable<Config>;
   private config$: ReplaySubject<Config>;
 
   constructor(
     @Inject('KNG2_OPTIONS') private customConfig:any,
-    private http: Http
+    private http: HttpClient
   ) {
     Object.assign(ConfigService.defaultConfig,customConfig||{});
-    this.headers = new Headers();
+    // FIXME, remove this hugly config propagation
+    Object.assign(config,customConfig||{});
+    this.headers = new HttpHeaders();
     this.headers.append('Content-Type', 'application/json');
     this.config$ = new ReplaySubject<Config>(1);
-
-
-
   }
 
 
-  init(): Observable<Config> {
+  get(): Observable<Config> {
     let lang=this.locale;
-    this.config = this.http.get(ConfigService.defaultConfig.API_SERVER + '/v1/config?lang='+lang, {
+    this.config = this.http.get<any>(ConfigService.defaultConfig.API_SERVER + '/v1/config?lang='+lang, {
       headers: this.headers,
       withCredentials: true,
-    })
-      .map(res => {
+    }).pipe(
+      map(shared => {
         Object.assign(config,ConfigService.defaultConfig)
-        Object.assign(config.shared, res.json());
+        Object.assign(config.shared, shared);
         Object.assign(this.defaultHome.about,config.shared.home.about);
         Object.assign(this.defaultHome.howto,config.shared.home.howto);
         Object.assign(this.defaultHome.shop,config.shared.home.shop);
         Object.assign(this.defaultHome.tagLine,config.shared.home.tagLine);
         Object.assign(this.defaultHome.footer,config.shared.home.footer);
         Object.assign(config.shared.home,this.defaultHome)
+        //
+        // dates 
+        config.shared.shippingweek=(shared.shippingweek||[]).map(date=>new Date(date));
           
+        //
+        // deposit
+        config.shared.deposit=(config.shared.deposit||[]).map(deposit=>new DepositAddress(
+          deposit.name,
+          deposit.streetAddress,
+          deposit.floor,
+          deposit.region,
+          deposit.postalCode,
+          deposit.note,
+          deposit.geo,
+          deposit.weight,
+          deposit.active,
+          deposit.fees
+        ));
         return config;
       })
+    )
     return this.config;
   }
 
@@ -118,22 +130,41 @@ export class ConfigService {
   // };  
 
   save(config:Config,cid?:string):Observable<any>{    
-    return this.http.post(ConfigService.defaultConfig.API_SERVER + '/v1/config',config.shared, {
+    return this.http.post<any>(ConfigService.defaultConfig.API_SERVER + '/v1/config',config.shared, {
       headers: this.headers,
       withCredentials: true
-    })
-    .map(res => {
-      Object.assign(config,ConfigService.defaultConfig)
-      Object.assign(config.shared, res.json());
-      Object.assign(this.defaultHome.about,config.shared.home.about);
-      Object.assign(this.defaultHome.howto,config.shared.home.howto);
-      Object.assign(this.defaultHome.shop,config.shared.home.shop);
-      Object.assign(this.defaultHome.tagLine,config.shared.home.tagLine);
-      Object.assign(this.defaultHome.footer,config.shared.home.footer);
-      Object.assign(config.shared.home,this.defaultHome)
-      return config;
-    })
-    .do(config=>this.config$.next(config));
+    }).pipe(
+      map(shared => {
+        Object.assign(config,ConfigService.defaultConfig)
+        Object.assign(config.shared, shared);
+        Object.assign(this.defaultHome.about,config.shared.home.about);
+        Object.assign(this.defaultHome.howto,config.shared.home.howto);
+        Object.assign(this.defaultHome.shop,config.shared.home.shop);
+        Object.assign(this.defaultHome.tagLine,config.shared.home.tagLine);
+        Object.assign(this.defaultHome.footer,config.shared.home.footer);
+        Object.assign(config.shared.home,this.defaultHome);
+        //
+        // dates 
+        config.shared.shippingweek=(shared.shippingweek||[]).map(date=>new Date(date));
+        //
+        // deposit
+        config.shared.deposit=(config.shared.deposit||[]).map(deposit=>new DepositAddress(
+          deposit.name,
+          deposit.streetAddress,
+          deposit.floor,
+          deposit.region,
+          deposit.postalCode,
+          deposit.note,
+          deposit.geo,
+          deposit.weight,
+          deposit.active,
+          deposit.fees
+        ));
+        
+        return config;
+      }),
+      tap(config=>this.config$.next(config))
+    );
   }
 
 
