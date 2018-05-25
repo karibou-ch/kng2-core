@@ -248,7 +248,6 @@ class Cache {
 export class CartService {
 
   private isReady:boolean;
-  private cart$: ReplaySubject<CartState>;
   private headers: HttpHeaders;
 
   private currentUser:User;
@@ -268,6 +267,7 @@ export class CartService {
   public SHIPPING_OTHER:string='other';
 
   public DEFAULT_GATEWAY:any;
+  public cart$: ReplaySubject<CartState>;
 
   constructor(    
     private $http: HttpClient,
@@ -418,7 +418,7 @@ export class CartService {
     //
     // testing deposit address
     // FIXME issue with streetAdress vs. streetAddress
-    let deposit=this.defaultConfig.shared.deposit.find(add=>{
+    let deposit=this.defaultConfig.shared.deposits.find(add=>{
       return add.isEqual(address)&&
              add.fees>=0;
     });
@@ -557,6 +557,7 @@ export class CartService {
     try{
       let cartCache=JSON.parse(localStorage.getItem('kng2-cart'));
       if(!cartCache){
+        this.cart$.next({action:CartAction.CART_LOADED});
         return;
       }
 
@@ -577,7 +578,8 @@ export class CartService {
       //
       // check values
       if(cartCache.list&&cartCache.discount){
-        this.cache.list=cartCache.list.map(item=>new CartItem(item))
+        this.cache.list=cartCache.list.map(item=>new CartItem(item));
+        this.clearErrors();
         Object.assign(this.cache.discount,cartCache.discount);      
       }
       //
@@ -621,7 +623,7 @@ export class CartService {
         //     
         // check existance on the current user (example when you switch account, cart should be sync )
         if(!this.currentUser.addresses.some(address=>address.isEqual(this.cache.address))&&
-           !this.defaultConfig.shared.deposit.some(address=>address.isEqual(this.cache.address))){
+           !this.defaultConfig.shared.deposits.some(address=>address.isEqual(this.cache.address))){
           this.cache.address=new UserAddress();
         }
       }
@@ -632,6 +634,25 @@ export class CartService {
       console.log('------------error on cart loading',e)
       this.cart$.next({action:CartAction.CART_LOAD_ERROR})
     }
+  }
+
+  removeAll(product:Product|CartItem, variant?:string){
+    this.checkIfReady();
+    // init
+    let items=this.cache.list;
+    let item=(product instanceof CartItem)?product:CartItem.fromProduct(product);
+
+    // 
+    for (var i = 0; i < items.length; i++) {
+      if (items[i].equalItem(item, variant)) {
+        items.splice(i, 1);
+        break;
+      }
+    }
+    //
+    // update discount amount
+    this.computeVendorDiscount(product.vendor);
+    return this.save({item:item,action:CartAction.ITEM_REMOVE});
   }
 
   remove(product:Product|CartItem, variant?:string) {
@@ -696,6 +717,9 @@ export class CartService {
   }
 
   setShippingDay(newDate:Date, hours?:number) {
+    if(newDate.equalsDate(this.cache.currentShippingDay)){
+      return;
+    }
     this.cache.currentShippingDay=newDate;
     this.cache.currentShippingTime=hours||16;
     this.save({action:CartAction.CART_SHPPING})
