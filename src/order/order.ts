@@ -15,6 +15,31 @@ import { config } from '../config';
 //
 // load es5 hooks
 import '../es5';
+import { UserAddress } from '../user.service';
+
+
+//
+// Define order shipping
+export class OrderShipping extends UserAddress{
+  when:Date;
+  hours:number;
+
+  constructor(address:UserAddress,when:Date,hours:number){
+    super(
+      address.name,
+      address.streetAdress,
+      address.floor,
+      address.region,
+      address.postalCode,
+      address.note,
+      address.primary,
+      address.geo
+    );
+    this.when=new Date(when);
+    this.hours=hours;
+  }
+
+}
 
 //
 // Define an item of this order
@@ -43,7 +68,6 @@ export interface OrderItem {
   //
   // product variation is not yet implemented
   variant?: {
-    id: string;
     title: string;
   };
 
@@ -306,8 +330,14 @@ export class Order {
     estimated?: number
   }
 
+  errors?:any[];
+
   constructor(json?: any) {
-    Object.assign(this, Utils.merge(this.defaultOrder,json||{}));          
+    Object.assign(this, this.defaultOrder,json||{});
+    
+    this.shipping.when=new Date(this.shipping.when);
+    this.created=new Date(this.created);
+    this.closed=new Date(this.closed);
 
     //
     // default order position
@@ -501,13 +531,30 @@ export class Order {
     return (progress / end * 100.00);
   }
 
-  getFulfilledStats() {
+  getFulfilledIssue(){
+    let issue=[];
+    this.items.forEach((item:OrderItem)=>{
+      if(item.fulfillment.issue&&
+        item.fulfillment.issue!==EnumOrderIssue[EnumOrderIssue.issue_no_issue]){
+          issue.push(item);
+      }
+    });
+    return issue;
+  }
+
+  getFulfilledFailure(){
     var failure = 0;
     for (var i in this.items) {
       if ([EnumFulfillments[EnumFulfillments.failure]].indexOf(this.items[i].fulfillment.status) !== -1) {
         failure++;
       }
     }
+    // count failure on initial order
+    return failure;
+  }
+
+  getFulfilledStats() {
+    var failure = this.getFulfilledStats();
     // count failure on initial order
     return failure + '/' + (this.items.length);
 

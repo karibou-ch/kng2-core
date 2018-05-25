@@ -1,3 +1,5 @@
+import { Observable } from 'rxjs/Observable';
+import { of } from 'rxjs/observable/of';
 
   // TODO test utility class
 export class Utils{
@@ -5,10 +7,16 @@ export class Utils{
     return parseFloat((Math.round(value * 20) / 20).toFixed(2));
   }
 
+  static encodeQuery(params) {
+    let elems = [];
+    for (let d in params)
+      elems.push(encodeURIComponent(d) + '=' + encodeURIComponent(params[d]));
+    return elems.join('&');
+  }  
+  
   static isObject(item) {
     return (item && typeof item === 'object' && !Array.isArray(item) && item !== null);
   }
-
 
   static merge(target, ...sources) {
     if (!sources.length) return target;
@@ -27,6 +35,31 @@ export class Utils{
   
     return Utils.merge(target, ...sources);
   }  
+
+
+  //
+  //https://github.com/ded/script.js/blob/master/dist/script.js
+  static script(path:string,key:string):Observable<string>{
+    if(Utils.scripts[key]){
+      return of(key);
+    }
+    
+    let head = document.getElementsByTagName('head')[0];
+    let script = document.createElement('script');
+    let obs=Observable.create(observer=>{
+      script.onload = script.onerror = script['onreadystatechange']=()=>{
+        Utils.scripts[key]=true;
+        observer.next(key);
+        observer.complete();
+      }        
+    });
+    script.async =true;
+    script.src = path;
+    head.insertBefore(script, head.lastChild);
+    return obs;
+  }
+
+  private static scripts:{[key:string]:boolean}={};  
 }
 
 //

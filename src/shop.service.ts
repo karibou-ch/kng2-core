@@ -1,12 +1,14 @@
-import { Http, Headers } from '@angular/http';
+import { HttpClient,HttpHeaders } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { ReplaySubject } from 'rxjs/ReplaySubject';
-import { Observable } from 'rxjs/Observable';
 import { Category } from './category.service';
 import { User } from './user.service';
 
 import { ConfigService } from './config.service';
 import { Utils } from './util'
+
+import { ReplaySubject } from 'rxjs/ReplaySubject';
+import { Observable } from 'rxjs/Observable';
+import { map } from 'rxjs/operators';
 
 //https://stackoverflow.com/questions/13142635/how-can-i-create-an-object-based-on-an-interface-file-definition-in-typescript
 
@@ -80,7 +82,7 @@ export class Shop {
     active:boolean;
     from:Date,
     to:Date,
-    weekdays:[number],
+    weekdays:number[],
     comment:string
 };
 
@@ -198,7 +200,10 @@ export class Shop {
   }*/
     json=json||{};
     Object.assign(this,Utils.merge(defaultShop,json));      
+    this.account.tva=this.account.tva||{};
+    this.available.weekdays=this.available.weekdays||[];
   }
+
 }
 
 @Injectable()
@@ -209,7 +214,7 @@ export class ShopService {
   public  shop$: ReplaySubject<Shop>;
 
   private config: any;
-  private headers: Headers;
+  private headers: HttpHeaders;
   private cache = {
     list: [],
     map: new Map<string, Shop>()
@@ -218,10 +223,10 @@ export class ShopService {
 
   constructor(
     private configSrv: ConfigService,
-    private http: Http
+    private http: HttpClient
   ) {
     this.config = ConfigService.defaultConfig;
-    this.headers = new Headers();
+    this.headers = new HttpHeaders();
     this.headers.append('Content-Type', 'application/json');
 
     //
@@ -263,46 +268,50 @@ export class ShopService {
   //
 
   query(filter?: any):Observable<Shop[]> {
-    return this.http.get(this.config.API_SERVER + '/v1/shops', {
+    return this.http.get<Shop[]>(this.config.API_SERVER + '/v1/shops', {
       headers: this.headers,
       withCredentials: true,
-      search: filter,
-    })
-    .map(res => res.json().map(this.updateCache.bind(this)));
+      params: filter,
+    }).pipe(
+      map(shops => shops.map(this.updateCache.bind(this)))
+    );    
 };
 
   findByCatalog(cat, filter): Observable<Shop[]> {
-    return this.http.get(this.config.API_SERVER + '/v1/shops/category/' + cat, {
+    return this.http.get<Shop[]>(this.config.API_SERVER + '/v1/shops/category/' + cat, {
       headers: this.headers,
       withCredentials: true
-    })
-    .map(res => res.json().map(this.updateCache.bind(this)));
+    }).pipe(
+      map(shops => shops.map(this.updateCache.bind(this)))
+    );    
   };
 
   //
   // get a single shop
   get(urlpath): Observable<Shop> {
-    return this.http.get(this.config.API_SERVER + '/v1/shops/' + urlpath, {
+    return this.http.get<Shop>(this.config.API_SERVER + '/v1/shops/' + urlpath, {
       headers: this.headers,
       withCredentials: true
-    })
-    .map(res => this.updateCache(res.json()));
+    }).pipe(
+      map(shop => this.updateCache(shop))
+    );
   };
 
   //
   // TODO: what is it used for ?
   publish(shop: Shop): Observable<Shop> {
-    return this.http.get(this.config.API_SERVER + '/v1/shops/' + shop.urlpath + '/status', {
+    return this.http.get<Shop>(this.config.API_SERVER + '/v1/shops/' + shop.urlpath + '/status', {
       headers: this.headers,
       withCredentials: true
-    })
-    .map(res => this.updateCache(res.json(),true));
+    }).pipe(
+      map(shop => this.updateCache(shop))
+    );
   };
 
   //
   // send question to a shop
   ask(shop: Shop, content: string): Observable<any> {
-    return this.http.post(this.config.API_SERVER + '/v1/shops/' + shop.urlpath + '/status',
+    return this.http.post<Shop>(this.config.API_SERVER + '/v1/shops/' + shop.urlpath + '/status',
       {
         content: content
       }, {
@@ -312,22 +321,24 @@ export class ShopService {
     };
 
   save(shop: Shop): Observable<Shop> {
-    return this.http.post(this.config.API_SERVER + '/v1/shops/' + shop.urlpath, shop, {
+    return this.http.post<Shop>(this.config.API_SERVER + '/v1/shops/' + shop.urlpath, shop, {
       headers: this.headers,
       withCredentials: true
-    })
-    .map(res => this.updateCache(res.json(),true))
+    }).pipe(
+      map(shop => this.updateCache(shop))
+    );
   };
 
   //
   // create a new shop for the current user
   // TODO: user must reload his profile when shop is modified
   create(shop: Shop): Observable<Shop> {
-    return this.http.post(this.config.API_SERVER + '/v1/shops', shop, {
+    return this.http.post<Shop>(this.config.API_SERVER + '/v1/shops', shop, {
       headers: this.headers,
       withCredentials: true
-    })
-    .map(res => this.updateCache(res.json(),true));
+    }).pipe(
+      map(shop => this.updateCache(shop))
+    );
   };
 
   //
@@ -338,11 +349,12 @@ export class ShopService {
     // TODO $rootScope.$broadcast("shop.remove",me);
     //return this.http.delete(this.config.API_SERVER + '/v1/shops/' + shop.urlpath, {
     var passwordJson = { "password": password };
-    return this.http.put(this.config.API_SERVER + '/v1/shops/' + shop.urlpath, passwordJson, {
+    return this.http.put<Shop>(this.config.API_SERVER + '/v1/shops/' + shop.urlpath, passwordJson, {
       headers: this.headers,
       withCredentials: true,
-    })
-    .map(res => this.deleteCache(res.json(),true))
+    }).pipe(
+      map(shop => this.deleteCache(shop))
+    );
 };
 
 }

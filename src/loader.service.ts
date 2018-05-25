@@ -1,5 +1,5 @@
 import { EventEmitter, Injectable } from '@angular/core';
-import { Http, Headers } from '@angular/http';
+import { Resolve, ActivatedRouteSnapshot } from '@angular/router';
 
 import { Config } from './config';
 import { Product, ProductService  } from './product.service';
@@ -9,15 +9,14 @@ import { User, UserCard, UserAddress, UserService } from './user.service';
 import { Category, CategoryService } from './category.service';
 import { Shop, ShopService } from './shop.service';
 
-import { ReplaySubject } from "rxjs/ReplaySubject";
 import { Observable } from 'rxjs/Observable';
-import { ConnectableObservable } from 'rxjs/observable/ConnectableObservable'
-import { flatMap, combineLatest } from 'rxjs/operators';
+import { of } from 'rxjs/observable/of';
+import { merge } from 'rxjs/observable/merge';
+import { combineLatest } from 'rxjs/observable/combineLatest';
 
-import 'rxjs/add/observable/of';
-import 'rxjs/add/observable/combineLatest';
-import 'rxjs/add/operator/mergeMap';
-import 'rxjs/add/operator/publishReplay';
+import { catchError, flatMap, map, publishReplay, refCount } from 'rxjs/operators';
+import { CartService, CartState } from './cart.service';
+import { _throw } from 'rxjs/observable/throw';
 
 
 
@@ -31,11 +30,11 @@ export class LoaderService {
 
 
   constructor(
-    private http: Http,
     private $config: ConfigService,
     private $product: ProductService,
     private $user: UserService,
     private $category: CategoryService,
+    private $cart: CartService,
     private $shop: ShopService
   ) {
 
@@ -45,20 +44,23 @@ export class LoaderService {
     // this.loader = new ReplaySubject<any[]>(1)
     //   .flatMap(this.preloader.bind(this));
 
-    this.loader = this.$config.init()
-      .flatMap(this.preloader.bind(this))
+    this.loader = this.$config.get().pipe(
+      flatMap(this.preloader.bind(this)),
       //
       // transform observable to ConnectableObservable (multicasting)
-      .publishReplay(1)
+      publishReplay(1),
       //
       // used to auto-connect to the source when there is >= 1 subscribers
-      .refCount();      
+      refCount()
+    );
   }
 
   private preloader(config:Config){
+    let me$=this.$user.me();
     let loaders:any[]=[
-      Observable.of(config),
-      this.$user.me()
+      of(config),
+      me$,  // howto merge this.$user.user$,      
+      // this.$user.me(),      
     ];
     ConfigService.defaultConfig.loader.forEach(loader=>{
       if(loader==="shops"){
@@ -70,11 +72,38 @@ export class LoaderService {
     })
     //
     //combineLatest to get array with last item of each when one emits an item
-    return Observable.combineLatest(loaders);      
+    return combineLatest(loaders).pipe(
+      catchError(err=>{
+        console.log('---- CATCHED',err)
+        return _throw(err);
+      })
+    );  
   }
 
   ready() {
     return this.loader;
   }
 
+  
+  update():Observable<{config?:Config;user?:User;state?:CartState;shop?:Shop}>{
+    return merge(
+      this.$config.config$.pipe(map(config=>({config:config}))),
+      this.$user.user$.pipe(map(user=>({user:user}))),
+      this.$cart.cart$.pipe(map(state=>({state:state}))),
+      this.$shop.shop$.pipe(map(shop=>({shop:shop})))
+    )
+  }
+
+}
+
+
+
+//
+// activate route only when loader is ready!
+@Injectable()
+export class LoaderResolve implements Resolve<Promise<any>> {
+  constructor(private $loader: LoaderService) {}
+  resolve(route: ActivatedRouteSnapshot) {
+    return this.$loader.ready().toPromise();
+  }
 }

@@ -1,29 +1,34 @@
-import { Http, Headers, RequestOptions } from '@angular/http';
+import { HttpClient,HttpHeaders } from '@angular/common/http';
+
 import { Injectable } from '@angular/core';
 import { config } from './config';
 
 
 import { ReplaySubject } from 'rxjs/ReplaySubject';
 import { Observable } from 'rxjs/Observable';
-import { map, catchError } from 'rxjs/operators';
-import 'rxjs/add/observable/of';
+import { of } from 'rxjs/observable/of';
+import { map } from 'rxjs/operators';
+import { StaticInjector } from '@angular/core/src/di/injector';
 
-export class Document {
-  private defaultDocument={
-    title:{fr:'Titre', en:'Title'},
-    header:{fr:'En tête', en:'Header'},
-    content:{fr:'Contenu', en:'Content'},
-    photo:{
-      bundle:[]
-    },
-    available:false,
-    published:false,
-    skus:[],
-    style:undefined,
-    type: undefined
-  }
+export class Document implements DocumentHeader {
   constructor(json?: any) {
-    Object.assign(this, json||this.defaultDocument);
+    let defaultDocument={
+      title:{},
+      header:{},
+      content:{},
+      photo:{
+        bundle:[]
+      },
+      created:new Date(),
+      available:false,
+      published:false,
+      skus:[],
+      style:undefined,
+      signature:undefined,
+      type: undefined
+    }
+      
+    Object.assign(this, json||defaultDocument);
   }
 
   slug:string[];
@@ -53,6 +58,15 @@ export class Document {
   type: string;
 }
 
+
+export interface DocumentHeader{
+  slug:string[];
+  title:{fr:string,en:string};
+  available:boolean;
+  published:boolean;
+  signature:string;
+}
+
 //
 // Internal cache of request
 // simple way to share instance between components
@@ -76,31 +90,31 @@ export class DocumentService {
 
 
   private cache:Cache=new Cache();
-  private headers: Headers;
+  private headers: HttpHeaders;
 
   constructor(
-    private http: Http
+    private http: HttpClient
     ) {
-    this.headers = new Headers();
+    this.headers = new HttpHeaders();
     this.headers.append('Content-Type', 'application/json');
     this.config = config;
   }
 
-  private deleteCache(category: Document) {
-      let incache=this.cache.map.get(category.slug[0]);
+  private deleteCache(slug: string) {
+      let incache=this.cache.map.get(slug);
       if (incache) {
           incache.deleted=true;
-          this.cache.map.delete(category.slug[0]);
+          this.cache.map.delete(slug);
       }
       return incache;
   }
 
-  private updateCache(category: Document) {
-    if(!this.cache.map.get(category.slug[0])){
-        this.cache.map.set(category.slug[0],new Document(category))
-        return this.cache.map.get(category.slug[0]);
+  private updateCache(doc: Document) {
+    if(!this.cache.map.get(doc.slug[0])){
+        this.cache.map.set(doc.slug[0],new Document(doc))
+        return this.cache.map.get(doc.slug[0]);
     }
-    return Object.assign(this.cache.map.get(category.slug[0]), category);
+    return Object.assign(this.cache.map.get(doc.slug[0]), doc);
   }
 
 
@@ -112,28 +126,46 @@ export class DocumentService {
   }
 
 
-  select(type: string):Observable<Document[]> {
-
-    return this.http.get(this.config.API_SERVER + '/v1/documents/category/'+type, {
+  select(type: string,headersOnly:boolean=false):Observable<Document[]> {
+    let params:any={};
+    if(headersOnly){
+      params.headerOnly='true'
+    }
+    return this.http.get<Document[]>(this.config.API_SERVER + '/v1/documents/category/'+type, {
+      params:params,
       headers: this.headers,
       withCredentials: true
-    })
-    .map(res => res.json().map(this.updateCache.bind(this)));
+    }).pipe(
+      map(documents => documents.map(this.updateCache.bind(this)))
+    );    
   }
 
   get(slug:string):Observable<Document> {
     // check if in the cache
     if (this.cache.map.get(slug)){
-      return Observable.of(this.cache.map.get(slug));
+      return of(this.cache.map.get(slug));
     }
 
-    return this.http.get(this.config.API_SERVER + '/v1/documents/'+slug, {
+    return this.http.get<Document>(this.config.API_SERVER + '/v1/documents/'+slug, {
+      headers: this.headers,
+      withCredentials: true
+    }).pipe(
+      map(doc => this.updateCache(doc))
+    );
+  }
+
+  getAll(headersOnly:boolean=false):Observable<DocumentHeader[]>{
+    let params:any={};
+    if(headersOnly){
+      params.headerOnly='true'
+    }
+
+    return this.http.get<DocumentHeader[]>(this.config.API_SERVER + '/v1/documents', {
+      params: params,
       headers: this.headers,
       withCredentials: true
     })
-    .map(res => this.updateCache(res.json()))
   }
-
   //
   // all document already in cache
   loaded(type?:string):Document[]{
@@ -147,29 +179,31 @@ export class DocumentService {
   }
 
   save(slug:string, doc:Document):Observable<Document> {
-    return this.http.post(this.config.API_SERVER + '/v1/documents/'+slug, doc, {
+    return this.http.post<Document>(this.config.API_SERVER + '/v1/documents/'+slug, doc, {
       headers: this.headers,
       withCredentials: true
-    })
-    .map(res => this.updateCache(res.json()))
+    }).pipe(
+      map(doc => this.updateCache(doc))
+    );
 
   }
 
   create(doc: Document):Observable<Document> {
-    return this.http.post(this.config.API_SERVER + '/v1/documents', doc, {
+    return this.http.post<Document>(this.config.API_SERVER + '/v1/documents', doc, {
       headers: this.headers,
       withCredentials: true
-    })
-    .map(res => this.updateCache(res.json()))
+    }).pipe(
+      map(doc => this.updateCache(doc))
+    );
   }
 
-  remove(slug:string, password:string) {
-    return this.http.put(this.config.API_SERVER + '/v1/documents/' + slug, {
+  remove(slug:string, password?:string) {
+    return this.http.put<Document>(this.config.API_SERVER + '/v1/documents/' + slug,{password:password},{
       headers: this.headers,
-      withCredentials: true,
-      password:password
-    })
-    .map(res => this.deleteCache(res.json()))
+      withCredentials: true
+    }).pipe(
+      map(doc => this.deleteCache(slug))
+    );
   }
 
 
