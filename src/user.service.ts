@@ -60,6 +60,7 @@ export class UserAddress {
   isEqual(address:UserAddress):boolean{
     return this.streetAdress==address.streetAdress&&
            this.name==address.name&&
+           this.floor==address.floor&&
            this.postalCode==address.postalCode;
   }
   
@@ -542,7 +543,13 @@ export class UserService {
     return this.http.post<{created:Date,email:string}>(this.config.API_SERVER + '/v1/validate/create',params||{}, {
       headers: this.headers,
       withCredentials: true
-    });
+    }).pipe(
+      map(result => {
+        this.currentUser.email.status=result.created;
+        return this.currentUser;
+      }),
+      tap(user=>this.user$.next(user))
+    );
   }
 
   // app.post('/v1/recover/:token/:email/password', users.recover);
@@ -587,7 +594,8 @@ export class UserService {
       headers: this.headers,
       withCredentials: true
     }).pipe(
-      map(user => this.updateCache(user))
+      map(user => this.updateCache(user)),
+      tap(user=>this.user$.next(user))
     );
       
   };
