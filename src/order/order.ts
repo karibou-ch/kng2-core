@@ -330,6 +330,8 @@ export class Order {
     estimated?: number
   }
 
+  errors?:any[];
+
   constructor(json?: any) {
     Object.assign(this, this.defaultOrder,json||{});
     
@@ -529,13 +531,30 @@ export class Order {
     return (progress / end * 100.00);
   }
 
-  getFulfilledStats() {
+  getFulfilledIssue(){
+    let issue=[];
+    this.items.forEach((item:OrderItem)=>{
+      if(item.fulfillment.issue&&
+        item.fulfillment.issue!==EnumOrderIssue[EnumOrderIssue.issue_no_issue]){
+          issue.push(item);
+      }
+    });
+    return issue;
+  }
+
+  getFulfilledFailure(){
     var failure = 0;
     for (var i in this.items) {
       if ([EnumFulfillments[EnumFulfillments.failure]].indexOf(this.items[i].fulfillment.status) !== -1) {
         failure++;
       }
     }
+    // count failure on initial order
+    return failure;
+  }
+
+  getFulfilledStats() {
+    var failure = this.getFulfilledStats();
     // count failure on initial order
     return failure + '/' + (this.items.length);
 
