@@ -38,8 +38,11 @@ export class ConfigService {
 
   };
 
+  //
+  // FIXME this should be managed by server side
   private defaultHome:any={
     shop:{
+      t:{fr:null,en:null,de:null},
       h:{fr:null,en:null,de:null},
       p:{fr:null,en:null,de:null},
     },
@@ -54,10 +57,12 @@ export class ConfigService {
       p:{fr:null,en:null,de:null},
     },
     tagLine:{
+      t:{fr:null,en:null,de:null},
       h:{fr:null,en:null,de:null},
       p:{fr:null,en:null,de:null},
     },
     footer:{
+      t:{fr:null,en:null,de:null},
       h:{fr:null,en:null,de:null},
       p:{fr:null,en:null,de:null},
     },    
@@ -65,7 +70,7 @@ export class ConfigService {
 
   private headers: HttpHeaders;
   public config:Observable<Config>;
-  private config$: ReplaySubject<Config>;
+  public config$: ReplaySubject<Config>;
 
   constructor(
     @Inject('KNG2_OPTIONS') private customConfig:any,
@@ -89,21 +94,16 @@ export class ConfigService {
       map(shared => {
         Object.assign(config,ConfigService.defaultConfig)
         Object.assign(config.shared, shared);
-        Object.assign(this.defaultHome.about,config.shared.home.about);
-        Object.assign(this.defaultHome.howto,config.shared.home.howto);
-        Object.assign(this.defaultHome.shop,config.shared.home.shop);
-        Object.assign(this.defaultHome.tagLine,config.shared.home.tagLine);
-        Object.assign(this.defaultHome.footer,config.shared.home.footer);
-        Object.assign(config.shared.home,this.defaultHome)
+
         //
         // dates 
         config.shared.shippingweek=(shared.shippingweek||[]).map(date=>new Date(date));
           
         //
         // deposit
-        config.shared.deposit=(config.shared.deposit||[]).map(deposit=>new DepositAddress(
+        config.shared.deposits=(config.shared.deposits||[]).map(deposit=>new DepositAddress(
           deposit.name,
-          deposit.streetAddress,
+          deposit.streetAddress||deposit.streetAdress,
           deposit.floor,
           deposit.region,
           deposit.postalCode,
@@ -137,20 +137,15 @@ export class ConfigService {
       map(shared => {
         Object.assign(config,ConfigService.defaultConfig)
         Object.assign(config.shared, shared);
-        Object.assign(this.defaultHome.about,config.shared.home.about);
-        Object.assign(this.defaultHome.howto,config.shared.home.howto);
-        Object.assign(this.defaultHome.shop,config.shared.home.shop);
-        Object.assign(this.defaultHome.tagLine,config.shared.home.tagLine);
-        Object.assign(this.defaultHome.footer,config.shared.home.footer);
-        Object.assign(config.shared.home,this.defaultHome);
+        
         //
         // dates 
         config.shared.shippingweek=(shared.shippingweek||[]).map(date=>new Date(date));
         //
         // deposit
-        config.shared.deposit=(config.shared.deposit||[]).map(deposit=>new DepositAddress(
+        config.shared.deposits=(config.shared.deposits||[]).map(deposit=>new DepositAddress(
           deposit.name,
-          deposit.streetAddress,
+          deposit.streetAddress||deposit.streetAdress,
           deposit.floor,
           deposit.region,
           deposit.postalCode,
