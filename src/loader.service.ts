@@ -10,10 +10,13 @@ import { Category, CategoryService } from './category.service';
 import { Shop, ShopService } from './shop.service';
 
 import { Observable } from 'rxjs/Observable';
-import { of } from 'rxjs/observable/of'
+import { of } from 'rxjs/observable/of';
+import { merge } from 'rxjs/observable/merge';
 import { combineLatest } from 'rxjs/observable/combineLatest';
 
-import { flatMap, publishReplay, refCount } from 'rxjs/operators';
+import { catchError, flatMap, map, publishReplay, refCount } from 'rxjs/operators';
+import { CartService, CartState } from './cart.service';
+import { _throw } from 'rxjs/observable/throw';
 
 
 
@@ -31,6 +34,7 @@ export class LoaderService {
     private $product: ProductService,
     private $user: UserService,
     private $category: CategoryService,
+    private $cart: CartService,
     private $shop: ShopService
   ) {
 
@@ -52,9 +56,10 @@ export class LoaderService {
   }
 
   private preloader(config:Config){
+    let me$=this.$user.me();
     let loaders:any[]=[
       of(config),
-      this.$user.me(),  // howto merge this.$user.user$,      
+      me$,  // howto merge this.$user.user$,      
       // this.$user.me(),      
     ];
     ConfigService.defaultConfig.loader.forEach(loader=>{
@@ -67,11 +72,26 @@ export class LoaderService {
     })
     //
     //combineLatest to get array with last item of each when one emits an item
-    return combineLatest(loaders);      
+    return combineLatest(loaders).pipe(
+      catchError(err=>{
+        console.log('---- CATCHED',err)
+        return _throw(err);
+      })
+    );  
   }
 
   ready() {
     return this.loader;
+  }
+
+  
+  update():Observable<{config?:Config;user?:User;state?:CartState;shop?:Shop}>{
+    return merge(
+      this.$config.config$.pipe(map(config=>({config:config}))),
+      this.$user.user$.pipe(map(user=>({user:user}))),
+      this.$cart.cart$.pipe(map(state=>({state:state}))),
+      this.$shop.shop$.pipe(map(shop=>({shop:shop})))
+    )
   }
 
 }
