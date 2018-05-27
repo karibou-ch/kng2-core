@@ -109,7 +109,7 @@ export class Shop {
   account:{
     fees?:number;
     tva:{
-      number?:number,
+      number?:string,
       fees?:number
     },
     updated: Date;
