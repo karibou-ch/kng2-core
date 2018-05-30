@@ -119,8 +119,35 @@ export class CartItem {
   }
 
   static fromOrder(orderItem:OrderItem){
+    /**
+     * TODO missing props CartItem.fromOrderItem
+       - thumb:orderItem.thumb,
+       - category.slug: orderItem.category,
+       - name: product.vendor.name,
+       - weekdays: product.vendor.available.weekdays,
+       - photo: product.vendor.photo.owner,
+       - discount: 
+       - weight:product.categories.weight,
+       - discount:product.isDiscount(),
+     * 
+     */
     let item={
-
+      timestamp:(new Date()),
+      title:orderItem.title,
+      sku:orderItem.sku,
+      variant:orderItem.variant,
+      thumb:orderItem.thumb,
+      price:orderItem.price,
+      finalprice:orderItem.price,
+      category: {
+        slug: orderItem.category,
+        name: orderItem.category
+      },
+      vendor: {
+        urlpath: orderItem.vendor,
+      },          
+      part:orderItem.part,
+      quantity:1
     }
     throw new Error("Not implemented");
   }
