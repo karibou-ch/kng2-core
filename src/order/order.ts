@@ -58,6 +58,10 @@ export interface OrderItem {
   part: string;
 
   //
+  // thumbnail
+  thumb?:string;
+
+  //
   // real price, maximum +/- 10% of given price
   finalprice: number;
 
