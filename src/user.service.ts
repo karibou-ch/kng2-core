@@ -421,8 +421,6 @@ class Cache {
 @Injectable()
 export class UserService {
 
-  private defaultUser: User = new User();
-
   // TODO make observable content !!
   config: any;
   currentUser: User = new User();
@@ -461,7 +459,6 @@ export class UserService {
     this.config = config;
     this.headers = new HttpHeaders();
     this.headers.append('Content-Type', 'application/json');
-    Object.assign(this.currentUser, this.defaultUser);
     this.user$ = new ReplaySubject<User>(1);
   }
 
@@ -484,7 +481,7 @@ export class UserService {
       withCredentials: true
     }).pipe(
       map((user) => new User(user)),
-      catchError(err => of(this.defaultUser))
+      catchError(err => of(new User()))
     );
 
   }
@@ -507,7 +504,7 @@ export class UserService {
         this.updateCache(user);
         return this.currentUser;
       }),
-      catchError(err => of(this.defaultUser))
+      catchError(err => of(new User()))
     );
   }
 
@@ -581,8 +578,11 @@ export class UserService {
       headers: this.headers,
       withCredentials: true
     }).pipe(
-      map(user => Object.assign(this.currentUser,this.defaultUser)),
-      tap(user=>this.user$.next(user))
+      map(user => Object.assign(this.currentUser,new User())),
+      tap(user=>{
+        console.log('user.logout()',user)
+        return this.user$.next(user);
+      })
     )
   }
 
