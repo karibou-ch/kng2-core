@@ -394,7 +394,8 @@ export class Order {
       this.items.forEach(function (item) {
         //
         // item should not be failure (fulfillment)
-        if (item.fulfillment.status !== EnumFulfillments[EnumFulfillments.failure]) {
+        if (item.fulfillment.status !== EnumFulfillments[EnumFulfillments.failure]&&
+           !item.fulfillment.refunded) {
           total += item.finalprice;
         }
       });
@@ -414,7 +415,8 @@ export class Order {
       this.items.forEach(function (item) {
         //
         // item should not be failure (fulfillment)
-        if (item.fulfillment.status !== EnumFulfillments[EnumFulfillments.failure]) {
+        if (item.fulfillment.status !== EnumFulfillments[EnumFulfillments.failure]&&
+           !item.fulfillment.refunded) {
           total += item.finalprice;
         }
       });
