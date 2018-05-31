@@ -127,7 +127,7 @@ export class OrderService {
   capture(order: Order): Observable<any> {
     // opts=opts||{};
     // return this.chain(backend.$order.save({action:this.oid,id:'capture'},opts).$promise);
-    return this.http.post<Order>(this.config.API_SERVER + '/v1/orders/' + order.oid + '/capture',  {
+    return this.http.post<Order>(this.config.API_SERVER + '/v1/orders/' + order.oid + '/capture',{}, {
       headers: this.headers,
       withCredentials: true
     }).pipe(
@@ -135,12 +135,13 @@ export class OrderService {
     );
   }
 
-  // refund an order
+  // refund an order item
   // role:admin or shop (when partial)
   // app.post('/v1/orders/:oid/refund', auth.ensureAdmin, queued(orders.refund));
-  refund(order: Order, amount?:number): Observable<Order> {
+  refund(order: Order, item:OrderItem): Observable<Order> {
     // return this.chain(backend.$order.save({action:this.oid,id:'refund'}).$promise);
-    let params=(amount)?{amount:amount}:{};
+    let params = Object.assign({}, item);
+    params.finalprice = item.finalprice;
     return this.http.post<Order>(this.config.API_SERVER + '/v1/orders/' + order.oid + '/refund', params, {
       headers: this.headers,
       withCredentials: true
