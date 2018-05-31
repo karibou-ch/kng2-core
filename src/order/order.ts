@@ -77,6 +77,7 @@ export interface OrderItem {
 
   /* where is the product now? */
   fulfillment: {
+    refunded?:boolean;
     issue: string;//string|EnumOrderIssue;
     status: string;//string|EnumFulfillments;
     shipping: string;//string|EnumShippingMode;
