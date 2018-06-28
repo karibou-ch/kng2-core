@@ -222,7 +222,6 @@ export class ShopService {
 
 
   constructor(
-    private configSrv: ConfigService,
     private http: HttpClient
   ) {
     this.config = ConfigService.defaultConfig;
