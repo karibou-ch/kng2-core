@@ -35,6 +35,10 @@ export { Product,
 export { Shop, 
          ShopService } from './shop.service';
 
+export { ReportOrders, 
+         ReportCustomer,
+         ReportingService } from './reporting.service';
+         
 export { User, 
          UserCard, 
          UserAddress, 
