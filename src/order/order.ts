@@ -78,6 +78,7 @@ export interface OrderItem {
   /* where is the product now? */
   fulfillment: {
     refunded?:boolean;
+    request: string;//string|EnumOrderIssue;
     issue: string;//string|EnumOrderIssue;
     status: string;//string|EnumFulfillments;
     shipping: string;//string|EnumShippingMode;
@@ -394,8 +395,7 @@ export class Order {
       this.items.forEach(function (item) {
         //
         // item should not be failure (fulfillment)
-        if (item.fulfillment.status !== EnumFulfillments[EnumFulfillments.failure]&&
-           !item.fulfillment.refunded) {
+        if (item.fulfillment.status !== EnumFulfillments[EnumFulfillments.failure]) {
           total += item.finalprice;
         }
       });
@@ -415,8 +415,7 @@ export class Order {
       this.items.forEach(function (item) {
         //
         // item should not be failure (fulfillment)
-        if (item.fulfillment.status !== EnumFulfillments[EnumFulfillments.failure]&&
-           !item.fulfillment.refunded) {
+        if (item.fulfillment.status !== EnumFulfillments[EnumFulfillments.failure]) {
           total += item.finalprice;
         }
       });

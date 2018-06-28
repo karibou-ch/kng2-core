@@ -195,27 +195,33 @@ export class OrderService {
   updateIssue(order: Order, item, issue: EnumOrderIssue): Observable<Order> {
     let tosave = Object.assign({}, item);
     tosave.fulfillment.issue = EnumOrderIssue[issue];
-    // this.chain(backend.$order.save({action:this.oid,id:'issue'},[tosave]).$promise).$promise.then(function () {
-    //   _.find(me.items,function(i){return i.sku===item.sku;}).fulfillment.issue=issue;
-    // });
     return this.http.post<Order>(this.config.API_SERVER + '/v1/orders/' + order.oid + '/issue', [tosave], {
       headers: this.headers,
       withCredentials: true
     }).pipe(
       map(order => this.updateCache(order))
     );
-      // .map((res) => {
-      //   order.items.find(i => i.sku === item.sku).fulfillment.issue = issue;
-      //   return res;
-      // })
   }
 
+  // update order with specific issue made by one shop
+  // role:owner
+  // app.post('/v1/orders/:oid/issue', auth.ensureAdmin, orders.updateIssue);
+  requestIssue(order: Order, item, issue: EnumOrderIssue): Observable<Order> {
+    let tosave = Object.assign({}, item);
+    tosave.fulfillment.issue = EnumOrderIssue[issue];
+    return this.http.post<Order>(this.config.API_SERVER + '/v1/orders/' + order.oid + '/issue/request', [tosave], {
+      headers: this.headers,
+      withCredentials: true
+    }).pipe(
+      map(order => this.updateCache(order))
+    );
+  }
+  
   // update effective bags for this order
   // role:logistic
   // app.post('/v1/orders/:oid/shipping', auth.ensureLogisticOrAdmin, orders.updateShipping);
   updateBagsCount(order: Order, value: number): Observable<Order> {
     var status = order.shipping.shipped;
-    //return this.chain(backend.$order.save({action:this.oid,id:'shipping'},{bags:value,status:status}).$promise);
     return this.http.post<Order>(this.config.API_SERVER + '/v1/orders/' + order.oid + '/shipping', { bags: value, status: status }, {
       headers: this.headers,
       withCredentials: true

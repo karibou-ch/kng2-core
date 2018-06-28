@@ -12,8 +12,13 @@ export enum EnumFulfillments {
 
 // var EnumOrderIssue     =config.shared.issue.code;
 export enum EnumOrderIssue {
-  issue_no_issue, issue_missing_client_id, issue_missing_product, issue_wrong_packing, issue_wrong_product, issue_wrong_client_id, issue_wrong_product_quality
+  issue_no_issue, 
+  issue_logistic,
+  issue_missing_client_id, 
+  issue_missing_product, 
+  issue_wrong_product_quality
 }
+
 
 // var EnumCancelReason   =config.shared.order.cancelreason;
 export enum EnumCancelReason {
