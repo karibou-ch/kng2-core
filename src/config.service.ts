@@ -38,36 +38,6 @@ export class ConfigService {
 
   };
 
-  //
-  // FIXME this should be managed by server side
-  private defaultHome:any={
-    shop:{
-      t:{fr:null,en:null,de:null},
-      h:{fr:null,en:null,de:null},
-      p:{fr:null,en:null,de:null},
-    },
-    howto:{
-      h:{fr:null,en:null,de:null},
-      t:{fr:null,en:null,de:null},
-      p:{fr:null,en:null,de:null},
-    },
-    about:{
-      h:{fr:null,en:null,de:null},
-      t:{fr:null,en:null,de:null},
-      p:{fr:null,en:null,de:null},
-    },
-    tagLine:{
-      t:{fr:null,en:null,de:null},
-      h:{fr:null,en:null,de:null},
-      p:{fr:null,en:null,de:null},
-    },
-    footer:{
-      t:{fr:null,en:null,de:null},
-      h:{fr:null,en:null,de:null},
-      p:{fr:null,en:null,de:null},
-    },    
-  }
-
   private headers: HttpHeaders;
   public config:Observable<Config>;
   public config$: ReplaySubject<Config>;
@@ -120,14 +90,14 @@ export class ConfigService {
   }
 
 
-
-  // $scope.menuSplice=function (lst, menu) {
-  //   for (var i = lst.length - 1; i >= 0; i--) {
-  //     if(lst[i].name===menu.name){
-  //       lst.splice(i, 1);
-  //     }
-  //   }
-  // };  
+  setServer(url:string){
+    if(!url){
+      throw new Error("set server url is Null");
+    }
+    ConfigService.defaultConfig.API_SERVER=url;
+    //
+    //TODO save url to the localStorage AND use it on load
+  }
 
   save(config:Config,cid?:string):Observable<any>{    
     return this.http.post<any>(ConfigService.defaultConfig.API_SERVER + '/v1/config',config.shared, {
