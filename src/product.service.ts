@@ -216,19 +216,19 @@ class Cache {
 
 
 export class Product {
-    private defaultProduct={
-        attributes:{},
-        details:{},
-        photo:{},
-        pricing:{},
-        categories:{},
-        shelflife:{},
-        vendor:{},
-        quantity:{}
-    }
 
     constructor(json?: any) {
-        Object.assign(this, Utils.merge(this.defaultProduct,json||{}));          
+        let defaultProduct={
+            attributes:{},
+            details:{},
+            photo:{},
+            pricing:{},
+            categories:{},
+            shelflife:{},
+            vendor:{},
+            quantity:{}
+        }
+            Object.assign(this, Utils.merge(defaultProduct,json||{}));          
         
         if(json){
             this.updated=new Date(json.updated);
