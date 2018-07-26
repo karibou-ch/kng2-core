@@ -96,13 +96,14 @@ export class OrderService {
   // mail [all|specified] vendors for orders
   // role:admin|shop
   // app.post('/v1/orders/:shopname/email',shops.ensureOwnerOrAdmin,orders.informShopToOrders);
-  informShopToOrders(shop: string, when: Date, fulfillment: EnumFulfillments): Observable<any> {
+  // app.post('/v1/orders/shops/email',shops.ensureAuthenticated,orders.informShopToOrders);
+  informShopToOrders(shop: string, when: Date, message?:string): Observable<any> {
     shop = shop || 'shops'; // specified shop or all shops
     //return this.chain(backend.$order.inform({action:shop,id:'email'},{when:when,fulfillments:fulfillment}).$promise);
-    return this.http.post<Order>(this.config.API_SERVER + '/v1/orders/' + shop + '/email', { when: when, fulfillments: EnumFulfillments[fulfillment] }, {
+    return this.http.post<any>(this.config.API_SERVER + '/v1/orders/' + shop + '/email', { when: when, content: message }, {
       headers: this.headers,
       withCredentials: true
-    })
+    });
 
   }
 
