@@ -12,12 +12,14 @@ import { map, catchError } from 'rxjs/operators';
 
 
 export class Category {
-  private defaultCategory={
-    tags:[],
-    weight:0
-  }
   constructor(json?: any) {
-    Object.assign(this, Utils.merge(this.defaultCategory,json||{}));          
+    let defaultCategory={
+      tags:[],
+      usedBy:[],
+      weight:0
+    }
+  
+    Object.assign(this, Utils.merge(defaultCategory,json||{}));          
   }
   deleted:boolean;
   _id:string;
@@ -162,11 +164,11 @@ export class CategoryService {
 
 //  app.put('/v1/category/:category', auth.ensureAdmin, auth.checkPassword, categories.remove);
   remove(slug:string, password:string) {
-    return this.http.put<Category>(this.config.API_SERVER + '/v1/category/' + slug,{password:password}, {
+    return this.http.put(this.config.API_SERVER + '/v1/category/' + slug,{password:password}, {
       headers: this.headers,
       withCredentials: true
     }).pipe(
-      map(cat => this.deleteCache(slug))
+      map(result => this.deleteCache(slug))
     );
   }
 
