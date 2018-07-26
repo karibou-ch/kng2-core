@@ -14,9 +14,10 @@ export enum EnumFulfillments {
 export enum EnumOrderIssue {
   issue_no_issue, 
   issue_logistic,
-  issue_missing_client_id, 
+  issue_missing_client_id,
   issue_missing_product, 
-  issue_wrong_product_quality
+  issue_wrong_product_quality,
+  issue_wrong_packing
 }
 
 
