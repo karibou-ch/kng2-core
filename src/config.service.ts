@@ -46,9 +46,18 @@ export class ConfigService {
     @Inject('KNG2_OPTIONS') private customConfig:any,
     private http: HttpClient
   ) {
+    
+    //
+    // Use dynamic server settings
+    if(!customConfig.API_SERVER){
+      customConfig.API_SERVER=('//api.'+window.location.hostname);
+    }
+
     Object.assign(ConfigService.defaultConfig,customConfig||{});
     // FIXME, remove this hugly config propagation
     Object.assign(config,customConfig||{});
+
+
     this.headers = new HttpHeaders();
     this.headers.append('Content-Type', 'application/json');
     this.config$ = new ReplaySubject<Config>(1);

@@ -454,7 +454,12 @@ export class UserService {
     @Inject('KNG2_OPTIONS') private customConfig:any,
     public http: HttpClient
   ) {
-    // FIXME remove this hugly config propagation
+    //
+    // Use dynamic server settings
+    if(!customConfig.API_SERVER){
+      customConfig.API_SERVER=('//api.'+window.location.hostname);
+    }
+    // FIXME remove this hugly config propagation    
     Object.assign(config,customConfig);
     this.config = config;
     this.headers = new HttpHeaders();
