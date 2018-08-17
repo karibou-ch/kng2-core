@@ -168,10 +168,10 @@ export class ProductService {
       );
     };
 
-    create(prod: Product): Observable<Product> {
+    create(prod: Product, shopowner:string): Observable<Product> {
         //
         // FIXME creattion code is not correct
-        return this.http.post<Product>(this.config.API_SERVER + '/v1/shops/chocolat-de-villars-sur-glane/products/', prod, {
+        return this.http.post<Product>(this.config.API_SERVER + '/v1/shops/'+shopowner+'/products/', prod, {
             headers: this.headers,
             withCredentials: true
         }).pipe(
