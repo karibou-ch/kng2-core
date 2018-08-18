@@ -38,6 +38,10 @@ export class ProductService {
             this.cache.map.set(product.sku,new Product(product))
             return this.cache.map.get(product.sku);
         }
+        //
+        // clear date field to avoid type collusion
+        delete product.updated;
+        delete product.created;
         return Object.assign(this.cache.map.get(product.sku), product);
     }
 
@@ -228,11 +232,14 @@ export class Product {
             vendor:{},
             quantity:{}
         }
-            Object.assign(this, Utils.merge(defaultProduct,json||{}));          
-        
-        if(json){
-            this.updated=new Date(json.updated);
-            this.created=new Date(json.created);
+
+        Object.assign(this, defaultProduct,json||{});          
+            
+        if(this.updated){
+            this.updated=new Date(this.updated);
+        }
+        if(this.created){
+            this.created=new Date(this.created);
         }
     };
     deleted:boolean;
@@ -316,5 +323,6 @@ export class Product {
                 this.vendor.status===true);
         return ok;
     }
+
     
 }

@@ -724,6 +724,7 @@ export class CartService {
       localStorage.setItem('kng2-cart', JSON.stringify(this.cache));    
       this.cart$.next(state);
     }catch(e){
+      console.log('--',e.message)
       this.cart$.next({action:CartAction.CART_SAVE_ERROR})
     }
   }
