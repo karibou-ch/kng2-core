@@ -63,7 +63,7 @@ export class MarkdownDirective implements AfterViewInit{
     // Our custom extension
     this.sdExtAttr = {
       type: 'output',
-      regex: /()\((.+=".+" ?)+\)/g,
+      regex: /\)\((.+=".+" ?)+\)/g,
       replace: (match, $1, $2) => {
         return $1.replace('">', `" ${$2}>`);
       }
