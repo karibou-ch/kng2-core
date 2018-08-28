@@ -5,10 +5,8 @@ import { Config, config, ConfigKeyStoreEnum } from './config';
 import { UserAddress, DepositAddress } from './user.service';
 
 
-import { Observable } from 'rxjs/Observable';
-import { ReplaySubject } from 'rxjs/ReplaySubject';
+import { Observable ,  ReplaySubject ,  SubscriptionLike as ISubscription } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
-import { ISubscription } from 'rxjs/Subscription';
 
 
 @Injectable()

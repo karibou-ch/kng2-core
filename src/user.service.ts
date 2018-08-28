@@ -1,12 +1,6 @@
 import { HttpClient,HttpHeaders } from '@angular/common/http';
 import { Injectable, Inject } from '@angular/core';
-import { ReplaySubject } from 'rxjs/ReplaySubject';
-import { Observable } from 'rxjs/Observable';
-import { ISubscription } from 'rxjs/Subscription';
-
-import { of } from 'rxjs/observable/of';
-import { from } from 'rxjs/observable/from';
-import { _throw } from 'rxjs/observable/throw';
+import { ReplaySubject ,  Observable ,  SubscriptionLike as ISubscription ,  of ,  from ,  throwError as _throw } from 'rxjs';
 import { catchError, map, tap } from 'rxjs/operators';
 
 

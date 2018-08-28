@@ -9,14 +9,10 @@ import { User, UserCard, UserAddress, UserService } from './user.service';
 import { Category, CategoryService } from './category.service';
 import { Shop, ShopService } from './shop.service';
 
-import { Observable } from 'rxjs/Observable';
-import { of } from 'rxjs/observable/of';
-import { merge } from 'rxjs/observable/merge';
-import { combineLatest } from 'rxjs/observable/combineLatest';
+import { Observable ,  of ,  merge ,  combineLatest ,  throwError as _throw } from 'rxjs';
 
-import { catchError, flatMap, map, publishReplay, refCount } from 'rxjs/operators';
+import { catchError, flatMap, map, publishReplay, refCount,tap } from 'rxjs/operators';
 import { CartService, CartState } from './cart.service';
-import { _throw } from 'rxjs/observable/throw';
 
 
 
@@ -57,6 +53,7 @@ export class LoaderService {
 
   private preloader(config:Config){
     let me$=this.$user.me();
+    // let me$=merge(this.$user.me(),this.$user.user$);
     let loaders:any[]=[
       of(config),
       me$,  // howto merge this.$user.user$,      

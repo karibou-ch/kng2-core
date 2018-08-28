@@ -4,9 +4,7 @@ import { Injectable } from '@angular/core';
 import { config } from './config';
 
 
-import { ReplaySubject } from 'rxjs/ReplaySubject';
-import { Observable } from 'rxjs/Observable';
-import { of } from 'rxjs/observable/of';
+import { ReplaySubject ,  Observable ,  of } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { StaticInjector } from '@angular/core/src/di/injector';
 
