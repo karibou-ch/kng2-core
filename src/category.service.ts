@@ -4,10 +4,7 @@ import { config } from './config';
 import { Utils } from './util';
 
 
-import { ReplaySubject } from 'rxjs/ReplaySubject';
-import { Observable } from 'rxjs/Observable';
-import { _throw } from 'rxjs/observable/throw';
-import { of } from 'rxjs/observable/of';
+import { ReplaySubject ,  Observable ,  throwError as _throw ,  of } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
 
 

@@ -1,6 +1,6 @@
 import { Component, ElementRef, EventEmitter, Input, Output, OnInit } from '@angular/core';
 
-import { Observable } from 'rxjs/Observable';
+import { Observable } from 'rxjs';
 
 @Component({
   selector: '[confirm-delete]',

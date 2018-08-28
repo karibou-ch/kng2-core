@@ -1,7 +1,6 @@
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { ReplaySubject } from 'rxjs/ReplaySubject';
-import { Observable } from 'rxjs/Observable';
+import { ReplaySubject ,  Observable ,  SubscriptionLike as ISubscription ,  throwError as _throw } from 'rxjs';
 import { config, Config } from './config';
 import { ConfigService } from './config.service';
 
@@ -14,9 +13,6 @@ import { OrderService } from './order/order.service';
 import { Order, OrderItem } from './order/order';
 import { Shop } from './shop.service';
 import { User, UserAddress, UserCard, DepositAddress } from './user.service';
-import { ISubscription } from 'rxjs/Subscription';
-
-import { _throw } from 'rxjs/observable/throw';
 //import { catchError, map, tap } from 'rxjs/operators';
 
 //
