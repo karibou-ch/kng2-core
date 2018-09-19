@@ -26,7 +26,12 @@ export class LoaderService {
 
   // a BehaviorSubject can cache the last emited value so clients subscribing later can access the previously emitted data
   //private loader: BehaviorSubject<[Config, User]> = new BehaviorSubject<[Config, User]>([null,null]);
+  //
+  // Use better implementation
+  // - http://jsbin.com/vapiroz/1/edit?js,console
   private loader: Observable<any>;
+  private error:any;
+  
 
 
   constructor(
@@ -51,8 +56,16 @@ export class LoaderService {
       publishReplay(1),
       //
       // used to auto-connect to the source when there is >= 1 subscribers
-      refCount()
+      refCount(),
+      catchError(err=>{
+        this.error=err;       
+        return _throw(err);
+      })
     );
+  }
+
+  getError(){
+    return this.error;
   }
 
   private preloader(config:Config){
@@ -72,12 +85,7 @@ export class LoaderService {
     })
     //
     //combineLatest to get array with last item of each when one emits an item
-    return combineLatest(loaders).pipe(
-      catchError(err=>{
-        console.log('---- CATCHED',err)
-        return _throw(err);
-      })
-    );  
+    return combineLatest(loaders);  
   }
 
   ready() {
