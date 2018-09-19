@@ -5,7 +5,9 @@ import { Config, config, ConfigKeyStoreEnum } from './config';
 import { UserAddress, DepositAddress } from './user.service';
 
 
+//import { _throw } from 'rxjs/observable/throw';
 import { Observable } from 'rxjs/Observable';
+//import { of } from 'rxjs/observable/of';
 import { ReplaySubject } from 'rxjs/ReplaySubject';
 import { map, tap } from 'rxjs/operators';
 import { ISubscription } from 'rxjs/Subscription';
@@ -70,7 +72,7 @@ export class ConfigService {
       headers: this.headers,
       withCredentials: true,
     }).pipe(
-      map(shared => {
+      map((shared:any) => {
         Object.assign(config,ConfigService.defaultConfig)
         Object.assign(config.shared, shared);
 
@@ -113,7 +115,7 @@ export class ConfigService {
       headers: this.headers,
       withCredentials: true
     }).pipe(
-      map(shared => {
+      map((shared:any) => {
         Object.assign(config,ConfigService.defaultConfig)
         Object.assign(config.shared, shared);
         
