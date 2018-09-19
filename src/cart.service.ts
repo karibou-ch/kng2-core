@@ -41,7 +41,7 @@ export  enum CartAction {
   CART_ADDRESS   = 8,
   CART_PAYMENT   = 9,
   CART_SHPPING   =10,
-  CART_CLEARED   = 0
+  CART_CLEARED   =11
 }
 
 //
@@ -725,6 +725,7 @@ export class CartService {
       this.cart$.next(state);
     }catch(e){
       console.log('--',e.message)
+      console.log('--',e.stack)
       this.cart$.next({action:CartAction.CART_SAVE_ERROR})
     }
   }
