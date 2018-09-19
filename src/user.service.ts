@@ -685,7 +685,8 @@ export class UserService {
       headers: this.headers,
       withCredentials: true
     }).pipe(
-      map(user => this.updateCache(user))
+      map(user => this.updateCache(user)),
+      tap(user=>this.user$.next(user))
     );
     /*
     var self = this, params = {};
@@ -704,6 +705,11 @@ export class UserService {
 
   // app.post('/v1/users/:id/payment/:alias/delete', users.ensureMeOrAdmin,users.deletePayment);
   deletePaymentMethod(alias, uid): Observable<User> {
+    let updatePayment=(uid)=>{
+      let user=this.cache.map.get(uid);
+      user.payments=user.payments.filter(p=>p.alias!=alias);
+      return user;
+    };
     if(!alias || !uid){
       return _throw(new Error("deletePaymentMethod, missing params!"));
     }
@@ -711,7 +717,8 @@ export class UserService {
       headers: this.headers,
       withCredentials: true
     }).pipe(
-      map(user => this.updateCache(user))
+      map(() => updatePayment(uid)),
+      tap(user=>this.user$.next(user))
     );
     /*
     var self = this, params = {};
@@ -742,7 +749,8 @@ export class UserService {
       headers: this.headers,
       withCredentials: true
     }).pipe(
-      map(user => new User(user))
+      map(user => new User(user)),
+      tap(user=>this.user$.next(user))
     );
   }
   
