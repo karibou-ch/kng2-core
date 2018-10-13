@@ -29,6 +29,9 @@ export { Order,
          OrderItem } from './order/order';
 export { OrderService } from './order/order.service';
 
+export { Photo, 
+         PhotoService } from './photo.service';
+
 export { Product, 
          ProductService } from './product.service';
 
