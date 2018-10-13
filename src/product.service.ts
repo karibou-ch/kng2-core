@@ -56,17 +56,6 @@ export class ProductService {
     // REST api wrapper
     //
 
-    photos(skus:string[]):Observable<any>{
-        return this.http.get<any>(this.config.API_SERVER + '/v1/products/photos', {
-            params: {skus:skus},
-            headers: this.headers,
-            withCredentials: true
-        }).pipe(
-            map(skus => skus)
-        );
-        
-    }
-
     select(params?: any): Observable<Product[]> {
         params = params || {};
         return this.http.get<Product[]>(this.config.API_SERVER + '/v1/products', {

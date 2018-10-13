@@ -14,8 +14,8 @@ import { LoaderService,
 import { OrderService } from './order/order.service';
 import { UserService } from './user.service';
 import { ShopService } from './shop.service';
+import { PhotoService } from './photo.service';
 
-import { Config, ConfigKeyStoreEnum } from './config';
 
 
 //
@@ -78,6 +78,7 @@ export class Kng2CoreModule {
         LoaderService,
         LoaderResolve,
         OrderService,
+        PhotoService,
         ProductService,
         ShopService,
         ReportingService,

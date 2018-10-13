@@ -5,7 +5,10 @@ import { Config, config, ConfigKeyStoreEnum } from './config';
 import { UserAddress, DepositAddress } from './user.service';
 
 
-import { Observable ,  ReplaySubject ,  SubscriptionLike as ISubscription } from 'rxjs';
+//import { _throw } from 'rxjs/observable/throw';
+import { Observable } from 'rxjs/Observable';
+//import { of } from 'rxjs/observable/of';
+import { ReplaySubject } from 'rxjs/ReplaySubject';
 import { map, tap } from 'rxjs/operators';
 
 
@@ -68,7 +71,7 @@ export class ConfigService {
       headers: this.headers,
       withCredentials: true,
     }).pipe(
-      map(shared => {
+      map((shared:any) => {
         Object.assign(config,ConfigService.defaultConfig)
         Object.assign(config.shared, shared);
 
@@ -111,7 +114,7 @@ export class ConfigService {
       headers: this.headers,
       withCredentials: true
     }).pipe(
-      map(shared => {
+      map((shared:any) => {
         Object.assign(config,ConfigService.defaultConfig)
         Object.assign(config.shared, shared);
         
@@ -157,14 +160,5 @@ export class ConfigService {
     let lang = localStorage.getItem('localeId')||navigator.language || navigator['userLanguage']||'fr'; 
     return lang;
   }
-
-  /**
-   * Subscribe to the user stream.
-   */
-  subscribe(
-    onNext, onThrow?: ((exception: any) => void)|null,
-    onReturn?: (() => void)|null): ISubscription {
-      return this.config$.subscribe({next: onNext, error: onThrow, complete: onReturn});
-  }  
 
 }
