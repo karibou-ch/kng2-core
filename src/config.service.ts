@@ -161,4 +161,13 @@ export class ConfigService {
     return lang;
   }
 
+  /**
+   * Subscribe to the user stream.
+   */
+  // subscribe(
+  //   onNext, onThrow?: ((exception: any) => void)|null,
+  //   onReturn?: (() => void)|null) {
+  //     return this.config$.subscribe({next: onNext, error: onThrow, complete: onReturn});
+  // }  
+
 }
