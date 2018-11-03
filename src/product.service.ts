@@ -59,6 +59,16 @@ export class ProductService {
     // REST api wrapper
     //
 
+    search(text:string): Observable<Product[]> {
+        return this.http.get<Product[]>(this.config.API_SERVER + '/v1/products/search', {
+            params: {q:text},
+            headers: this.headers,
+            withCredentials: true
+        }).pipe(
+            map(products => products)
+        );
+    };
+
     select(params?: any): Observable<Product[]> {
         params = params || {};
         return this.http.get<Product[]>(this.config.API_SERVER + '/v1/products', {
