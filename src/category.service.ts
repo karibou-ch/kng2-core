@@ -16,7 +16,8 @@ export class Category {
     let defaultCategory={
       tags:[],
       usedBy:[],
-      weight:0
+      weight:0,
+      child:[]
     }
   
     Object.assign(this, Utils.merge(defaultCategory,json||{}));          
@@ -34,7 +35,8 @@ export class Category {
   home: boolean; /* afficher une sélection de cat sur la home */
   active: boolean;
   usedBy?:number[];
-  tags:string[]
+  tags:string[];
+  child:string[];
 }
 
 //
