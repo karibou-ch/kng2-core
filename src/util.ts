@@ -1,4 +1,5 @@
-import { Observable ,  of } from 'rxjs';
+import { Observable } from 'rxjs';
+import { ReplaySubject } from 'rxjs/ReplaySubject';
 
   // TODO test utility class
 export class Utils{
@@ -38,27 +39,28 @@ export class Utils{
 
   //
   //https://github.com/ded/script.js/blob/master/dist/script.js
-  static script(path:string,key:string):Observable<string>{
-    if(Utils.scripts[key]){
-      return of(key);
+  //https://netbasal.com/loading-external-libraries-on-demand-in-angular-9dad45701801
+  static script(url:string,key:string):Observable<string>{
+    if (Utils.scripts[url]) {
+      return Utils.scripts[url].asObservable();
     }
-    
-    let head = document.getElementsByTagName('head')[0];
-    let script = document.createElement('script');
-    let obs=Observable.create(observer=>{
-      script.onload = script.onerror = script['onreadystatechange']=()=>{
-        Utils.scripts[key]=true;
-        observer.next(key);
-        observer.complete();
-      }        
-    });
-    script.async =true;
-    script.src = path;
-    head.insertBefore(script, head.lastChild);
-    return obs;
+
+    Utils.scripts[url] = new ReplaySubject();
+
+    const script = document.createElement('script');
+    script.type = 'text/javascript';
+    script.src = url;
+    script.onload = () => {
+        Utils.scripts[url].next(window);
+        Utils.scripts[url].complete();
+    };
+
+    document.body.appendChild(script);
+
+    return Utils.scripts[url].asObservable();  
   }
 
-  private static scripts:{[key:string]:boolean}={};  
+  private static scripts:{ [url: string]: ReplaySubject<any> } = {};
 }
 
 //

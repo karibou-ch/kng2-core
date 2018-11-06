@@ -577,6 +577,7 @@ export class UserService {
       headers: this.headers,
       withCredentials: true
     }).pipe(
+      catchError(err => of(new User())),
       map(user => Object.assign(this.currentUser,new User())),
       tap(user=>{
         console.log('user.logout()',user)
