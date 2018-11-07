@@ -229,7 +229,15 @@ export class Product {
             categories:{},
             shelflife:{},
             vendor:{},
-            quantity:{}
+            quantity:{},
+            belong:{
+                weight:0
+            },
+            stats:{
+                score:0,
+                issues:0,
+                sales:0
+            }
         }
 
         Object.assign(this, defaultProduct,json||{});          
@@ -299,6 +307,20 @@ export class Product {
         lactose: boolean;
     };
 
+    //
+    // child category
+    belong:{
+        name:string;
+        weigth:number;
+    };
+
+    //
+    // genetated values
+    stats: {
+        score: number;
+        sales: number;
+        issues: number;
+    };
 
     hasFixedPortion(){
         var weight=this.pricing.part||'';
