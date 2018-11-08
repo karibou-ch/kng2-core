@@ -311,7 +311,7 @@ export class Product {
     // child category
     belong:{
         name:string;
-        weigth:number;
+        weight:number;
     };
 
     //
