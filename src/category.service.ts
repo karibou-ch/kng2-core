@@ -33,7 +33,10 @@ export class Category {
   active: boolean;
   usedBy?:number[];
   tags:string[];
-  child:string[];
+  child:{
+    name:string;
+    weight:number;
+  }[];
 }
 
 //
