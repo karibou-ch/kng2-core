@@ -107,6 +107,7 @@ export class Shop {
   // - > is available/displayed for shop owner and admin ONLY
   // - > is saved on each order to compute bill
   account:{
+    IBAN?:string;
     fees?:number;
     tva:{
       number?:string,
