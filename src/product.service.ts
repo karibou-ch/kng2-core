@@ -287,6 +287,7 @@ export class Product {
         comment: boolean;
         available: boolean;
         home: boolean;
+        boost:boolean;
     };
     details: {
         keywords: string;
