@@ -322,7 +322,7 @@ export class CartService {
     //if(window.fbq)fbq('track', 'AddToCart');
     this.checkIfReady();
     let items=this.cache.list;
-    let item=(product instanceof CartItem)?product:CartItem.fromProduct(product);
+    let item=(product instanceof CartItem)?product:CartItem.fromProduct(product,variant);
 
 
     for(var i=0;i<items.length;i++){
