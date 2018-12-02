@@ -78,9 +78,14 @@ export class ReportingService {
 
   //
   // config.API_SERVER+'/v1/orders/invoices/shops/6/2018'
-  getVendors(year:number,month?:number|string): Observable<ReportOrders> {
+  getReport(year:number,month?:number|string,shops?:any): Observable<ReportOrders> {
     month=month||'-';
+    let params:any={};
+    if(shops){
+      params.shops=shops;
+    }
     return this.config = this.http.get<ReportOrders>(config.API_SERVER + '/v1/orders/invoices/shops/'+month+'/'+year, {
+      params:params,
       headers: this.headers,
       withCredentials: true,
     }).pipe(
