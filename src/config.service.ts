@@ -8,7 +8,7 @@ import { UserAddress, DepositAddress } from './user.service';
 //import { _throw } from 'rxjs/observable/throw';
 import { Observable } from 'rxjs';
 //import { of } from 'rxjs/observable/of';
-import { ReplaySubject } from 'rxjs/ReplaySubject';
+import { ReplaySubject } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
 
 
