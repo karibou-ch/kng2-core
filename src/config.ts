@@ -1,3 +1,4 @@
+import { Order } from "./order/order";
 
 
 
@@ -45,6 +46,22 @@ export class Config{
       return (this.shared.order.weekdays.indexOf(i)>-1)?
         {label:day,state:''}:{label:day,state:'disabled'};
     });
+  }
+
+  //
+  // map potential shipping week 
+  // with reason of closed 
+  noShippingMessage(){
+    return Order.potentialShippingWeek().map(shipping=>{
+      let find=this.shared.noshipping.find(noshipping=>{
+        return shipping.in(noshipping.from,noshipping.to);
+      });
+      if(find){
+        shipping.message=find.reason;
+      }
+      return shipping;
+    });
+
   }
 
   getShippingDays():Date[]{

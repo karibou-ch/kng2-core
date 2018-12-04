@@ -2,6 +2,7 @@
 // useful statics methods 
 
 interface Date {
+  message:string;
   daysInMonth(month: number): number;
   monthDiff(d: Date): number;
   dayToDates(days: number[], limit?: number): Date[];
