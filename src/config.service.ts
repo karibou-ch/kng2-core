@@ -76,8 +76,12 @@ export class ConfigService {
         Object.assign(config.shared, shared);
 
         //
-        // dates 
+        // fill dates 
         config.shared.shippingweek=(shared.shippingweek||[]).map(date=>new Date(date));
+        config.shared.noshipping.forEach(noshipping=>{
+          noshipping.from=new Date(noshipping.from);
+          noshipping.to=new Date(noshipping.to);
+        });
           
         //
         // deposit
@@ -121,6 +125,12 @@ export class ConfigService {
         //
         // dates 
         config.shared.shippingweek=(shared.shippingweek||[]).map(date=>new Date(date));
+        config.shared.noshipping.forEach(noshipping=>{
+          noshipping.from=new Date(noshipping.from);
+          noshipping.to=new Date(noshipping.to);
+        });
+          
+
         //
         // deposit
         config.shared.deposits=(config.shared.deposits||[]).map(deposit=>new DepositAddress(
