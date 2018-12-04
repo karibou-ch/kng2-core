@@ -6,15 +6,16 @@ import {
   EnumShippingMode
 } from './order.enum';
 
+//
+// load es5 hooks
+import '../es5';
+
 import { Utils } from '../util';
 
 //
 // get global configuration
-import { config } from '../config';
+import { config, Config } from '../config';
 
-//
-// load es5 hooks
-import '../es5';
 import { UserAddress } from '../user.service';
 
 
@@ -92,39 +93,6 @@ export interface OrderItem {
 
 
 export class Order {
-  //
-  // Compute the next potential shipping day.
-  // It depends on the hours needed to harvest/prepare a placed order
-  static potentialShippingDay(): Date {
-    var now = new Date(),
-      potential = new Date(now.getTime() + 3600000 * (config.shared.order.timelimit));
-
-    //
-    // timelimitH is hour limit to place an order
-    if (potential.getHours() >= config.shared.order.timelimitH) {
-      //
-      // set shipping time to fix the printed countdown (eg. 'dans un jour') 16:00 vs. 12:00
-      potential.setHours(config.shared.order.timelimitH, 0, 0, 0);
-      return potential.plusDays(1);
-    }
-
-    //
-    // set shipping time to fix the printed countdown (eg. 'dans un jour') 16:00 vs. 12:00
-    potential.setHours(config.shared.order.timelimitH, 0, 0, 0);
-
-    // next date depends on the hours needed to prepare a placed order
-    return potential;
-
-  }
-
-  //
-  // Compute the next potential shipping days in one week.
-  static potentialShippingWeek() {
-    let potential = Order.potentialShippingDay();
-    return potential.dayToDates(
-      config.shared.order.weekdays
-    );
-  }
 
   //
   // the current shipping day is short date for the placed orders
@@ -135,7 +103,7 @@ export class Order {
   //
   // the next shipping day
   static nextShippingDay() {
-    let potential = Order.potentialShippingDay();
+    let potential = config.potentialShippingDay();
     let noshipping;
     let next = potential.dayToDates(
       config.shared.order.weekdays
@@ -167,7 +135,7 @@ export class Order {
   // a full week of available shipping days
   // limit to nb days (default is <7)
   static fullWeekShippingDays(limit?) {
-    var next = Order.potentialShippingWeek(), lst:any[] = [], find = false, today = new Date();
+    var next = config.potentialShippingWeek(), lst:any[] = [], find = false, today = new Date();
 
     //
     // default date limit is defined by
