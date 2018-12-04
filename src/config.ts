@@ -1,4 +1,3 @@
-import { Order } from "./order/order";
 
 
 
@@ -24,6 +23,40 @@ export class Config{
   loginPath:string[];
   readonlyPath:string[];
   avoidShopUIIn:string[];
+
+  //
+  // Compute the next potential shipping day.
+  // It depends on the hours needed to harvest/prepare a placed order
+  potentialShippingDay(): Date {
+    var now = new Date(),
+      potential = new Date(now.getTime() + 3600000 * (this.shared.order.timelimit));
+
+    //
+    // timelimitH is hour limit to place an order
+    if (potential.getHours() >= this.shared.order.timelimitH) {
+      //
+      // set shipping time to fix the printed countdown (eg. 'dans un jour') 16:00 vs. 12:00
+      potential.setHours(this.shared.order.timelimitH, 0, 0, 0);
+      return potential.plusDays(1);
+    }
+
+    //
+    // set shipping time to fix the printed countdown (eg. 'dans un jour') 16:00 vs. 12:00
+    potential.setHours(this.shared.order.timelimitH, 0, 0, 0);
+
+    // next date depends on the hours needed to prepare a placed order
+    return potential;
+
+  }
+
+  //
+  // Compute the next potential shipping days in one week.
+  potentialShippingWeek() {
+    let potential = this.potentialShippingDay();
+    return potential.dayToDates(
+      config.shared.order.weekdays
+    );
+  }
 
   getShippingWeek(){    
     let oneWeek=['Di','Lu','Ma','Me','Je','Ve','Sa'], today=new Date();
@@ -52,7 +85,7 @@ export class Config{
   // map potential shipping week 
   // with reason of closed 
   noShippingMessage(){
-    return Order.potentialShippingWeek().map(shipping=>{
+    return this.potentialShippingWeek().map(shipping=>{
       let find=this.shared.noshipping.find(noshipping=>{
         return shipping.in(noshipping.from,noshipping.to);
       });
