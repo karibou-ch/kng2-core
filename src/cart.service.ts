@@ -568,8 +568,11 @@ export class CartService {
 
 
   load(){
+    //
+    // IFF next shipping day is Null (eg. hollidays)=> currentShippingDay
     let nextShippingDay=Order.nextShippingDay();
     let currentShippingDay=Order.currentShippingDay();
+    ;
     // this.$order.findOrdersByUser(this.currentUser).subscribe(
     //   (orders:Order[])=>{
 
@@ -586,7 +589,7 @@ export class CartService {
 
       //
       // check shipping date or get the next one
-      cartCache.currentShippingDay=new Date(cartCache.currentShippingDay||nextShippingDay);
+      cartCache.currentShippingDay=new Date(cartCache.currentShippingDay||nextShippingDay||currentShippingDay);
 
       //
       // if selected shipping date is before the next one => reset the default date
