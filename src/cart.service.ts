@@ -587,6 +587,7 @@ export class CartService {
     try{
       let cartCache=JSON.parse(localStorage.getItem('kng2-cart'));
       if(!cartCache){
+        this.cache.currentShippingDay=new Date(nextShippingDay||currentShippingDay);
         this.cart$.next({action:CartAction.CART_LOADED});
         return;
       }
