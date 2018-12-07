@@ -571,7 +571,7 @@ export class CartService {
     //
     // IFF next shipping day is Null (eg. hollidays)=> currentShippingDay
     let nextShippingDay=Order.nextShippingDay();
-    let currentShippingDay=Order.currentShippingDay();
+    let currentShippingDay=config.potentialShippingWeek()[0];
     ;
     // this.$order.findOrdersByUser(this.currentUser).subscribe(
     //   (orders:Order[])=>{
@@ -583,6 +583,7 @@ export class CartService {
     try{
       let cartCache=JSON.parse(localStorage.getItem('kng2-cart'));
       if(!cartCache){
+        this.cache.currentShippingDay=new Date(nextShippingDay||currentShippingDay);
         this.cart$.next({action:CartAction.CART_LOADED});
         return;
       }
