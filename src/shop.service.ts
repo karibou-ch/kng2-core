@@ -240,7 +240,7 @@ export class ShopService {
 
   //
   // simple cache manager
-  private deleteCache(shop: Shop, propagate:boolean=false) {
+  private deleteCache(shop: Shop, propagate?:boolean) {
     shop.deleted=true;
     if (this.cache.map[shop.urlpath]) {
       delete this.cache.map[shop.urlpath];
@@ -249,7 +249,7 @@ export class ShopService {
     return shop;
   }
 
-  private updateCache(shop: Shop, propagate:boolean=false) {
+  private updateCache(shop: Shop, propagate?:boolean) {
     if (!this.cache.map[shop.urlpath]) {
       this.cache.map[shop.urlpath] = new Shop(shop);
       return this.cache.map[shop.urlpath];
