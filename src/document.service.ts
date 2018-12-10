@@ -126,7 +126,7 @@ export class DocumentService {
   }
 
 
-  select(type: string,headersOnly:boolean=false):Observable<Document[]> {
+  select(type: string,headersOnly?:boolean):Observable<Document[]> {
     let params:any={};
     if(headersOnly){
       params.headerOnly='true'
@@ -154,7 +154,7 @@ export class DocumentService {
     );
   }
 
-  getAll(headersOnly:boolean=false):Observable<DocumentHeader[]>{
+  getAll(headersOnly?:boolean):Observable<DocumentHeader[]>{
     let params:any={};
     if(headersOnly){
       params.headerOnly='true'
