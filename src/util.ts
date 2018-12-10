@@ -24,7 +24,7 @@ export class Utils{
     const source = sources.shift();
   
     if (Utils.isObject(target) && Utils.isObject(source)) {
-      for (const key in source) {
+      for (var key in source) {
         if (Utils.isObject(source[key])) {
           if (!target[key]) Object.assign(target, { [key]: {} });
           Utils.merge(target[key], source[key]);
