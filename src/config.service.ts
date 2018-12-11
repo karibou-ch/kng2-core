@@ -161,14 +161,18 @@ export class ConfigService {
   // - https://medium.com/@feloy/deploying-an-i18n-angular-app-with-angular-cli-fc788f17e358 (build locale targets)
   //   +--> https://github.com/ngx-translate/core/issues/495 (plan to integrate runtime lang switch and keep AOT compliant)
   set locale(lang:string){
-    localStorage.setItem('localeId', lang);
+    try{
+      localStorage.setItem('kng2-locale', lang);
+    }catch(e){}
     this.http.get(config.API_SERVER+'/v1/config?lang='+lang);    
   }
 
   get locale(){
     // FIXME default locale should not be hardcoded!
-    let lang = localStorage.getItem('localeId')||navigator.language || navigator['userLanguage']||'fr'; 
-    return lang;
+    try{
+      return localStorage.getItem('kng2-locale')||navigator.language || navigator['userLanguage']||'fr'; 
+    }catch(e){}
+    return 'fr';
   }
 
   /**
