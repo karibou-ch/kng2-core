@@ -574,8 +574,7 @@ export class CartService {
   load(){
     //
     // IFF next shipping day is Null (eg. hollidays)=> currentShippingDay
-    let nextShippingDay=Order.nextShippingDay();
-    let currentShippingDay=Order.currentShippingDay();
+    let nextShippingDay=Order.nextShippingDay()||config.potentialShippingWeek()[0];
     ;
     // this.$order.findOrdersByUser(this.currentUser).subscribe(
     //   (orders:Order[])=>{
@@ -587,20 +586,22 @@ export class CartService {
     try{
       let cartCache=JSON.parse(localStorage.getItem('kng2-cart'));
       if(!cartCache){
-        this.cache.currentShippingDay=new Date(nextShippingDay||currentShippingDay);
+        this.cache.currentShippingDay=new Date(nextShippingDay);
         this.cart$.next({action:CartAction.CART_LOADED});
         return;
       }
 
       //
       // check shipping date or get the next one
-      cartCache.currentShippingDay=new Date(cartCache.currentShippingDay||nextShippingDay||currentShippingDay);
+      cartCache.currentShippingDay=new Date(cartCache.currentShippingDay||nextShippingDay);
 
       //
       // if selected shipping date is before the next one => reset the default date
       if(cartCache.currentShippingDay<nextShippingDay){
         cartCache.currentShippingDay=nextShippingDay;
       }
+      // console.log('cart.service:',cartCache.currentShippingDay<nextShippingDay);
+      // console.log('cart.service:',cartCache.currentShippingDay,nextShippingDay);
       cartCache.currentShippingTime=cartCache.currentShippingTime||16;
 
       this.cache.currentShippingDay=cartCache.currentShippingDay;
