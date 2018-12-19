@@ -1,10 +1,11 @@
 import { AfterViewInit, Directive,Input, ElementRef, Component, ViewEncapsulation } from '@angular/core';
 import { Http } from '@angular/http';
 
-import Showdown from 'showdown';
+import { Utils } from './util';
 // import { Prism } from 'prism';
 // import 'prism/themes/prism-okaidia.css!css';
 
+const CDNJS_SHOWDOWN=window['CDNJS_SHOWDOWN']||"https://cdnjs.cloudflare.com/ajax/libs/showdown/1.9.0/showdown.min.js";
 
 // Showdown typescript
 // https://github.com/DefinitelyTyped/DefinitelyTyped/blob/7ba0c54fa401f1ccc969b4c6923ed0c636a86002/types/showdown/index.d.ts
@@ -82,9 +83,11 @@ export class MarkdownDirective implements AfterViewInit{
       return;
     }
     let raw = data;    
-    this.html = this.process(this.prepare(raw));
-    this.highlight(this.html);
-    this.elementRef.nativeElement.innerHTML = this.html;
+    this.process(this.prepare(raw)).then(html=>{
+      this.html=html;
+      this.highlight(html);
+      this.elementRef.nativeElement.innerHTML = html;  
+    })
   }
 
   fromRAW() {
@@ -92,45 +95,42 @@ export class MarkdownDirective implements AfterViewInit{
     if(!raw.length){
       return;
     }
-    this.html = this.process(this.prepare(raw));
-    this.highlight(this.html);
-    this.elementRef.nativeElement.innerHTML = this.html;
+    this.process(this.prepare(raw)).then(html=>{
+      this.html=html;
+      this.highlight(html);
+      this.elementRef.nativeElement.innerHTML = html;  
+    })
   }
   prepare(raw) {
     return raw.split('\n').map((line) => line.trim()).join('\n')
   }
 
-  process(markdown) {
+  process(markdown):Promise<string> {
+    let removeRoot=(md)=>{
+      if(md.indexOf('<p>')===0&&this.removeRoot){
+        return md.substring(3, md.length - 5);      
+      }
+      return md;
+    }
+    if(MarkdownDirective.converter){
+      return new Promise((resolve,reject)=>{
+        let md=MarkdownDirective.converter.makeHtml(markdown);
+        resolve(removeRoot(md));
+      });
+    }
 
-    if(!MarkdownDirective.converter){
-      Showdown.extension('extAttributes', this.sdExtAttr);
-      MarkdownDirective.converter = new Showdown.Converter({ extensions: ['extAttributes'] });  
-    }
-      
-    let md=MarkdownDirective.converter.makeHtml(markdown);
-    //
-    // so nice hack to remove root paragraph
-    // TODO should be 
-    if(md.indexOf('<p>')===0&&this.removeRoot){
-      return md.substring(3, md.length - 5);      
-    }
-    
-    return md;
+    // Showdown.extension('extAttributes', this.sdExtAttr);
+    // MarkdownDirective.converter = new Showdown.Converter({ extensions: ['extAttributes'] });  
+
+    return Utils.script(CDNJS_SHOWDOWN,"showdown")
+         .toPromise().then(window=>{
+      window['showdown'].extension('extAttributes', this.sdExtAttr);
+      MarkdownDirective.converter= new window['showdown']['Converter']();
+
+      let md=MarkdownDirective.converter.makeHtml(markdown);
+      return removeRoot(md);        
+    });
   }
-
-  // process(markdown):Promise<string> {
-  //   return import("showdown").then(Showdown => {
-  //     let converter = new Showdown['Converter']();
-  //     let md=converter.makeHtml(markdown),end;
-  //     //
-  //     // so nice hack to remove root paragraph
-  //     // TODO should be 
-  //     if(md.indexOf('<p>')===0&&this.removeRoot){
-  //       return md.substring(3, md.length - 5);      
-  //     }
-  //     return md;        
-  //   });
-  // }
   
   highlight(html){
     //Prism.highlightAll();
