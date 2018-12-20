@@ -291,9 +291,10 @@ export class OrderService {
   // find all orders by user
   // role:user
   // app.get('/v1/orders/users/:id', users.ensureMeOrAdmin, orders.list);
-  findOrdersByUser(user): Observable<Order[]> {
+  findOrdersByUser(user,filter?): Observable<Order[]> {
     //return this.chainAll(backend.$order.query({id:user.id,action:'users'}).$promise);
     return this.http.get<Order[]>(this.config.API_SERVER + '/v1/orders/users/' + user.id, {
+      params:filter||{},
       headers: this.headers,
       withCredentials: true
     }).pipe(
@@ -307,7 +308,7 @@ export class OrderService {
     //return this.chainAll(backend.$order.query(filter).$promise);
     let self=this;
     return this.http.get<Order[]>(this.config.API_SERVER + '/v1/orders', {
-      params: filter,
+      params: filter||{},
       headers: this.headers,
       withCredentials: true
     }).pipe(
