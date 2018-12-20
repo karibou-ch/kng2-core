@@ -51,8 +51,9 @@ export class Utils{
     script.type = 'text/javascript';
     script.src = url;
     script.onload = () => {
-        Utils.scripts[url].next(window);
-        Utils.scripts[url].complete();
+      let inst=(key&&window[key])||window;      
+      Utils.scripts[url].next(inst);
+      Utils.scripts[url].complete();
     };
 
     document.body.appendChild(script);
