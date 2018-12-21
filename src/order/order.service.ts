@@ -202,11 +202,16 @@ export class OrderService {
   // update order with specific issue made by one shop
   // role:owner
   // app.post('/v1/orders/:oid/issue', auth.ensureAdmin, orders.updateIssue);
-  requestIssue(order: Order, score,items): Observable<any> {
-    let tosave = {
+  requestIssue(order: Order,items,score:number,message?:string): Observable<any> {
+    let tosave:any = {
       score:score,
       items:items.map(item=>Object.assign({},item))
     };
+    //
+    // specify a message
+    if(message){
+      tosave.message=message;
+    }
     return this.http.post<any>(this.config.API_SERVER + '/v1/orders/' + order.oid + '/issue/request', tosave, {
       headers: this.headers,
       withCredentials: true
