@@ -183,11 +183,6 @@ export class OrderService {
     }).pipe(
       map(order => this.updateCache(order))
     );
-      // .map((res) => {
-      //   let item:any=order.items.find(i => i.sku === item.sku);
-      //   item.fulfillment.status = EnumFulfillments[fulfillment];
-      //   return res;
-      // })
   };
 
   // update order with specific issue made by one shop
@@ -207,15 +202,15 @@ export class OrderService {
   // update order with specific issue made by one shop
   // role:owner
   // app.post('/v1/orders/:oid/issue', auth.ensureAdmin, orders.updateIssue);
-  requestIssue(order: Order, item, issue: EnumOrderIssue): Observable<Order> {
-    let tosave = Object.assign({}, item);
-    tosave.fulfillment.issue = EnumOrderIssue[issue];
-    return this.http.post<Order>(this.config.API_SERVER + '/v1/orders/' + order.oid + '/issue/request', [tosave], {
+  requestIssue(order: Order, score,items): Observable<any> {
+    let tosave = {
+      score:score,
+      items:items.map(item=>Object.assign({},item))
+    };
+    return this.http.post<any>(this.config.API_SERVER + '/v1/orders/' + order.oid + '/issue/request', tosave, {
       headers: this.headers,
       withCredentials: true
-    }).pipe(
-      map(order => this.updateCache(order))
-    );
+    });
   }
   
   // update effective bags for this order
