@@ -121,11 +121,10 @@ export class MarkdownDirective implements AfterViewInit{
 
     // Showdown.extension('extAttributes', this.sdExtAttr);
     // MarkdownDirective.converter = new Showdown.Converter({ extensions: ['extAttributes'] });  
-
     return Utils.script(CDNJS_SHOWDOWN,"showdown")
-         .toPromise().then(window=>{
-      window['showdown'].extension('extAttributes', this.sdExtAttr);
-      MarkdownDirective.converter= new window['showdown']['Converter']();
+         .toPromise().then((showdown:any)=>{
+      showdown.extension('extAttributes', this.sdExtAttr);
+      MarkdownDirective.converter= new showdown.Converter();
 
       let md=MarkdownDirective.converter.makeHtml(markdown);
       return removeRoot(md);        
