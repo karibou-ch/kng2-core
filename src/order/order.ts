@@ -221,6 +221,9 @@ export class Order {
   created: Date;
   closed?: Date;
 
+  /* customer evaluation */
+  score:number;
+
   /* full customer details */
   customer: any;
 
