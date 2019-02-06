@@ -1,6 +1,6 @@
 {
   "name": "kng2-core",
-  "version": "1.53.0",
+  "version": "1.54.0",
   "description": "The module goal mainly provide a kickstart kit to make every new idea/motivation web application/ionic declinaison for karibou.ch without friction!",
   "main": "./index.umd.js",
   "module": "./index.js",
@@ -48,8 +48,7 @@
   "bugs": {
     "url": "https://github.com/karibou-ch/kng2-core/issues"
   },
-  "dependencies": {
-  },
+  "dependencies": {},
   "peerDependencies": {
     "@angular/common": ">=4.0.0",
     "@angular/core": ">=4.0.0"
