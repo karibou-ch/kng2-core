@@ -48,13 +48,9 @@
   "bugs": {
     "url": "https://github.com/karibou-ch/kng2-core/issues"
   },
-<<<<<<< HEAD
   "dependencies": {
     "rxjs-compat": "^6.3.3"
   },
-=======
-  "dependencies": {},
->>>>>>> master
   "peerDependencies": {
     "@angular/common": ">=4.0.0",
     "@angular/core": ">=4.0.0"
