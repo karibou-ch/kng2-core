@@ -43,6 +43,8 @@ export class OrderService {
     this.config = ConfigService.defaultConfig;
     this.headers = new HttpHeaders();
     this.headers.append('Content-Type', 'application/json');
+    this.headers.append('Cache-Control' , 'no-cache');
+    this.headers.append('Pragma' , 'no-cache');
     this.cache={
       list:[],map:new Map()
     };
