@@ -345,10 +345,8 @@ export class CartService {
 
         //
         //  fast cart load
-        if(items[i].quantity>15){
+        if(items[i].quantity>10){
           items[i].quantity+=5;
-        }else if(items[i].quantity>3){
-          items[i].quantity+=3;
         }else{
           items[i].quantity++;
         }
@@ -697,13 +695,7 @@ export class CartService {
     for (var i = 0; i < items.length; i++) {
       if (items[i].equalItem(item, variant)) {
         // if(items[i].sku===product.sku){
-          if(items[i].quantity>15){
-            items[i].quantity-=3;
-          }else if(items[i].quantity>6){
-            items[i].quantity-=2;
-          }else{
-            items[i].quantity-=1;
-          }
+        items[i].quantity-=1;
 
         //
         // update the finalprice
