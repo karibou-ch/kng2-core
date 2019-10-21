@@ -1,6 +1,6 @@
 {
   "name": "kng2-core",
-  "version": "2.56.0",
+  "version": "2.57.0",
   "description": "The module goal mainly provide a kickstart kit to make every new idea/motivation web application/ionic declinaison for karibou.ch without friction!",
   "main": "./index.umd.js",
   "module": "./index.js",
@@ -62,7 +62,6 @@
     "@angular/compiler-cli": "^5.2.10",
     "@angular/core": "^5.2.10",
     "@angular/forms": "^5.2.10",
-    "@angular/http": "^5.2.10",
     "@angular/platform-browser": "^5.2.10",
     "@angular/platform-browser-dynamic": "^5.2.10",
     "@angular/platform-server": "^5.2.10",
