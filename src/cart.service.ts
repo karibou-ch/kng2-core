@@ -243,11 +243,12 @@ export class CartConfig{
 
 }
 
-//
+// FIXME: this should be now merged with the CartModel used by server
 // Cart Cache content 
 // which is used over time (close/open navigator)
 // this should be serialized in server side
 class Cache {
+  cid:string[];
   list: CartItem[];
   //
   // vendors discounts 
@@ -271,10 +272,9 @@ class Cache {
 
 export class CartModel{
   cid:string[];
-  address:number;
-  payment:number;
+  address:string;
+  payment:string;
   items:CartItem[];
-  sync:boolean;
 }
 
 
@@ -580,9 +580,21 @@ export class CartService {
       withCredentials: true
     }).pipe(
       map(cart=>{
+      this.cache.cid=cart.cid||[];
       //
       // init items
       this.cache.list=cart.items.map(item=>new CartItem(item));
+
+      //
+      // init address and payment      
+      if(cart.address){
+        this.cache.address=Object.assign(new UserAddress(), JSON.parse(cart.address||"{}"));
+      }
+      if(cart.payment){
+        this.cache.payment=new UserCard(JSON.parse(cart.payment||"{}"));
+      }
+      
+      
       //
       // FIXME compute vendor discount on load
       //this.computeVendorDiscount();
@@ -782,10 +794,18 @@ export class CartService {
   }
 
   private saveServer(state:CartState):Observable<CartState>{
-    return this.$http.post<CartState>(ConfigService.defaultConfig.API_SERVER + '/v1/cart',state, {
+    let model:CartModel=new CartModel();
+    model.cid=this.cache.cid;
+    model.address=JSON.stringify(this.cache.address);
+    model.payment=JSON.stringify(this.cache.payment);
+    model.items=this.cache.list;
+
+    return this.$http.post<CartModel>(ConfigService.defaultConfig.API_SERVER + '/v1/cart',model, {
       headers: this.headers,
       withCredentials: true
-    }).pipe(map(state=>{
+    }).pipe(map(model=>{
+      this.cache.cid=model.cid;
+      this.cache.list=model.items;
       //
       // sync with server is done!
       state.sync=true;
