@@ -3,13 +3,11 @@ import { Injectable } from '@angular/core';
 import { ReplaySubject } from 'rxjs/ReplaySubject';
 import { Observable } from 'rxjs/Observable';
 import { config, Config } from './config';
-import { ConfigService } from './config.service';
 
 import { Product } from './product.service';
 import { Utils } from './util';
 
 
-import { LoaderService } from './loader.service';
 import { OrderService } from './order/order.service';
 import { Order, OrderItem } from './order/order';
 import { Shop } from './shop.service';
@@ -17,15 +15,18 @@ import { User, UserAddress, UserCard, DepositAddress } from './user.service';
 import { ISubscription } from 'rxjs/Subscription';
 
 import { _throw } from 'rxjs/observable/throw';
+import { ConfigService } from './config.service';
+import { map, catchError } from 'rxjs/operators';
 //import { catchError, map, tap } from 'rxjs/operators';
 
 //
 // on recurrent order
 export enum CartItemFrequency {
-  ITEM_WEEK      = 0,
-  ITEM_2WEEKS    = 1,
-  ITEM_MONTH     = 2,
-  ITEM_QUARTER   = 3
+  ITEM_ONCE      = 0,
+  ITEM_WEEK      = 1,
+  ITEM_2WEEKS    = 2,
+  ITEM_MONTH     = 3,
+  ITEM_QUARTER   = 4
 }
 
 //
@@ -57,6 +58,8 @@ export class CartItem {
   deleted?: boolean;
   frequency?:CartItemFrequency;
   timestamp: Date;
+  displayName?:string;
+  email?:string;
   title: string;
   sku: number;
   variant: string;
@@ -248,6 +251,7 @@ export class CartConfig{
 // which is used over time (close/open navigator)
 // this should be serialized in server side
 class Cache {
+  sync:boolean;
   list: CartItem[];
   //
   // vendors discounts 
@@ -269,6 +273,13 @@ class Cache {
   }
 }
 
+export class CartModel{
+  cid:string[];
+  address:number;
+  payment:number;
+  items:CartItem[];
+  sync:boolean;
+}
 
 
 @Injectable()
@@ -297,8 +308,7 @@ export class CartService {
   public cart$: ReplaySubject<CartState>;
 
   constructor(    
-    private $http: HttpClient,
-    private $order: OrderService
+    private $http: HttpClient
   ) {
     this.headers = new HttpHeaders();
     this.headers.append('Content-Type', 'application/json');
@@ -480,6 +490,7 @@ export class CartService {
     this.cache.payment=new UserCard();
     this.cache.address=new UserAddress();
     this.cartConfig.gateway=this.DEFAULT_GATEWAY;
+    this.cache.sync=false;
     this.cache.list=[];      
     this.cache.discount={};
     this.save({action:CartAction.CART_CLEARED});
@@ -568,101 +579,134 @@ export class CartService {
     return shop.available.weekdays.indexOf(weekday)>-1;
   }
 
+  // NOT available with rx<v6.0
+  loadCart(){
+    return this.$http.get<CartModel>(ConfigService.defaultConfig.API_SERVER + '/v1/cart');
+  }
+  // loadCart():Observable<CartModel>{ 
+  //   return this.$http.get<CartModel>(ConfigService.defaultConfig.API_SERVER + '/v1/cart',{
+  //     headers: this.headers,
+  //     withCredentials: true
+  //   }).pipe(
+  //     map(cart=>{
+  //     //
+  //     // init items
+  //     this.cache.list=cart.items.map(item=>new CartItem(item));
+  //     //
+  //     // FIXME compute vendor discount on load
+  //     //this.computeVendorDiscount();
+  //     this.clearErrors();
 
-  load(){
+  //     //
+  //     // sync with server is done!
+  //     this.cache.sync=true;
+  //     return cart;
+  //   }),
+  //   catchError(err=>{
+  //     //
+  //     // mark sync false
+  //     this.cache.sync=false;
+  //     return throwError(err);
+  //   })
+  //   );
+  // }
+
+
+  private initCache(cartCache){
     //
     // IFF next shipping day is Null (eg. hollidays)=> currentShippingDay
     let nextShippingDay=Order.nextShippingDay()||config.potentialShippingWeek()[0];
-    ;
-    // this.$order.findOrdersByUser(this.currentUser).subscribe(
-    //   (orders:Order[])=>{
 
-    //   },error=>{
+    //
+    // check shipping date or get the next one
+    cartCache.currentShippingDay=new Date(cartCache.currentShippingDay||nextShippingDay);
 
-    //   }
-    // );
+    //
+    // if selected shipping date is before the next one => reset the default date
+    if(cartCache.currentShippingDay<nextShippingDay){
+      cartCache.currentShippingDay=nextShippingDay;
+    }
+    // console.log('cart.service:',cartCache.currentShippingDay<nextShippingDay);
+    // console.log('cart.service:',cartCache.currentShippingDay,nextShippingDay);
+    cartCache.currentShippingTime=cartCache.currentShippingTime||16;
+
+    this.cache.currentShippingDay=cartCache.currentShippingDay;
+    this.cache.currentShippingTime=cartCache.currentShippingTime;
+    
+    //
+    // check values
+    if(cartCache.list&&cartCache.discount){
+      this.cache.list=cartCache.list.map(item=>new CartItem(item));
+      this.clearErrors();
+      Object.assign(this.cache.discount,cartCache.discount);      
+    }
+    //
+    // load only available payment
+    if(cartCache.payment){
+      this.cache.payment=new UserCard(cartCache.payment);
+      // check validity
+      if(!this.cache.payment.isValid()){
+        this.cache.payment=null;
+      }
+      // check existance on the current user (example when you switch account, cart should be sync )
+      else 
+      if(!this.currentUser.payments.some(payment=>payment.isEqual(this.cache.payment))){
+        this.cache.payment=new UserCard();
+      }
+    }
+    
+    //
+    // load address
+    if(cartCache.address){
+      this.cache.address=new UserAddress(
+        cartCache.address.name,
+        cartCache.address.streetAdress,
+        cartCache.address.floor,
+        cartCache.address.region,
+        cartCache.address.postalCode,
+        cartCache.address.note,
+        cartCache.address.primary,
+        cartCache.address.geo
+      );  
+            
+      if((cartCache.address.fees>=0)){
+        this.cache.address=<DepositAddress>this.cache.address;
+        this.cache.address['weight']=cartCache.address.weight;
+        this.cache.address['active']=cartCache.address.active;
+        this.cache.address['fees']=cartCache.address.fees;       
+        this.cache.address.floor='-';
+      }
+
+      //     
+      // check existance on the current user (example when you switch account, cart should be sync )
+      if(!this.currentUser.addresses.some(address=>address.isEqual(this.cache.address))&&
+          !this.defaultConfig.shared.deposits.some(address=>address.isEqual(this.cache.address))){
+        this.cache.address=new UserAddress();
+      }
+    }
+  }
+
+  loadContext(){
+    //
+    // IFF next shipping day is Null (eg. hollidays)=> currentShippingDay
+    let nextShippingDay=Order.nextShippingDay()||config.potentialShippingWeek()[0];
     try{
       let cartCache=JSON.parse(localStorage.getItem('kng2-cart'));
+      //
+      // initial cart on this device
       if(!cartCache){
         this.cache.currentShippingDay=new Date(nextShippingDay);
-        this.cart$.next({action:CartAction.CART_LOADED});
+        // this.cart$.next({action:CartAction.CART_LOADED,sync:this.cache.sync});
         return;
       }
 
       //
-      // check shipping date or get the next one
-      cartCache.currentShippingDay=new Date(cartCache.currentShippingDay||nextShippingDay);
+      // init cart context
+      this.initCache(cartCache);
 
-      //
-      // if selected shipping date is before the next one => reset the default date
-      if(cartCache.currentShippingDay<nextShippingDay){
-        cartCache.currentShippingDay=nextShippingDay;
-      }
-      // console.log('cart.service:',cartCache.currentShippingDay<nextShippingDay);
-      // console.log('cart.service:',cartCache.currentShippingDay,nextShippingDay);
-      cartCache.currentShippingTime=cartCache.currentShippingTime||16;
-
-      this.cache.currentShippingDay=cartCache.currentShippingDay;
-      this.cache.currentShippingTime=cartCache.currentShippingTime;
-      
-      //
-      // check values
-      if(cartCache.list&&cartCache.discount){
-        this.cache.list=cartCache.list.map(item=>new CartItem(item));
-        this.clearErrors();
-        Object.assign(this.cache.discount,cartCache.discount);      
-      }
-      //
-      // load only available payment
-      if(cartCache.payment){
-        this.cache.payment=new UserCard(cartCache.payment);
-        // check validity
-        if(!this.cache.payment.isValid()){
-          this.cache.payment=null;
-        }
-        // check existance on the current user (example when you switch account, cart should be sync )
-        else if(
-          !this.currentUser.payments.some(payment=>payment.isEqual(this.cache.payment))){
-          this.cache.payment=new UserCard();
-        }
-      }
-      
-      //
-      // load address
-      if(cartCache.address){
-        let AddressConstructor=(this.cache.address['fees']>=0)? DepositAddress:UserAddress;
-        this.cache.address=new UserAddress(
-          cartCache.address.name,
-          cartCache.address.streetAdress,
-          cartCache.address.floor,
-          cartCache.address.region,
-          cartCache.address.postalCode,
-          cartCache.address.note,
-          cartCache.address.primary,
-          cartCache.address.geo
-        );  
-              
-        if((cartCache.address.fees>=0)){
-          this.cache.address=<DepositAddress>this.cache.address;
-          this.cache.address['weight']=cartCache.address.weight;
-          this.cache.address['active']=cartCache.address.active;
-          this.cache.address['fees']=cartCache.address.fees;       
-          this.cache.address.floor='-';
-        }
-
-        //     
-        // check existance on the current user (example when you switch account, cart should be sync )
-        if(!this.currentUser.addresses.some(address=>address.isEqual(this.cache.address))&&
-           !this.defaultConfig.shared.deposits.some(address=>address.isEqual(this.cache.address))){
-          this.cache.address=new UserAddress();
-        }
-      }
-    
-
-      this.cart$.next({action:CartAction.CART_LOADED});
     }catch(e){
       console.log('------------error on cart loading',e)
-      this.cart$.next({action:CartAction.CART_LOAD_ERROR})
+      // this.cart$.next({action:CartAction.CART_LOAD_ERROR})
     }
   }
 
@@ -713,19 +757,56 @@ export class CartService {
     return this.save({item:item,action:CartAction.ITEM_REMOVE});
   }
 
-  //
-  // save with localStorage
-  // save with api/user/cart
-  save(state:CartState){
-    try{
-      localStorage.setItem('kng2-cart', JSON.stringify(this.cache));    
-      this.cart$.next(state);
-    }catch(e){
-      console.log('--',e.message)
-      console.log('--',e.stack)
-      this.cart$.next({action:CartAction.CART_SAVE_ERROR})
-    }
+  // 
+  // NOT AVAILABLE WITH rxjs<v6
+  save(state:CartState){}
+  // Save with localStorage or api/cart
+  // save(state:CartState){
+  //   let obs=this.currentUser.isAuthenticated()?
+  //       this.saveServer(state):this.saveLocal(state);
+  //   obs.pipe(
+  //     map(state=>{
+  //       this.cart$.next(state);
+  //       return state;
+  //     }),
+  //     catchError(e=>{
+  //       //
+  //       // FIXME what do we do on error ?        
+  //       console.log('--',e.message)
+  //       console.log('--',e.stack)
+  //       this.cart$.next({action:CartAction.CART_SAVE_ERROR})
+  //       return this.saveLocal(state);
+  //     })
+  //   );
+
+  // }
+
+  private saveLocal(state:CartState):Observable<CartState>{
+    return Observable.create((observer)=>{
+      try{
+        localStorage.setItem('kng2-cart', JSON.stringify(this.cache));    
+        this.cache.sync=false;
+        observer.next(state);        
+      }catch(e){
+        observer.error(e);
+      }
+      observer.complete();
+    });    
   }
+
+  // NOT AVAILABLE WITH rxjs<v6
+  // private saveServer(state:CartState):Observable<CartState>{
+  //   return this.$http.post<CartState>(ConfigService.defaultConfig.API_SERVER + '/v1/cart',state, {
+  //     headers: this.headers,
+  //     withCredentials: true
+  //   }).pipe(map(state=>{
+  //     //
+  //     // sync with server is done!
+  //     state.sync=this.cache.sync=true;
+  //     return state;
+  //   }));
+  // }
+
    
   //
   // set default user address
@@ -767,9 +848,17 @@ export class CartService {
     this.cache.currentShippingTime=16;
 
     //
-    // mark cart ready
-    this.isReady=true;
-    this.load();
+    // load initial context on this device
+    this.loadContext();
+
+    this.loadCart().subscribe(state=>{
+      this.cart$.next({action:CartAction.CART_LOADED});
+      this.isReady=true;
+    },err=>{
+      this.cart$.next({action:CartAction.CART_LOAD_ERROR});
+      this.isReady=true;
+    })
+    
   }
   
   setError(errors){

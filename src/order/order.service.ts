@@ -125,12 +125,12 @@ export class OrderService {
 
   // capture this order
   // role:admin only
-  // TODO opts ??
+  // TODO opts => reason:'invoice'
   // app.post('/v1/orders/:oid/capture', auth.ensureAdmin, queued(orders.capture));
-  capture(order: Order): Observable<any> {
-    // opts=opts||{};
+  capture(order: Order, opts?:any): Observable<any> {
+    opts=opts||{};
     // return this.chain(backend.$order.save({action:this.oid,id:'capture'},opts).$promise);
-    return this.http.post<Order>(this.config.API_SERVER + '/v1/orders/' + order.oid + '/capture',{}, {
+    return this.http.post<Order>(this.config.API_SERVER + '/v1/orders/' + order.oid + '/capture',opts, {
       headers: this.headers,
       withCredentials: true
     }).pipe(

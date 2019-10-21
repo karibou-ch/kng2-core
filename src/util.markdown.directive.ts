@@ -1,5 +1,4 @@
 import { AfterViewInit, Directive,Input, ElementRef, Component, ViewEncapsulation } from '@angular/core';
-import { Http } from '@angular/http';
 
 import { Utils } from './util';
 // import { Prism } from 'prism';
@@ -54,8 +53,7 @@ export class MarkdownDirective implements AfterViewInit{
   sdExtAttr;
 
   constructor (
-    private elementRef:ElementRef, 
-    private http:Http
+    private elementRef:ElementRef
   ) {
     this.element = this.elementRef.nativeElement;
     this.html='';
