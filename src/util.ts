@@ -1,5 +1,4 @@
-import { Observable } from 'rxjs';
-import { ReplaySubject } from 'rxjs/ReplaySubject';
+import { Observable, ReplaySubject } from 'rxjs';
 
   // TODO test utility class
 export class Utils{

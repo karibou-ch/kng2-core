@@ -19,8 +19,10 @@ export class bgSrcDirective implements OnInit{
   @Input() bgGradient : boolean;
   element;
 
-  constructor(el: ElementRef) { 
-    this.element=el.nativeElement;
+  constructor(
+    private el: ElementRef
+  ) { 
+    this.element=this.el.nativeElement;
   }
 
   @Input() set bgSrc(url) {

@@ -7,6 +7,8 @@
     "interface-name": false,
     "invoke-injectable": true,
     "max-line-length": [true, 100],
+    "max-classes-per-file": false,
+    "member-access": false,
     "no-access-missing-member": false,
     "no-attribute-parameter-decorator": true,
     "no-console": [true, "time", "timeEnd", "trace"],

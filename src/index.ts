@@ -8,6 +8,7 @@ export { ConfigService } from './config.service';
 
 export { CartAction,
          CartConfig,
+         CartModel,
          CartItem,
          CartService,
          CartState } from './cart.service';

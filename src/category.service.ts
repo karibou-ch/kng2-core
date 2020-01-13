@@ -24,6 +24,7 @@ export class Category {
   slug: string;
   group: string;  /* permet de grouper une catégorie (toutes les catégories des artisans, producteurs*/
   cover: string;  /* image de la catégorie */
+  color: string;  /* couleur de la catégorie */
   description?: string;
   image: string; /* icon associé à la catégorie */
   name: string;

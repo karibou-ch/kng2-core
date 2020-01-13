@@ -6,7 +6,6 @@ import { config } from './config';
 
 import { ReplaySubject ,  Observable ,  of } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { StaticInjector } from '@angular/core/src/di/injector';
 
 export class Document implements DocumentHeader {
   constructor(json?: any) {
