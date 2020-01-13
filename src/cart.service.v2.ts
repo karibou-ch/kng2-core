@@ -207,7 +207,7 @@ export class CartConfig {
       others: number;
     }
     //
-    // discount amount  
+    // discount amount
     priceA: number;
     priceB: number;
     //
@@ -216,7 +216,7 @@ export class CartConfig {
     discountB: number;    // 180 full price 11.7@18% & 9.75@15%
 
     //
-    // postalCodes 
+    // postalCodes
     periphery: string[];
     others: string[];
   }
@@ -730,6 +730,7 @@ export class CartService {
     return this.save({ item: item, action: CartAction.ITEM_REMOVE, sync: false });
   }
 
+  // tslint:disable-next-line: member-ordering
   remove(product: Product | CartItem, variant?: string) {
     this.checkIfReady();
     // init
@@ -760,6 +761,7 @@ export class CartService {
 
   // 
   // Save with localStorage or api/cart
+  // tslint:disable-next-line: member-ordering
   save(state: CartState) {
     let obs = this.currentUser.isAuthenticated() ?
       this.saveServer(state) : this.saveLocal(state);

@@ -3,14 +3,12 @@
   "version": "2.58.0",
   "description": "The module goal mainly provide a kickstart kit to make every new idea/motivation web application/ionic declinaison for karibou.ch without friction!",
   "scripts": {
-    "build": "ng-packagr -p package.json",
-    "publish-git": "push-dir --force --dir=./dist --branch=kng-core-dist"
-  },
-  "ngPackage": {
-    "lib": {
-      "entryFile": "src/index.ts"
-    },
-    "dest": "dist"
+    "ng": "ng",
+    "start": "ng serve",
+    "build": "ng build",
+    "test": "ng test",
+    "lint": "ng lint",
+    "e2e": "ng e2e"
   },
   "repository": {
     "type": "git",
@@ -22,33 +20,26 @@
     "karibou.ch"
   ],
   "author": "olivier@karibou.ch",
-  "maintainers": [
-    {
-      "name": "David",
-      "email": "d.gonzalez@outlook.fr"
-    }
-  ],
-  "homepage": "https://github.com/karibou-ch/kng2-core",
-  "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/karibou-ch/kng2-core/issues"
-  },
-  "dependencies": {
-  },
+  "private": false,
   "peerDependencies": {
-    "@angular/common": ">=7.0.0",
-    "@angular/compiler": "~8.2.7",
-    "@angular/core": ">=7.0.0",
+    "@angular/animations": "~8.2.7",
+    "@angular/common": "^8.2.14",
+    "@angular/core": "^8.2.14"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@angular/forms": "~8.2.7",
     "@angular/platform-browser": "~8.2.7",
     "@angular/platform-browser-dynamic": "~8.2.7",
+    "@angular/router": "~8.2.7",
     "rxjs": "~6.4.0",
     "tslib": "^1.10.0",
     "zone.js": "~0.9.1",
-    "moment":"^0.24.0"
-  },
-  "devDependencies": {
-    "@angular-devkit/build-angular": "~0.803.12",
-    "@angular-devkit/build-ng-packagr": "~0.803.12",
+    "@angular/common": "~8.2.7",
+    "@angular/compiler": "~8.2.7",
+    "@angular/core": "~8.2.7",
+    "@angular-devkit/build-angular": "~0.803.22",
+    "@angular-devkit/build-ng-packagr": "~0.803.22",
     "@angular/cli": "~8.3.5",
     "@angular/compiler-cli": "~8.2.7",
     "@angular/language-service": "~8.2.7",

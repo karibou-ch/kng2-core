@@ -14,26 +14,26 @@ import { User, UserAddress, UserCard, DepositAddress } from './user.service';
 //
 // on recurrent order
 export enum CartItemFrequency {
-  ITEM_ONCE      = 0,
-  ITEM_WEEK      = 1,
-  ITEM_2WEEKS    = 2,
-  ITEM_MONTH     = 3,
-  ITEM_QUARTER   = 4
+  ITEM_ONCE = 0,
+  ITEM_WEEK = 1,
+  ITEM_2WEEKS = 2,
+  ITEM_MONTH = 3,
+  ITEM_QUARTER = 4
 }
 //
 // on cart action 
-export  enum CartAction {
-  ITEM_ADD       = 1,
-  ITEM_REMOVE    = 2,
-  ITEM_MAX       = 3,
-  CART_INIT      = 4,
-  CART_LOADED    = 5,
-  CART_LOAD_ERROR= 6,
-  CART_SAVE_ERROR= 7,
-  CART_ADDRESS   = 8,
-  CART_PAYMENT   = 9,
-  CART_SHPPING   =10,
-  CART_CLEARED   =11
+export enum CartAction {
+  ITEM_ADD = 1,
+  ITEM_REMOVE = 2,
+  ITEM_MAX = 3,
+  CART_INIT = 4,
+  CART_LOADED = 5,
+  CART_LOAD_ERROR = 6,
+  CART_SAVE_ERROR = 7,
+  CART_ADDRESS = 8,
+  CART_PAYMENT = 9,
+  CART_SHPPING = 10,
+  CART_CLEARED = 11
 }
 
 //
@@ -263,7 +263,7 @@ class Cache {
   }
 }
 
-export class CartModel{
+export class CartModel {
   cid: string[];
   address: string;
   payment: string;
