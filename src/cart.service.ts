@@ -573,26 +573,26 @@ export class CartService {
     const nextShippingDay = Order.nextShippingDay();
     const currentShippingDay = config.potentialShippingWeek()[0];
 
-    const localJsonCart = localStorage.getItem('kng2-cart');
-    this.$http.get<CartModel>(ConfigService.defaultConfig.API_SERVER + '/v1/cart', {
-      params: {cart: localJsonCart},
-      headers: this.headers,
-      withCredentials: true
-    }).pipe(
-      map(cart => {
-        return cart.items.map(item => new CartItem(item));
-      }),
-      catchError(() => {
-        const cart = JSON.parse(localJsonCart);
-        return of(cart.list.map(item => new CartItem(item)));
-      })
-    ).subscribe(items => {
-      const cart = JSON.parse(localJsonCart);
-      this.cache.list = cart.list.map(item => new CartItem(item));
-      this.clearErrors();
-      Object.assign(this.cache.discount, cart.discount);
+// const localJsonCart = localStorage.getItem('kng2-cart');
+// this.$http.get<CartModel>(ConfigService.defaultConfig.API_SERVER + '/v1/cart', {
+//   params: {cart: localJsonCart},
+//   headers: this.headers,
+//   withCredentials: true
+// }).pipe(
+//   map(cart => {
+//     return cart.items.map(item => new CartItem(item));
+//   }),
+//   catchError(() => {
+//     const cart = JSON.parse(localJsonCart);
+//     return of(cart.list.map(item => new CartItem(item)));
+//   })
+// ).subscribe(items => {
+//   const cart = JSON.parse(localJsonCart);
+//   this.cache.list = cart.list.map(item => new CartItem(item));
+//   this.clearErrors();
+//   Object.assign(this.cache.discount, cart.discount);
 
-    });
+// });
 
     try {
       const cartCache = JSON.parse(localStorage.getItem('kng2-cart'));
@@ -776,6 +776,7 @@ export class CartService {
       return state;
     }));
   }
+
 
   //
   // set default user address
