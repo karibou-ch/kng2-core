@@ -1,6 +1,6 @@
-import { HttpHeaders } from '@angular/common/http';
+import { HttpHeaders, HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { ReplaySubject, SubscriptionLike as ISubscription, throwError as _throw } from 'rxjs';
+import { ReplaySubject, SubscriptionLike as ISubscription, throwError as _throw, Observable, of } from 'rxjs';
 import { config, Config } from './config';
 
 import { Product } from './product.service';
@@ -10,6 +10,8 @@ import { OrderService } from './order/order.service';
 import { Order, OrderItem } from './order/order';
 import { Shop } from './shop.service';
 import { User, UserAddress, UserCard, DepositAddress } from './user.service';
+import { map, catchError } from 'rxjs/operators';
+import { ConfigService } from './config.service';
 
 //
 // on recurrent order
@@ -21,7 +23,7 @@ export enum CartItemFrequency {
   ITEM_QUARTER = 4
 }
 //
-// on cart action 
+// on cart action
 export enum CartAction {
   ITEM_ADD = 1,
   ITEM_REMOVE = 2,
@@ -41,11 +43,18 @@ export enum CartAction {
 export class CartState {
   item?: CartItem;
   action: CartAction;
+  //sync: boolean;
 }
 
 //
 // cart content
 export class CartItem {
+
+  constructor(item: any | CartItem) {
+    // avoid UI artefact on loading 
+    item['selected'] = undefined;
+    Object.assign(this, item);
+  }
   deleted?: boolean;
   frequency?: CartItemFrequency;
   timestamp: Date;
@@ -77,40 +86,6 @@ export class CartItem {
   discount: boolean;
   part: string;
   quantity: number;
-
-  constructor(item: any | CartItem) {
-    // avoid UI artefact on loading 
-    item['selected'] = undefined;
-    Object.assign(this, item);
-  }
-
-  equalItem(other: CartItem, variant?: string) {
-    let bSku = this.sku == other.sku;
-    if (!variant) {
-      return bSku;
-    }
-    return (this.variant &&
-      this.variant == variant &&
-      bSku);
-  }
-
-  //
-  // FIXME server need this format, that should be modified
-  toDEPRECATED() {
-    return {
-      sku: this.sku,
-      title: this.title,
-      variant: this.variant,
-      categories: this.category.name,
-      vendor: this.vendor.urlpath,
-      quantity: this.quantity,
-      price: this.price,
-      part: this.part,
-      note: this.note,
-      finalprice: this.finalprice
-    };
-
-  }
 
   static fromOrder(orderItem: OrderItem) {
     /**
@@ -182,6 +157,34 @@ export class CartItem {
     }
     return new CartItem(item);
   }
+
+  equalItem(other: CartItem, variant?: string) {
+    let bSku = this.sku == other.sku;
+    if (!variant) {
+      return bSku;
+    }
+    return (this.variant &&
+      this.variant == variant &&
+      bSku);
+  }
+
+  //
+  // FIXME server need this format, that should be modified
+  toDEPRECATED() {
+    return {
+      sku: this.sku,
+      title: this.title,
+      variant: this.variant,
+      categories: this.category.name,
+      vendor: this.vendor.urlpath,
+      quantity: this.quantity,
+      price: this.price,
+      part: this.part,
+      note: this.note,
+      finalprice: this.finalprice
+    };
+
+  }
 }
 
 //
@@ -191,7 +194,7 @@ export class CartConfig {
   gateway: {
     fees: number,
     label: string
-  }
+  };
   currency: string;
   shipping: any | {
     average: number;
@@ -201,7 +204,7 @@ export class CartConfig {
       others: number;
     }
     //
-    // discount amount  
+    // discount amount
     priceA: number;
     priceB: number;
     //
@@ -210,14 +213,14 @@ export class CartConfig {
     discountB: number;    // 180 full price 11.7@18% & 9.75@15%
 
     //
-    // postalCodes 
+    // postalCodes
     periphery: string[];
     others: string[];
-  }
+  };
 
   constructor() {
-    let defaultShipping = {
-      // average 
+    const defaultShipping = {
+      // average
       average: 0,
       price: {},
       priceA: 0,
@@ -238,13 +241,14 @@ export class CartConfig {
 }
 
 //
-// Cart Cache content 
+// Cart Cache content
 // which is used over time (close/open navigator)
 // this should be serialized in server side
 class Cache {
+  cid: string[];
   list: CartItem[];
   //
-  // vendors discounts 
+  // vendors discounts
   // TODO vendors discount should feet actual vendors settings
   discount: any;
   address: DepositAddress | UserAddress;
@@ -288,16 +292,16 @@ export class CartService {
 
   private cache = new Cache();
 
-  public SHIPPING_COLLECT: string = 'collect';
-  public SHIPPING_CENTER: string = 'hypercenter';
-  public SHIPPING_PERIPHERY: string = 'periphery';
-  public SHIPPING_OTHER: string = 'other';
+  public SHIPPING_COLLECT = 'collect';
+  public SHIPPING_CENTER = 'hypercenter';
+  public SHIPPING_PERIPHERY = 'periphery';
+  public SHIPPING_OTHER = 'other';
 
   public DEFAULT_GATEWAY: any;
   public cart$: ReplaySubject<CartState>;
 
   constructor(
-    private $order: OrderService
+    private $http: HttpClient
   ) {
     this.headers = new HttpHeaders();
     this.headers.append('Content-Type', 'application/json');
@@ -309,7 +313,7 @@ export class CartService {
     this.cart$ = new ReplaySubject(1);
     this.isReady = false;
 
-    //this.cart$.next({action:CartAction.CART_INIT});
+    // this.cart$.next({action:CartAction.CART_INIT});
   }
 
   //
@@ -321,14 +325,13 @@ export class CartService {
   //
   // add one item
   add(product: Product | CartItem, variant?: string) {
-    //TODO facebook
-    //if(window.fbq)fbq('track', 'AddToCart');
+    // if(window.fbq)fbq('track', 'AddToCart');
     this.checkIfReady();
-    let items = this.cache.list;
-    let item = (product instanceof CartItem) ? product : CartItem.fromProduct(product, variant);
+    const items = this.cache.list;
+    const item = (product instanceof CartItem) ? product : CartItem.fromProduct(product, variant);
 
 
-    for (var i = 0; i < items.length; i++) {
+    for (let i = 0; i < items.length; i++) {
       if (items[i].equalItem(item, variant)) {
 
         //
@@ -366,13 +369,13 @@ export class CartService {
     items.push(item);
     // TODO warn update
     this.computeVendorDiscount(product.vendor);
-    return this.save({ item: item, action: CartAction.ITEM_ADD });
+    return this.save({ item, action: CartAction.ITEM_ADD });
   }
 
-  // clear error 
+  // clear error
   clearErrors() {
-    let items = this.cache.list;
-    for (var i = 0; i < items.length; i++) {
+    const items = this.cache.list;
+    for (let i = 0; i < items.length; i++) {
       items[i].error = undefined;
     }
   }
@@ -380,14 +383,14 @@ export class CartService {
   //
   // cart initialisation valid
   checkIfReady() {
-    if (!this.isReady) { throw new Error("Cart is used before initialisation"); }
+    if (!this.isReady) { throw new Error('Cart is used before initialisation'); }
   }
 
   //
   // compute discount by vendor
   computeVendorDiscount(vendor: Shop) {
     // init
-    let items = this.cache.list;
+    const items = this.cache.list;
     let amount = 0;
 
     //
@@ -399,7 +402,7 @@ export class CartService {
 
     //
     // subtotal for the vendor
-    items.forEach(function (item) {
+    items.forEach(function(item) {
       if (item.vendor.urlpath == vendor.urlpath) {
         amount += (item.price * item.quantity);
       }
@@ -407,8 +410,8 @@ export class CartService {
 
     //
     // compute discount based on vendor
-    var discountMagnitude = Math.floor(amount / vendor.discount.threshold);
-    this.cache.discount[vendor.urlpath] = discountMagnitude * vendor.discount.amount
+    let discountMagnitude = Math.floor(amount / vendor.discount.threshold);
+    this.cache.discount[vendor.urlpath] = discountMagnitude * vendor.discount.amount;
 
     //
     // return the discount
@@ -418,8 +421,8 @@ export class CartService {
 
   computeShippingFees(address: UserAddress) {
     this.checkIfReady();
-    let total = this.subTotal();
-    let postalCode = address.postalCode || '1234567';
+    const total = this.subTotal();
+    const postalCode = address.postalCode || '1234567';
 
     let distance = this.SHIPPING_CENTER;
 
@@ -444,7 +447,7 @@ export class CartService {
     //
     // testing deposit address
     // FIXME issue with streetAdress vs. streetAddress
-    let deposit = this.defaultConfig.shared.deposits.find(add => {
+    const deposit = this.defaultConfig.shared.deposits.find(add => {
       return add.isEqual(address) &&
         add.fees >= 0;
     });
@@ -454,19 +457,16 @@ export class CartService {
 
     //
     // TODO TESTING MERCHANT ACCOUNT
-    //if (user.merchant===true){
+    // if (user.merchant===true){
     // return Utils.roundAmount(price-this.cartConfig.shipping.priceB);
-    //}
+    // }
 
 
     // implement 3) get free shipping!
     if (this.cartConfig.shipping.discountB &&
       total >= this.cartConfig.shipping.discountB) {
       price = (price - this.cartConfig.shipping.priceB);
-    }
-
-    // implement 3) get half shipping!
-    else
+    } else
       if (this.cartConfig.shipping.discountA &&
         total >= this.cartConfig.shipping.discountA) {
         price = (price - this.cartConfig.shipping.priceA);
@@ -497,10 +497,10 @@ export class CartService {
   }
 
   //
-  // compute amout of 
+  // compute amout of
   gatewayAmount() {
     this.checkIfReady();
-    let total = this.subTotal(),
+    const total = this.subTotal(),
       shipping = this.shipping();
     return this.getCurrentGateway().fees * (total + shipping - this.totalDiscount());
   }
@@ -545,16 +545,13 @@ export class CartService {
   }
 
   hasShippingReduction(): boolean {
-    let total = this.subTotal();
+    const total = this.subTotal();
 
     // implement 3) get free shipping!
     if (this.cartConfig.shipping.discountB &&
       total >= this.cartConfig.shipping.discountB) {
       return true;
-    }
-
-    // implement 3) get half shipping!
-    else
+    } else
       if (this.cartConfig.shipping.discountA &&
         total >= this.cartConfig.shipping.discountA) {
         return true;
@@ -565,7 +562,7 @@ export class CartService {
 
   isCurrentShippingDayAvailable(shop: Shop): boolean {
     this.checkIfReady();
-    let weekday = this.cache.currentShippingDay.getDay();
+    const weekday = this.cache.currentShippingDay.getDay();
     return shop.available.weekdays.indexOf(weekday) > -1;
   }
 
@@ -573,18 +570,32 @@ export class CartService {
   load() {
     //
     // IFF next shipping day is Null (eg. hollidays)=> currentShippingDay
-    let nextShippingDay = Order.nextShippingDay();
-    let currentShippingDay = config.potentialShippingWeek()[0];
-    ;
-    // this.$order.findOrdersByUser(this.currentUser).subscribe(
-    //   (orders:Order[])=>{
+    const nextShippingDay = Order.nextShippingDay();
+    const currentShippingDay = config.potentialShippingWeek()[0];
 
-    //   },error=>{
+    const localJsonCart = localStorage.getItem('kng2-cart');
+    this.$http.get<CartModel>(ConfigService.defaultConfig.API_SERVER + '/v1/cart', {
+      params: {cart: localJsonCart},
+      headers: this.headers,
+      withCredentials: true
+    }).pipe(
+      map(cart => {
+        return cart.items.map(item => new CartItem(item));
+      }),
+      catchError(() => {
+        const cart = JSON.parse(localJsonCart);
+        return of(cart.list.map(item => new CartItem(item)));
+      })
+    ).subscribe(items => {
+      const cart = JSON.parse(localJsonCart);
+      this.cache.list = cart.list.map(item => new CartItem(item));
+      this.clearErrors();
+      Object.assign(this.cache.discount, cart.discount);
 
-    //   }
-    // );
+    });
+
     try {
-      let cartCache = JSON.parse(localStorage.getItem('kng2-cart'));
+      const cartCache = JSON.parse(localStorage.getItem('kng2-cart'));
       if (!cartCache) {
         this.cache.currentShippingDay = new Date(nextShippingDay || currentShippingDay);
         this.cart$.next({ action: CartAction.CART_LOADED });
@@ -619,9 +630,7 @@ export class CartService {
         // check validity
         if (!this.cache.payment.isValid()) {
           this.cache.payment = null;
-        }
-        // check existance on the current user (example when you switch account, cart should be sync )
-        else if (
+        } else if (
           !this.currentUser.payments.some(payment => payment.isEqual(this.cache.payment))) {
           this.cache.payment = new UserCard();
         }
@@ -650,7 +659,7 @@ export class CartService {
           this.cache.address.floor = '-';
         }
 
-        //     
+        //
         // check existance on the current user (example when you switch account, cart should be sync )
         if (!this.currentUser.addresses.some(address => address.isEqual(this.cache.address)) &&
           !this.defaultConfig.shared.deposits.some(address => address.isEqual(this.cache.address))) {
@@ -661,19 +670,19 @@ export class CartService {
 
       this.cart$.next({ action: CartAction.CART_LOADED });
     } catch (e) {
-      console.log('------------error on cart loading', e)
-      this.cart$.next({ action: CartAction.CART_LOAD_ERROR })
+      console.log('------------error on cart loading', e);
+      this.cart$.next({ action: CartAction.CART_LOAD_ERROR });
     }
   }
 
   removeAll(product: Product | CartItem, variant?: string) {
     this.checkIfReady();
     // init
-    let items = this.cache.list;
-    let item = (product instanceof CartItem) ? product : CartItem.fromProduct(product);
+    const items = this.cache.list;
+    const item = (product instanceof CartItem) ? product : CartItem.fromProduct(product);
 
-    // 
-    for (var i = 0; i < items.length; i++) {
+    //
+    for (let i = 0; i < items.length; i++) {
       if (items[i].equalItem(item, variant)) {
         items.splice(i, 1);
         break;
@@ -682,17 +691,17 @@ export class CartService {
     //
     // update discount amount
     this.computeVendorDiscount(product.vendor);
-    return this.save({ item: item, action: CartAction.ITEM_REMOVE });
+    return this.save({ item, action: CartAction.ITEM_REMOVE });
   }
 
   remove(product: Product | CartItem, variant?: string) {
     this.checkIfReady();
     // init
-    let items = this.cache.list;
-    let item = (product instanceof CartItem) ? product : CartItem.fromProduct(product);
+    const items = this.cache.list;
+    const item = (product instanceof CartItem) ? product : CartItem.fromProduct(product);
 
-    // 
-    for (var i = 0; i < items.length; i++) {
+    //
+    for (let i = 0; i < items.length; i++) {
       if (items[i].equalItem(item, variant)) {
         // if(items[i].sku===product.sku){
         if (items[i].quantity > 15) {
@@ -716,28 +725,63 @@ export class CartService {
     //
     // update discount amount
     this.computeVendorDiscount(product.vendor);
-    return this.save({ item: item, action: CartAction.ITEM_REMOVE });
+    return this.save({ item, action: CartAction.ITEM_REMOVE });
   }
 
   //
   // save with localStorage
   // save with api/user/cart
   save(state: CartState) {
-    try {
-      localStorage.setItem('kng2-cart', JSON.stringify(this.cache));
+    this.saveServer(state)
+    .pipe(
+      catchError(e => {
+        return this.saveLocal(state);
+      }),
+    )
+    .subscribe(state => {
       this.cart$.next(state);
-    } catch (e) {
-      console.log('--', e.message)
-      console.log('--', e.stack)
-      this.cart$.next({ action: CartAction.CART_SAVE_ERROR })
-    }
+    },error => {
+      // console.log('--DEBUG ERR', error.message)
+      this.cart$.next({ action: CartAction.CART_SAVE_ERROR});
+    });
+
+  }
+
+  private saveLocal(state: CartState): Observable<CartState> {
+    return new Observable((observer) => {
+      try {
+        localStorage.setItem('kng2-cart', JSON.stringify(this.cache));
+        observer.next(state);
+      } catch (e) {
+        observer.error(e);
+      }
+      observer.complete();
+    });
+  }
+
+  private saveServer(state: CartState): Observable<CartState> {
+    let model: CartModel = new CartModel();
+    model.cid = this.cache.cid;
+    model.items = this.cache.list;
+
+    return this.$http.post<CartModel>(ConfigService.defaultConfig.API_SERVER + '/v1/cart', model, {
+      headers: this.headers,
+      withCredentials: true
+    }).pipe(map(model => {
+      this.cache.cid = model.cid;
+      this.cache.list = model.items.map(item => new CartItem(item));
+
+      //
+      // sync with server is done!
+      return state;
+    }));
   }
 
   //
   // set default user address
   setShippingAddress(address: UserAddress) {
     this.cache.address = address;
-    this.save({ action: CartAction.CART_ADDRESS })
+    this.save({ action: CartAction.CART_ADDRESS });
   }
 
   //
@@ -754,7 +798,7 @@ export class CartService {
     }
     this.cache.currentShippingDay = newDate;
     this.cache.currentShippingTime = hours || 16;
-    this.save({ action: CartAction.CART_SHPPING })
+    this.save({ action: CartAction.CART_SHPPING });
   }
 
   //
@@ -783,7 +827,7 @@ export class CartService {
     for (let i = 0; i < errors.length; i++) {
       sku = Object.keys(errors[i])[0];
       item = this.findBySku(sku);
-      if (item) item.error = errors[i][sku];
+      if (item) { item.error = errors[i][sku]; }
     }
   }
 
@@ -791,13 +835,13 @@ export class CartService {
   shipping(removeDiscount?: boolean) {
     // check if cart is available
 
-    let total = this.subTotal();
+    const total = this.subTotal();
     let price = this.computeShippingFees(this.cache.address);
 
 
-    //Compute shipping and substract discount
+    // Compute shipping and substract discount
     if (removeDiscount) {
-      var fees = this.getCurrentGateway().fees * (total + price);
+      let fees = this.getCurrentGateway().fees * (total + price);
       price -= Math.max(this.totalDiscount() - fees, 0);
     }
 
@@ -806,9 +850,9 @@ export class CartService {
 
 
   subTotal(): number {
-    let items = this.cache.list;
+    const items = this.cache.list;
     let total = 0;
-    items.forEach(function (item) {
+    items.forEach(function(item) {
       total += (item.price * item.quantity);
     });
     return Utils.roundAmount(total);
@@ -826,9 +870,9 @@ export class CartService {
 
 
   quantity(): number {
-    let items = this.cache.list;
+    const items = this.cache.list;
     let quantity = 0;
-    items.forEach(function (item) {
+    items.forEach(function(item) {
       quantity += item.quantity;
     });
     return quantity;
@@ -838,10 +882,10 @@ export class CartService {
   //
   // total = items + shipping - total discount
   // total = stotal + stotal*payment.fees
-  // WARNNG -- WARNNG -- WARNNG -- edit in all places 
+  // WARNNG -- WARNNG -- WARNNG -- edit in all places
   total(): number {
     let total = this.subTotal(), shipping = this.shipping();
-    let fees = this.getCurrentGateway().fees * (total + shipping - this.totalDiscount()) + shipping;
+    const fees = this.getCurrentGateway().fees * (total + shipping - this.totalDiscount()) + shipping;
     total += (fees - this.totalDiscount());
 
     // Rounding up to the nearest 0.05
@@ -852,8 +896,8 @@ export class CartService {
   //
   // FIXME, that should be based on the list of all vendors Shop[] (in fact, vendor discount could change )
   totalDiscount(): number {
-    var amount = 0;
-    for (let slug in this.cache.discount) {
+    let amount = 0;
+    for (const slug in this.cache.discount) {
       amount += this.cache.discount[slug];
     }
     return Utils.roundAmount(amount);
@@ -866,7 +910,7 @@ export class CartService {
       return false;
     }
     if (this.cache.payment.issuer == this.cartConfig.gateway.label) {
-      return true
+      return true;
     }
     //
     // init default one
@@ -901,6 +945,6 @@ export class CartService {
       errMsg = error.message ? error.message : error.toString();
     }
     return _throw(errMsg);
-  };
+  }
 }
 

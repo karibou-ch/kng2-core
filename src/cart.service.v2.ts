@@ -576,6 +576,7 @@ export class CartService {
 
   loadCart(): Observable<CartModel> {
     return this.$http.get<CartModel>(ConfigService.defaultConfig.API_SERVER + '/v1/cart', {
+      params: {cart: ''},
       headers: this.headers,
       withCredentials: true
     }).pipe(
@@ -586,7 +587,7 @@ export class CartService {
         this.cache.list = cart.items.map(item => new CartItem(item));
 
         //
-        // init address and payment      
+        // init address and payment
         if (cart.address) {
           this.cache.address = Object.assign(new UserAddress(), JSON.parse(cart.address || "{}"));
         }
@@ -763,17 +764,15 @@ export class CartService {
   // Save with localStorage or api/cart
   // tslint:disable-next-line: member-ordering
   save(state: CartState) {
-    let obs = this.currentUser.isAuthenticated() ?
-      this.saveServer(state) : this.saveLocal(state);
-    obs.pipe(
+    this.saveServer(state).pipe(
       map(state => {
         this.cart$.next(state);
         return state;
       }),
       catchError(e => {
         //
-        // FIXME what do we do on error ?        
-        console.log('--', e.message)
+        // FIXME what do we do on error ?
+        console.log('--', e.message);
         console.log('--', e.stack)
         this.cart$.next({ action: CartAction.CART_SAVE_ERROR, sync: false })
         return this.saveLocal(state);
@@ -798,8 +797,6 @@ export class CartService {
   private saveServer(state: CartState): Observable<CartState> {
     let model: CartModel = new CartModel();
     model.cid = this.cache.cid;
-    model.address = JSON.stringify(this.cache.address);
-    model.payment = JSON.stringify(this.cache.payment);
     model.items = this.cache.list;
 
     return this.$http.post<CartModel>(ConfigService.defaultConfig.API_SERVER + '/v1/cart', model, {
