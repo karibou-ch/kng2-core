@@ -93,12 +93,12 @@ export class CartItem {
   }
 
   public equalItem(other: CartItem, variant?: string) {
-    const bSku = this.sku == other.sku;
+    const bSku = this.sku === other.sku;
     if (!variant) {
       return bSku;
     }
     return (this.variant &&
-      this.variant == variant &&
+      this.variant === variant &&
       bSku);
   }
 
@@ -121,18 +121,17 @@ export class CartItem {
   }
 
   public static fromOrder(orderItem: OrderItem) {
-    /**
-     * TODO missing props CartItem.fromOrderItem
-       - thumb:orderItem.thumb,
-       - category.slug: orderItem.category,
-       - name: product.vendor.name,
-       - weekdays: product.vendor.available.weekdays,
-       - photo: product.vendor.photo.owner,
-       - discount:
-       - weight:product.categories.weight,
-       - discount:product.isDiscount(),
-     *
-     */
+
+      // TODO missing props CartItem.fromOrderItem
+      //  - thumb:orderItem.thumb,
+      //  - category.slug: orderItem.category,
+      //  - name: product.vendor.name,
+      //  - weekdays: product.vendor.available.weekdays,
+      //  - photo: product.vendor.photo.owner,
+      //  - discount:
+      //  - weight:product.categories.weight,
+      //  - discount:product.isDiscount(),
+
     const item = {
       timestamp: (new Date()),
       title: orderItem.title,
@@ -333,7 +332,7 @@ export class CartService {
     this.checkIfReady();
     const items = this.cache.list;
     const item = (product instanceof CartItem) ? product : CartItem.fromProduct(product, variant);
-
+    // TODO TSLINT
     for (let i = 0; i < items.length; i++) {
       if (items[i].equalItem(item, variant)) {
 
@@ -375,6 +374,7 @@ export class CartService {
   // clear error
   public clearErrors() {
     const items = this.cache.list;
+    // TOFIX  TSLINT
     for (let i = 0; i < items.length; i++) {
       items[i].error = undefined;
     }
@@ -402,15 +402,16 @@ export class CartService {
 
     //
     // subtotal for the vendor
+    // TODO  TSLINT
     items.forEach(function(item) {
-      if (item.vendor.urlpath == vendor.urlpath) {
+      if (item.vendor.urlpath === vendor.urlpath) {
         amount += (item.price * item.quantity);
       }
     });
 
     //
     // compute discount based on vendor
-    let discountMagnitude = Math.floor(amount / vendor.discount.threshold);
+    const discountMagnitude = Math.floor(amount / vendor.discount.threshold);
     this.cache.discount[vendor.urlpath] = discountMagnitude * vendor.discount.amount;
 
     //
@@ -424,7 +425,6 @@ export class CartService {
     const postalCode = address.postalCode || '1234567';
 
     let distance = this.SHIPPING_CENTER;
-
 
     //
     // get the base of price depending the shipping sector
@@ -446,7 +446,7 @@ export class CartService {
     //
     // testing deposit address
     // FIXME issue with streetAdress vs. streetAddress
-    const deposit = this.defaultConfig.shared.deposits.find((add)=> {
+    const deposit = this.defaultConfig.shared.deposits.find((add) => {
       return add.isEqual(address) &&
              add.fees >= 0;
     });
@@ -486,7 +486,7 @@ export class CartService {
   }
 
   public findBySku(sku: number): CartItem {
-    return this.cache.list.find((item)=> item.sku == sku);
+    return this.cache.list.find((item) => item.sku === sku);
   }
 
   public getCurrentGateway(): {fees: number, label: string} {
@@ -499,8 +499,8 @@ export class CartService {
   // compute amout of
   public gatewayAmount() {
     this.checkIfReady();
-    const total = this.subTotal(),
-        shipping = this.shipping();
+    const total = this.subTotal();
+    const shipping = this.shipping();
     return this.getCurrentGateway().fees * (total + shipping - this.totalDiscount());
   }
 
@@ -540,7 +540,7 @@ export class CartService {
   }
 
   public hasError(): boolean {
-    return this.cache.list.some((item)=> item.error != undefined);
+    return this.cache.list.some((item) => item.error !== undefined);
   }
 
   public hasShippingReduction(): boolean {
@@ -621,7 +621,7 @@ export class CartService {
     //
     // check values
     if (cartCache.list && cartCache.discount) {
-      this.cache.list = cartCache.list.map((item)=> new CartItem(item));
+      this.cache.list = cartCache.list.map((item) => new CartItem(item));
       this.clearErrors();
       Object.assign(this.cache.discount, cartCache.discount);
     }
@@ -633,7 +633,7 @@ export class CartService {
       if (!this.cache.payment.isValid()) {
         this.cache.payment = null;
       } else
-      if (!this.currentUser.payments.some((payment)=> payment.isEqual(this.cache.payment))) {
+      if (!this.currentUser.payments.some((payment) => payment.isEqual(this.cache.payment))) {
         this.cache.payment = new UserCard();
       }
     }
@@ -662,8 +662,8 @@ export class CartService {
 
       //
       // check existance on the current user (example when you switch account, cart should be sync )
-      if (!this.currentUser.addresses.some((address)=> address.isEqual(this.cache.address)) &&
-          !this.defaultConfig.shared.deposits.some((address)=> address.isEqual(this.cache.address))) {
+      if (!this.currentUser.addresses.some((address) => address.isEqual(this.cache.address)) &&
+          !this.defaultConfig.shared.deposits.some((address) => address.isEqual(this.cache.address))) {
         this.cache.address = new UserAddress();
       }
     }
@@ -742,6 +742,7 @@ export class CartService {
 
   //
   // NOT AVAILABLE WITH rxjs<v6
+  // TODO  TSLINT
   public save(state: CartState) {}
   // Save with localStorage or api/cart
   // save(state:CartState){
@@ -790,7 +791,6 @@ export class CartService {
   //   }));
   // }
 
-
   //
   // set default user address
   public setShippingAddress(address: UserAddress) {
@@ -834,10 +834,10 @@ export class CartService {
     // load initial context on this device
     this.loadContext();
 
-    this.loadCart().subscribe((state)=> {
+    this.loadCart().subscribe((state) => {
       this.cart$.next({action: CartAction.CART_LOADED});
       this.isReady = true;
-    }, err => {
+    }, (err) => {
       this.cart$.next({action: CartAction.CART_LOAD_ERROR});
       this.isReady = true;
     });
@@ -845,11 +845,12 @@ export class CartService {
   }
 
   public setError(errors) {
-    let sku, item;
+    let sku;
+    let item;
     for (let i = 0; i < errors.length; i++) {
       sku = Object.keys(errors[i])[0];
       item = this.findBySku(sku);
-      if (item) {item.error=errors[i][sku]; }
+      if (item) {item.error = errors[i][sku]; }
     }
   }
 
@@ -861,7 +862,7 @@ export class CartService {
 
     // Compute shipping and substract discount
     if (removeDiscount) {
-      let fees = this.getCurrentGateway().fees * (total + price);
+      const fees = this.getCurrentGateway().fees * (total + price);
       price -= Math.max(this.totalDiscount() - fees, 0);
     }
 
@@ -900,7 +901,8 @@ export class CartService {
   // total = stotal + stotal*payment.fees
   // WARNNG -- WARNNG -- WARNNG -- edit in all places
   public total(): number {
-    let total = this.subTotal(), shipping = this.shipping();
+    let total = this.subTotal();
+    const shipping = this.shipping();
     const fees = this.getCurrentGateway().fees * (total + shipping - this.totalDiscount()) + shipping;
     total += (fees - this.totalDiscount());
 
@@ -925,13 +927,13 @@ export class CartService {
     if (!this.cache.payment) {
       return false;
     }
-    if (this.cache.payment.issuer == this.cartConfig.gateway.label) {
+    if (this.cache.payment.issuer === this.cartConfig.gateway.label) {
       return true;
     }
     //
     // init default one
     this.cartConfig.gateway = this.DEFAULT_GATEWAY;
-    return this.defaultConfig.shared.order.gateway.some((gateway)=> {
+    return this.defaultConfig.shared.order.gateway.some((gateway) => {
       // TODO check issuer vs type
       if (gateway.label === this.cache.payment.issuer) {
         this.cartConfig.gateway = gateway;
@@ -959,4 +961,3 @@ export class CartService {
     return _throw(errMsg);
   }
 }
-
