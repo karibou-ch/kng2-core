@@ -2,7 +2,9 @@ import { Pipe, PipeTransform } from '@angular/core';
 import { Utils } from '../util';
 
 @Pipe({
-  name: 'portion'
+  name: 'portion' 
+  // TODO TSLINT : 
+  // The name of the Pipe decorator of class OrderPortionPipe should be named camelCase with prefix my, however its value is "portion". 
 })
 export class OrderPortionPipe implements PipeTransform {
 
@@ -23,7 +25,8 @@ export class OrderPortionPipe implements PipeTransform {
     let m = weight.match(/~([0-9.]+) ?(.+)/);
     if (!m && def) {m = def.match(/~([0-9.]+) ?(.+)/); }
     if (!m || m.length < 2) {return ''; }
-    const w = parseFloat(m[1]), unit = (m[2]).toLowerCase();
+    const w = parseFloat(m[1]);
+    const unit = (m[2]).toLowerCase();
     return 'une portion entre ' + this.roundN(w - w * 0.07) + unit + ' et ' + this.roundN(w + w * 0.07) + '' + unit;
   }
 
@@ -31,6 +34,9 @@ export class OrderPortionPipe implements PipeTransform {
 
 @Pipe({
   name: 'baseprice'
+    // TODO TSLINT
+    // The name of the Pipe decorator of class OrderPortionPipe should be named camelCase with prefix my, however its value is "portion". 
+
 })
 export class OrderBasepricePipe implements PipeTransform {
   public transform(weight: any, price?: any): any {
