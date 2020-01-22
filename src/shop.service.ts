@@ -340,6 +340,7 @@ export class ShopService {
     // TODO user.shops.pop(me);
     // TODO $rootScope.$broadcast("shop.remove",me);
     // return this.http.delete(this.config.API_SERVER + '/v1/shops/' + shop.urlpath, {
+     // TOCHECK TSLINT 
     let passwordJson = { 'password': password };
     return this.http.put<Shop>(this.config.API_SERVER + '/v1/shops/' + shop.urlpath, passwordJson, {
       headers: this.headers,

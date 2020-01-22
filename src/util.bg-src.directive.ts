@@ -34,7 +34,7 @@ export class bgSrcDirective implements OnInit {
       url += '-/progressive/yes/';
     }
 
-    this.element.style.backgroundImage = prefix + "url(" + url + ")";
+    this.element.style.backgroundImage = prefix + 'url(' + url + ')';
 
   }
 
