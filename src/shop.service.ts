@@ -95,7 +95,7 @@ export class Shop {
     // requiere a detailled email for order preparation
     detailledOrder: boolean;
     active: boolean;
-    comment: { type: String }  // TOCHECK 
+    comment: { type: String }  // TOCHECK  doit pouvoir être ainsi comment: { type: string } 
   };
 
   //

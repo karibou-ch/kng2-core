@@ -143,7 +143,7 @@ export class ProductService {
     //
     // get product based on its sku
     public get(sku): Observable<Product> {
-        // let cached: Observable<Product>; // TOCHECK
+        let cached: Observable<Product>; // TOCHECK cette ligne devrait pouvoir être supprimée car la variable n'est pas utilisée
 
         // check if in the cache
         if (this.cache.map.get(sku)) {
@@ -159,8 +159,9 @@ export class ProductService {
     }
 
     public remove(sku: number, password: string): Observable<any> {
-      let passwordJson = {'password': password};  // TOCHECK 
-      return this.http.put<Product>(this.config.API_SERVER + '/v1/products/' + sku, passwordJson, {
+      // const passwordJson = {password};  // TOCHECK doit pouvoir remplacé la ligne ci dessous
+       const passwordJson = {password: password};
+       return this.http.put<Product>(this.config.API_SERVER + '/v1/products/' + sku, passwordJson, {
         headers: this.headers,
         withCredentials: true
       }).pipe(
