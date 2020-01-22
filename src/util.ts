@@ -10,6 +10,7 @@ export class Utils {
 
   public static encodeQuery(params) {
     const elems = [];
+    // TODO TSLINT
     for (const d in params) {
       elems.push(encodeURIComponent(d) + '=' + encodeURIComponent(params[d]));
     }

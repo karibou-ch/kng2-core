@@ -402,8 +402,8 @@ export class CartService {
 
     //
     // subtotal for the vendor
-    // TODO  TSLINT
-    items.forEach(function(item) {
+    // TOCHECK  TSLINT
+    items.forEach((item) => {
       if (item.vendor.urlpath === vendor.urlpath) {
         amount += (item.price * item.quantity);
       }
@@ -890,7 +890,8 @@ export class CartService {
   public quantity(): number {
     const items = this.cache.list;
     let quantity = 0;
-    items.forEach(function(item) {
+    // TOCHECK TSLINT
+    items.forEach((item) => {
       quantity += item.quantity;
     });
     return quantity;

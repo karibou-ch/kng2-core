@@ -22,6 +22,7 @@ const CDNJS_SHOWDOWN = window['CDNJS_SHOWDOWN'] || 'https://cdnjs.cloudflare.com
   template: '<ng-content></ng-content>',
   encapsulation: ViewEncapsulation.None
 })
+// TODO TSLINT
 export class MarkdownDirective implements AfterViewInit {
 
   public html: string;

@@ -6,6 +6,7 @@ import { Observable } from 'rxjs/Observable';
 import { map } from 'rxjs/operators';
 
 export class Photo {
+  // TO DO TSLINT
   constructor(json) {
 }
   public slug: string;

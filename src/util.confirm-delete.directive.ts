@@ -14,6 +14,7 @@ import { Observable } from 'rxjs/Observable';
 
 //
 // https://stackoverflow.com/questions/41274603/observable-of-component-attribute-changes-in-angular2
+// TODO TSLINT
 export class ConfirmDeleteDirective implements OnInit {
   @Output() public onconfirm: EventEmitter<any> = new EventEmitter();
   public element;

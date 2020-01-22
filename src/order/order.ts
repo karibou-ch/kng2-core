@@ -147,16 +147,15 @@ export class Order {
     function format(lst) {
       //
       // sorting dates
-      lst = lst.sort(function(a, b) {
-        // FIXME TSLINT
-        // non-arrow functions are forbidden (only-arrow-functions)t
+      // TOCHECK TSLINT
+      lst = lst.sort((a, b) => {
         return a.getTime() - b.getTime();
       });
 
       //
       // limit lenght of a week
-      // TODO TSLINT
-      return lst.filter(function(date) {
+      // TOCHECK TSLINT
+      return lst.filter((date) => {
         return (!limit || date < limit);
       });
 
@@ -171,7 +170,8 @@ export class Order {
     // there is cloased dates
     // next contains the potentials shipping days,
     // we must return the first date available for shipping
-    next.forEach(function(shippingday) {
+    // TOCHECK TSLINT
+    next.forEach((shippingday) => {
       const find = config.shared.noshipping.find((noshipping) => shippingday.in(noshipping.from, noshipping.to));
       if (!find) { lst.push(shippingday); }
     });
@@ -188,8 +188,8 @@ export class Order {
 
     // jump one week past
     next = new Date(next.getTime() - 86400000 * 7);
-
-    config.shared.order.weekdays.forEach(function(day) {
+    // TOCHECK TSLINT
+    config.shared.order.weekdays.forEach((day) => {
       nextDay = (day >= next.getDay()) ? (day - next.getDay()) : (7 - next.getDay() + day);
       nextDate = new Date(nextDay * 86400000 + next.getTime());
       if (config.shared.order.weekdays.indexOf(nextDate.getDay()) !== -1) { all.push(nextDate); }
@@ -348,8 +348,8 @@ export class Order {
   // get amount of discount for this order
   public getTotalDiscount() {
     let amount = 0;
-
-    this.vendors.forEach(function(vendor) {
+    // TOCHECK TSLINT
+    this.vendors.forEach((vendor) => {
       amount += (vendor.discount && vendor.discount.finalAmount || 0);
     });
 
@@ -364,7 +364,8 @@ export class Order {
   public getSubTotal() {
     let total = 0.0;
     if (this.items) {
-      this.items.forEach(function(item) {
+      // TOCHECK TSLINT
+      this.items.forEach((item) =>  {
         //
         // item should not be failure (fulfillment)
         if (item.fulfillment.status !== EnumFulfillments[EnumFulfillments.failure]) {
@@ -383,7 +384,8 @@ export class Order {
   public getTotalPrice(factor?: number) {
     let total = 0.0;
     if (this.items) {
-      this.items.forEach(function(item) {
+      // TOCHECK TSLINT
+      this.items.forEach((item) => {
         //
         // item should not be failure (fulfillment)
         if (item.fulfillment.status !== EnumFulfillments[EnumFulfillments.failure]) {
@@ -428,7 +430,8 @@ export class Order {
   public getOriginPrice(factor) {
     let total = 0.0;
     if (this.items) {
-      this.items.forEach(function(item) {
+      // TOCHECK TSLINT
+      this.items.forEach((item) =>  {
         //
         // item should not be failure (fulfillment)
         if (item.fulfillment.status !== EnumFulfillments[EnumFulfillments.failure]) {
@@ -455,7 +458,8 @@ export class Order {
     let original = 0.0;
     let validated = 0.0;
     if (!item && this.items) {
-      this.items.forEach(function(item) {
+      // TOCHECK TSLINT
+      this.items.forEach((item) =>  {
         //
         // item should not be failure (fulfillment)
         if (item.fulfillment.status !== EnumFulfillments[EnumFulfillments.failure]) {

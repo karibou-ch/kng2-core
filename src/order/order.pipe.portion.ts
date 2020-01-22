@@ -3,8 +3,8 @@ import { Utils } from '../util';
 
 @Pipe({
   name: 'portion' 
-  // TODO TSLINT : 
-  // The name of the Pipe decorator of class OrderPortionPipe should be named camelCase with prefix my, however its value is "portion". 
+  // TODO TSLINT :
+  // The name of the Pipe decorator of class OrderPortionPipe should be named camelCase with prefix my, however its value is "portion".
 })
 export class OrderPortionPipe implements PipeTransform {
 
@@ -35,7 +35,7 @@ export class OrderPortionPipe implements PipeTransform {
 @Pipe({
   name: 'baseprice'
     // TODO TSLINT
-    // The name of the Pipe decorator of class OrderPortionPipe should be named camelCase with prefix my, however its value is "portion". 
+    // The name of the Pipe decorator of class OrderPortionPipe should be named camelCase with prefix my, however its value is "portion".
 
 })
 export class OrderBasepricePipe implements PipeTransform {

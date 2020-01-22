@@ -385,8 +385,8 @@ export class User {
 
     // TODO get geo
     // self.geo=new Map();
-    // TODO TSLINT
-    self.addresses.forEach(function(address, i) {
+    // TOCHECK TSLINT
+    self.addresses.forEach((address, i) => {
       // address is correct
       if (!address.geo || !address.geo.lat || !address.geo.lng) {
         return;

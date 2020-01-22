@@ -52,7 +52,8 @@ Date.prototype.dayToDates = function(days?: number[], limit?: number): Date[] {
 
   //
   // starting from today
-  days.forEach(function(day, i) {
+  // TOCHECK TSLINT
+  days.forEach((day, i) =>  {
     if ((day - today) >= 0) {
       result.push(new Date(now.getTime() + (day - today) * h24));
     }
@@ -60,8 +61,8 @@ Date.prototype.dayToDates = function(days?: number[], limit?: number): Date[] {
 
   // this is splitted in 2 loops to make the list ordered!
   // going to next week  ()
-  // TODO TSLINT 
-  days.forEach(function(day) {
+  // TOCHECK TSLINT
+  days.forEach((day) =>  {
     if ((day - today) < 0) {
       potential = new Date(now.getTime() + (day - today) * h24 + week);
       if (!limit || potential < limit) {
@@ -125,8 +126,8 @@ Date.prototype.equalsDate = function(d: Date): boolean {
 // label alphanum sort for this case "2000.10"
 Array.prototype.sortSeparatedAlphaNum = function(separator?: string) {
   separator = separator || '.';
-  // TODO TSLINT
-  return this.sort(function(a, b) {
+  // TOCHECK TSLINT
+  return this.sort((a, b)  => {
     const aA = a.split(separator);
     const bA = b.split(separator);
     // left part
@@ -153,7 +154,8 @@ Object.defineProperty(Array.prototype, 'sortSeparatedAlphaNum', { enumerable: fa
 Array.prototype.sortAlphaNum = function() {
   const reA = /[^a-zA-Z]/g;
   const reN = /[^0-9]/g;
-  return this.sort(function(a, b) {
+  // TOCHECK TSLINT
+  return this.sort((a, b) => {
     const aA = a.replace(reA, '');
     const bA = b.replace(reA, '');
     if (aA === bA) {
