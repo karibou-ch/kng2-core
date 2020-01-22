@@ -1,4 +1,4 @@
-import { HttpClient,HttpHeaders } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Injectable, Inject } from '@angular/core';
 import { ReplaySubject } from 'rxjs/ReplaySubject';
 import { Observable } from 'rxjs/Observable';
@@ -9,200 +9,194 @@ import { from } from 'rxjs/observable/from';
 import { _throw } from 'rxjs/observable/throw';
 import { catchError, map, tap } from 'rxjs/operators';
 
-
-
 // Cannot call a namespace ('moment')
 // import * as moment from 'moment';
 // https://stackoverflow.com/questions/39519823/using-rollup-for-angular-2s-aot-compiler-and-importing-moment-js
-//import  moment from 'moment';
-//import 'moment/locale/fr';
+// import  moment from 'moment';
+// import 'moment/locale/fr';
 
 //
 import { config } from './config';
 import { Shop } from './shop.service';
 import { Utils } from './util';
 
-
-
 export class UserAddress {
 
   constructor(
-    name?:string,
-    street?:string,
-    floor?:string,
-    region?:string,
-    postalCode?:string,
-    note?:string,
-    primary?:boolean,
-    geo?:any
+    name?: string,
+    street?: string,
+    floor?: string,
+    region?: string,
+    postalCode?: string,
+    note?: string,
+    primary?: boolean,
+    geo?: any
   ) {
-    this.name=name;
-    this.streetAdress=street;
-    this.floor=floor;
-    this.region=region;
-    this.postalCode=postalCode;
-    this.note=note;
-    this.primary=primary;
-    this.geo=geo||{lat:0,lng:0};
+    this.name = name;
+    this.streetAdress = street;
+    this.floor = floor;
+    this.region = region;
+    this.postalCode = postalCode;
+    this.note = note;
+    this.primary = primary;
+    this.geo = geo || {lat: 0, lng: 0};
   }
-  name: string;
-  note: string;
-  floor: string;
-  streetAdress: string;
-  region: string;
-  postalCode: string;
-  primary: boolean;
-  geo: {
+  public name: string;
+  public note: string;
+  public floor: string;
+  public streetAdress: string;
+  public region: string;
+  public postalCode: string;
+  public primary: boolean;
+  public geo: {
     lat: number;
     lng: number;
-  }
+  };
 
-  isEqual(address:UserAddress):boolean{
-    return this.streetAdress==address.streetAdress&&
-           this.name==address.name&&
-           this.floor==address.floor&&
-           this.postalCode==address.postalCode;
+  public isEqual(address: UserAddress): boolean {
+    return this.streetAdress === address.streetAdress &&
+           this.name === address.name &&
+           this.floor === address.floor &&
+           this.postalCode === address.postalCode;
   }
-  
 
 }
 
-
-export class DepositAddress extends UserAddress{
-  weight:number;
-  active:boolean;
-  fees:number;
+export class DepositAddress extends UserAddress {
+  public weight: number;
+  public active: boolean;
+  public fees: number;
   constructor(
-    name?:string,
-    street?:string,
-    floor?:string,
-    region?:string,
-    postalCode?:string,
-    note?:string,
-    geo?:any,
-    weight?:number,
-    active?:boolean,
-    fees?:number
-  ){
-    super(name,street,floor,region,postalCode,note,false,geo);
-    this.weight=weight||0;
-    this.fees=fees||0;
-    this.active=active||false;  
+    name?: string,
+    street?: string,
+    floor?: string,
+    region?: string,
+    postalCode?: string,
+    note?: string,
+    geo?: any,
+    weight?: number,
+    active?: boolean,
+    fees?: number
+  ) {
+    super(name, street, floor, region, postalCode, note, false, geo);
+    this.weight = weight || 0;
+    this.fees = fees || 0;
+    this.active = active || false;
   }
 }
 
 export class UserCard {
 
-  constructor(json?:any) {
-    Object.assign(this,json||{});
-    if(!this.expiry){
-      this.error="Unvalid instance";
-      this.expiry=new Date(1970,0,0).toISOString();
+  constructor(json?: any) {
+    Object.assign(this, json || {});
+    if (!this.expiry) {
+      this.error = 'Unvalid instance';
+      this.expiry = new Date(1970, 0, 0).toISOString();
     }
-    this.updated=new Date(this.updated);
+    this.updated = new Date(this.updated);
   }
 
-  id?: string;
-  alias: string;
-  expiry: string;
-  issuer: string;
-  name: string;
-  number: string;
-  provider: string;
-  updated:Date;
-  error:string;
+  public id?: string;
+  public alias: string;
+  public expiry: string;
+  public issuer: string;
+  public name: string;
+  public number: string;
+  public provider: string;
+  public updated: Date;
+  public error: string;
 
   //
   // display expiry
-  expiryToDate(){
-    let date=new Date(this.expiry);
-    let splitted=this.expiry.split('/');
-    let month,year;
-    if(!isNaN(date.getTime())){
+  public expiryToDate() {
+    const date = new Date(this.expiry);
+    const splitted = this.expiry.split('/');
+    let month;
+    let year;
+    if (!isNaN(date.getTime())) {
       return date;
     }
 
-    if(splitted.length>0){
+    if (splitted.length > 0) {
       month = parseInt(splitted[0], 10);
       year = parseInt(splitted[1], 10);
-      if(year<1000){
-        year+=2000;
+      if (year < 1000) {
+        year += 2000;
       }
-      return new Date(year,month);
+      return new Date(year, month);
     }
   }
   //
   // check if card is valid
-  isValid(){
-    if(this.error){
+  public isValid() {
+    if (this.error) {
       return false;
     }
 
-    let now=new Date();
-    let date=this.expiryToDate();
+    const now = new Date();
+    const date = this.expiryToDate();
     now.setDate(1);
-    now.setHours(0,0,0,1);
-    return date>now;
+    now.setHours(0, 0, 0, 1);
+    return date > now;
   }
 
-  isEqual(payment:UserCard){
-    return this.number==payment.number&&
-           this.alias==payment.alias;
+  public isEqual(payment: UserCard) {
+    return this.number === payment.number &&
+           this.alias === payment.alias;
   }
 }
 
 export class User {
 
-  deleted:boolean;
-  id: number;
+  public deleted: boolean;
+  public id: number;
 
   /* The provider which with the user authenticated (facebook, twitter, etc.) */
-  provider: string;
+  public provider: string;
 
-  email: {
+  public email: {
     address: string;
     cc: string;
     status: any;
   };
 
   /* The name of this user, suitable for display.*/
-  displayName: string;
-  name: {
+  public displayName: string;
+  public name: {
     familyName: string;
     givenName: string;
   };
 
-  birthday: Date;
-  gender: string;
-  tags: string[];
-  url: string;
+  public birthday: Date;
+  public gender: string;
+  public tags: string[];
+  public url: string;
 
-  phoneNumbers: [{
+  public phoneNumbers: [{
     number: string;
     what: string;
   }];
 
-  photo: string;
+  public photo: string;
 
-  addresses: UserAddress[];
+  public addresses: UserAddress[];
 
   /* preferred postalCode*/
-  logistic: {
+  public logistic: {
     postalCode: string[];
   };
 
-
   /* preferred products*/
-  likes: number[];
+  public likes: number[];
 
   /* The available Shop for this user */
-  shops: Shop[];
+  public shops: Shop[];
 
   /* disqus sso */
-  context: any;
+  public context: any;
 
   /* payments methods */
-  payments: UserCard[];
+  public payments: UserCard[];
   // payments:[{
   //   type:{type:String},
   //   name:{type:String},
@@ -212,25 +206,24 @@ export class User {
   //   alias:{type:String,unique:true,required:true}
   // }],
 
-  merchant: boolean;
+  public merchant: boolean;
 
-  reminder: {
+  public reminder: {
     active: boolean;
     weekdays: number[];
     time: Date;
   };
 
-
-  status: boolean;
-  created: Date;
-  updated: Date;
-  logged: Date;
-  roles: string[];
-  rank: string;
+  public status: boolean;
+  public created: Date;
+  public updated: Date;
+  public logged: Date;
+  public roles: string[];
+  public rank: string;
 
   constructor(json?: any) {
-    let defaultUser = {
-      id:null,
+    const defaultUser = {
+      id: null,
       name: {},
       tags: [],
       email: {
@@ -238,20 +231,20 @@ export class User {
       reminder: {
         weekdays: []
       },
-      likes:[],
+      likes: [],
       roles: [],
       shops: [],
       phoneNumbers: [{
         number: '',
         what: 'mobile'
       }],
-      addresses:[],
-      payments:[],
-      logistic: {postalCode:[]}
-    }
-    Object.assign(this, defaultUser,json||{});          
-    this.payments=this.payments.map(payment=>new UserCard(payment));
-    this.addresses=this.addresses.map(add=>new UserAddress(
+      addresses: [],
+      payments: [],
+      logistic: {postalCode: []}
+    };
+    Object.assign(this, defaultUser, json || {});
+    this.payments = this.payments.map((payment) => new UserCard(payment));
+    this.addresses = this.addresses.map((add) => new UserAddress(
       add.name,
       add.streetAdress,
       add.floor,
@@ -265,7 +258,7 @@ export class User {
 
   //
   // methods
-  display() {
+  public display() {
     if (this.displayName) {
       return this.displayName;
     }
@@ -278,15 +271,14 @@ export class User {
     return 'Anonymous';
   }
 
-
-  loggedTime() {
+  public loggedTime() {
     return (Date.now() - (new Date(this.logged)).getTime()) / 1000;
   }
 
-  isOwner(shopname) {
+  public isOwner(shopname) {
 
-    //if (this.isAdmin())return true;
-    for (var i in this.shops) {
+    // if (this.isAdmin())return true;
+    for (const i in this.shops) {
       if (this.shops[i].name === shopname) {
         return true;
       }
@@ -294,67 +286,70 @@ export class User {
     return false;
   }
 
-  isOwnerOrAdmin(shopname) {
-    if (this.isAdmin())
+  public isOwnerOrAdmin(shopname) {
+    if (this.isAdmin()) {
       return true;
+    }
     return this.isOwner(shopname);
   }
 
-  isAuthenticated():boolean {
-    return this.id>0||this.id!==null;
+  public isAuthenticated(): boolean {
+    return this.id > 0 || this.id !== null;
   }
 
-  isAdmin() {
+  public isAdmin() {
     return this.hasRole('admin');
   }
 
-  isReady() {
+  public isReady() {
     return (this.email && this.email.status === true);
   }
 
-  hasRole(role) {
-    return (this.roles.indexOf(role)!=-1);
+  public hasRole(role) {
+    return (this.roles.indexOf(role) !== -1);
   }
 
-  hasLike(product) {
+  public hasLike(product) {
     if (!this.likes || !this.likes.length) {
       return false;
     }
-    return (this.likes.indexOf(product.sku) != -1);
+    return (this.likes.indexOf(product.sku) !== -1);
   }
 
-  hasPrimaryAddress():boolean|UserAddress {
-    if (this.addresses && this.addresses.length == 1) return this.addresses[0];
-    //this.addresses.some(add=>add.primary)
-    for (var i in this.addresses) {
-      if (this.addresses[i].primary === true)
+  public hasPrimaryAddress(): boolean|UserAddress {
+    if (this.addresses && this.addresses.length === 1) { return this.addresses[0]; }
+    // this.addresses.some(add=>add.primary)
+    for (const i in this.addresses) {
+      if (this.addresses[i].primary === true) {
         return this.addresses[i];
+      }
     }
     return false;
   }
 
-
-  getEmailStatus():boolean|Date {
-    if (!this.email || !this.email.status)
+  public getEmailStatus(): boolean|Date {
+    if (!this.email || !this.email.status) {
       return false;
+    }
 
-    if (this.email.status === true)
+    if (this.email.status === true) {
       return true;
+    }
 
     return new Date(this.email.status);
-    //return moment(this.email.status).format('ddd DD MMM YYYY');
+    // return moment(this.email.status).format('ddd DD MMM YYYY');
 
   }
 
-  getDefaultAddress(){
-    let add=(this.addresses||[]).find(add=>add.primary);
-    if(add){
+  public getDefaultAddress() {
+    const add = (this.addresses || []).find((add) => add.primary);
+    if (add) {
       return add;
     }
-    
+
     //
     // check with first address
-    if(this.addresses && this.addresses.length){
+    if (this.addresses && this.addresses.length) {
       return this.addresses[0];
     }
 
@@ -363,7 +358,7 @@ export class User {
     return new UserAddress();
   }
 
-  populateAdresseName() {
+  public populateAdresseName() {
     // autofill the address name when available
     if (this.addresses && this.addresses.length && !this.addresses[0].name) {
       this.addresses[0].name = this.name.familyName + ' ' + this.name.givenName;
@@ -371,33 +366,33 @@ export class User {
     }
   }
 
-  getBVR() {
-    var self = this;
+  public getBVR() {
+    const self = this;
   }
-
 
   //
   // init user
-  init() {
-    var self = this;
+  public init() {
+    const self = this;
 
     // set context for error
 
     if (!self.addresses) {
       return;
     }
-    //check address
+    // check address
     self.populateAdresseName();
 
     // TODO get geo
     // self.geo=new Map();
+    // TODO TSLINT
     self.addresses.forEach(function(address, i) {
       // address is correct
       if (!address.geo || !address.geo.lat || !address.geo.lng) {
         return;
       }
       //
-      //TODO setup marker
+      // TODO setup marker
       // self.geo.addMarker(i,{
       //   lat:address.geo.lat,
       //   lng:address.geo.lng,
@@ -410,8 +405,8 @@ export class User {
 }
 
 class Cache {
-    list: User[];
-    map: Map<number, User>
+    public list: User[];
+    public map: Map<number, User>;
     constructor() {
         this.list = [];
         this.map = new Map();
@@ -422,45 +417,44 @@ class Cache {
 export class UserService {
 
   // TODO make observable content !!
-  config: any;
-  currentUser: User = new User();
+  public config: any;
+  public currentUser: User = new User();
   private cache = new Cache();
 
   private updateCache(user: User) {
-    if(!this.cache.map.get(user.id)){
+    if (!this.cache.map.get(user.id)) {
       // TODO unit test of payments/address Class existances after updates
-      Object.assign(this.currentUser, new User(user));      
-      this.cache.map.set(user.id,this.currentUser)
+      Object.assign(this.currentUser, new User(user));
+      this.cache.map.set(user.id, this.currentUser);
       return this.cache.map.get(user.id);
     }
-    //Object.assign(this.currentUser, new User(user));      
+    // Object.assign(this.currentUser, new User(user));
     return Object.assign(this.cache.map.get(user.id), new User(user));
   }
 
   private deleteCache(user: User) {
-      let incache=this.cache.map.get(user.id);
+      const incache = this.cache.map.get(user.id);
       if (incache) {
-          incache.deleted=true;
+          incache.deleted = true;
           this.cache.map.delete(user.id);
       }
       return incache;
   }
 
-
   private headers: HttpHeaders;
   public  user$: ReplaySubject<User>;
 
   constructor(
-    @Inject('KNG2_OPTIONS') private customConfig:any,
+    @Inject('KNG2_OPTIONS') private customConfig: any,
     public http: HttpClient
   ) {
     //
     // Use dynamic server settings
-    if(!customConfig.API_SERVER){
-      customConfig.API_SERVER=('//api.'+window.location.hostname);
+    if (!customConfig.API_SERVER) {
+      customConfig.API_SERVER = ('//api.' + window.location.hostname);
     }
-    // FIXME remove this hugly config propagation    
-    Object.assign(config,customConfig);
+    // FIXME remove this hugly config propagation
+    Object.assign(config, customConfig);
     this.config = config;
     this.headers = new HttpHeaders();
     this.headers.append('Content-Type', 'application/json');
@@ -474,8 +468,8 @@ export class UserService {
   // How to build Angular apps using Observable Data Services
   // http://blog.angular-university.io/how-to-build-angular2-apps-using-rxjs-observable-data-services-pitfalls-to-avoid/
 
-  //get user data by his id
-  get(id: number): Observable<User> {
+  // get user data by his id
+  public get(id: number): Observable<User> {
 
     if (this.cache.map[id]) {
       return of(this.cache.map[id]);
@@ -486,35 +480,34 @@ export class UserService {
       withCredentials: true
     }).pipe(
       map((user) => new User(user)),
-      catchError(err => of(new User()))
+      catchError((err) => of(new User()))
     );
 
   }
 
   //
-  //============================= REST api wrapper
+  // ============================= REST api wrapper
   // TODO
 
-
   // app.get('/v1/users/me', auth.ensureAuthenticated, users.me);
-  me(): Observable<User> {
-    if(!this.config.API_SERVER){
-      throw new Error("Issue with uninitialized server context");
+  public me(): Observable<User> {
+    if (!this.config.API_SERVER) {
+      throw new Error('Issue with uninitialized server context');
     }
     return this.http.get<User>(this.config.API_SERVER + '/v1/users/me', {
       headers: this.headers,
       withCredentials: true
     }).pipe(
-      map(user => {
+      map((user) => {
         this.updateCache(user);
         return this.currentUser;
       }),
-      catchError(err => of(new User()))
+      catchError((err) => of(new User()))
     );
   }
 
   // app.get('/v1/users', auth.ensureAdmin, users.list);
-  query(filter?: any): Observable<User[]> {
+  public query(filter?: any): Observable<User[]> {
     filter = filter || {};
 
     return this.http.get<User[]>(this.config.API_SERVER + '/v1/users/', {
@@ -522,17 +515,17 @@ export class UserService {
       headers: this.headers,
       withCredentials: true
     }).pipe(
-      map(users => users.map(user=>new User(user)))
+      map((users) => users.map((user) => new User(user)))
     );
   }
 
   // Reçoit un statut de requête http
   // app.get ('/v1/validate/:uid/:email', emails.validate);
-  validate(id, email): Observable<any> {
-    if (!id||!email) {
-      return _throw(new Error("validate, missing parameter id or email"));
+  public validate(id, email): Observable<any> {
+    if (!id || !email) {
+      return _throw(new Error('validate, missing parameter id or email'));
     }
-    
+
     return this.http.get(this.config.API_SERVER + '/v1/validate/' + id + '/' + email, {
       headers: this.headers,
       withCredentials: true
@@ -541,135 +534,131 @@ export class UserService {
   }
 
   // app.post('/v1/validate/create',auth.ensureAuthenticated, emails.create);
-  validateEmail(params?:any): Observable<any> {
-    return this.http.post<{created:Date,email:string}>(this.config.API_SERVER + '/v1/validate/create',params||{}, {
+  public validateEmail(params?: any): Observable<any> {
+    return this.http.post<{created: Date, email: string}>(this.config.API_SERVER + '/v1/validate/create', params || {}, {
       headers: this.headers,
       withCredentials: true
     }).pipe(
-      map(result => {
-        this.currentUser.email.status=result.created;
+      map((result) => {
+        this.currentUser.email.status = result.created;
         return this.currentUser;
       }),
-      tap(user=>this.user$.next(user))
+      tap((user) => this.user$.next(user))
     );
   }
 
   // app.post('/v1/recover/:token/:email/password', users.recover);
-  recover(email): Observable<any> {
+  public recover(email): Observable<any> {
     return this.http.post(this.config.API_SERVER + '/v1/recover/' + this.config.shared.token + '/' + email + '/password', {
       headers: this.headers,
       withCredentials: true
     });
   }
 
-
-
   // app.post('/v1/users/:id', users.ensureMeOrAdmin,users.update);
-  save(user): Observable<User> {
+  public save(user): Observable<User> {
     // autofill the address name when available
     user.populateAdresseName();
     return this.http.post<User>(this.config.API_SERVER + '/v1/users/' + user.id, user, {
       headers: this.headers,
       withCredentials: true
     }).pipe(
-      map(user => this.updateCache(user)),
-      tap(user=>this.user$.next(user))
+      map((user) => this.updateCache(user)),
+      tap((user) => this.user$.next(user))
     );
   }
 
   // app.get ('/logout', auth.logout);
-  logout(): Observable<User> {
+  public logout(): Observable<User> {
     return this.http.get<User>(this.config.API_SERVER + '/logout/', {
       headers: this.headers,
       withCredentials: true
     }).pipe(
-      catchError(err => of(new User())),
-      map(user => Object.assign(this.currentUser,new User())),
-      tap(user=>{
-        console.log('user.logout()',user)
+      catchError((err) => of(new User())),
+      map((user) => Object.assign(this.currentUser, new User())),
+      tap((user) => {
+        console.log('user.logout()', user);
         return this.user$.next(user);
       })
-    )
+    );
   }
 
   // TODO voir lignes commentées (updateGeoCode etc.)
   // app.post('/register', queued(auth.register_post));
-  register(user): Observable<User> {
-    //user.populateAdresseName();
+  public register(user): Observable<User> {
+    // user.populateAdresseName();
     return this.http.post<User>(this.config.API_SERVER + '/register', user, {
       headers: this.headers,
       withCredentials: true
     }).pipe(
-      map(user => this.updateCache(user)),
-      tap(user=>this.user$.next(user))
+      map((user) => this.updateCache(user)),
+      tap((user) => this.user$.next(user))
     );
-      
-  };
+
+  }
 
   // app.post('/v1/users/:id/password',users.ensureMe, users.password);
-  newpassword(id:number, change): Observable<User> {
+  public newpassword(id: number, change): Observable<User> {
     return this.http.post<User>(this.config.API_SERVER + '/v1/users/' + id + '/password', change, {
       headers: this.headers,
       withCredentials: true
     });
-  };
+  }
 
   // TODO voir lignes commentées (updateGeoCode etc.) + Broadcast
   // app.post('/login', queued(auth.login_post));
-  login(data): Observable<User> {
+  public login(data): Observable<User> {
     return this.http.post<User>(this.config.API_SERVER + '/login', data, {
       headers: this.headers,
       withCredentials: true
     }).pipe(
-      map(user => this.updateCache(user)),
-      tap(user=>this.user$.next(user))
+      map((user) => this.updateCache(user)),
+      tap((user) => this.user$.next(user))
     );
-  };
-
+  }
 
   // app.put('/v1/users/:id', auth.ensureAdmin, auth.checkPassword, users.remove);
-  remove(id, password): Observable<any> {
-    return this.http.put<User>(this.config.API_SERVER + '/v1/users/', { password: password }, {
+  public remove(id, password): Observable<any> {
+    return this.http.put<User>(this.config.API_SERVER + '/v1/users/', { password }, {
       headers: this.headers,
       withCredentials: true
     }).pipe(
-      map(user => this.deleteCache(user))
+      map((user) => this.deleteCache(user))
     );
   }
 
   // app.post('/v1/users/:id/like/:sku', users.ensureMe, users.like);
-  love(id, product): Observable<User> {
-    //var self=this, params={};
+  public love(id, product): Observable<User> {
+    // var self=this, params={};
     return this.http.post<User>(this.config.API_SERVER + '/v1/users/' + id + '/like/' + product.sku, null, {
       headers: this.headers,
       withCredentials: true
     }).pipe(
-      map(user => this.updateCache(user)),
-      tap(user=>this.user$.next(user))
+      map((user) => this.updateCache(user)),
+      tap((user) => this.user$.next(user))
     );
   }
-  //================================================
-
+  // ================================================
 
   /**
    * payment methods
    */
   // app.post('/v1/users/:id/payment/:alias/check', users.ensureMeOrAdmin,users.checkPaymentMethod);
-  checkPaymentMethod(user): Observable<User> {
-    if(!user.payments.length){
+  public checkPaymentMethod(user): Observable<User> {
+    if (!user.payments.length) {
       return of(user);
     }
 
-    let allAlias = user.payments.map(payment => { return payment.alias; });
-    let alias = allAlias.pop();
-    
-    return this.http.post<any>(this.config.API_SERVER + '/v1/users/' + user.id + '/payment/' + alias + '/check', {alias:allAlias}, {
+    const allAlias = user.payments.map((payment) => payment.alias);
+    const alias = allAlias.pop();
+
+    return this.http.post<any>(this.config.API_SERVER + '/v1/users/' + user.id + '/payment/' + alias + '/check', {alias: allAlias}, {
       headers: this.headers,
       withCredentials: true
     }).pipe(
-      map(check => {
-        user.payments.forEach((payment,i)=>{
-          payment.error=check[payment.alias]&&check[payment.alias].error;
+      map((check) => {
+        user.payments.forEach((payment, i) => {
+          payment.error = check[payment.alias] && check[payment.alias].error;
         });
         return this.updateCache(user);
       })
@@ -677,17 +666,17 @@ export class UserService {
   }
 
   // app.post('/v1/users/:id/payment', users.ensureMeOrAdmin,users.addPayment);
-  addPaymentMethod(payment:UserCard, uid): Observable<User> {
-    if(!payment.id){
-      return _throw(new Error("addPaymentMethod missing payment id"));
+  public addPaymentMethod(payment: UserCard, uid): Observable<User> {
+    if (!payment.id) {
+      return _throw(new Error('addPaymentMethod missing payment id'));
     }
 
     return this.http.post<User>(this.config.API_SERVER + '/v1/users/' + uid + '/payment', payment, {
       headers: this.headers,
       withCredentials: true
     }).pipe(
-      map(user => this.updateCache(user)),
-      tap(user=>this.user$.next(user))
+      map((user) => this.updateCache(user)),
+      tap((user) => this.user$.next(user))
     );
     /*
     var self = this, params = {};
@@ -705,21 +694,21 @@ export class UserService {
   }
 
   // app.post('/v1/users/:id/payment/:alias/delete', users.ensureMeOrAdmin,users.deletePayment);
-  deletePaymentMethod(alias, uid): Observable<User> {
-    let updatePayment=(uid)=>{
-      let user=this.cache.map.get(uid);
-      user.payments=user.payments.filter(p=>p.alias!=alias);
+  public deletePaymentMethod(alias, uid): Observable<User> {
+    const updatePayment = (uid) => {
+      const user = this.cache.map.get(uid);
+      user.payments = user.payments.filter((p) => p.alias !== alias);
       return user;
     };
-    if(!alias || !uid){
-      return _throw(new Error("deletePaymentMethod, missing params!"));
+    if (!alias || !uid) {
+      return _throw(new Error('deletePaymentMethod, missing params!'));
     }
     return this.http.post<User>(this.config.API_SERVER + '/v1/users/' + uid + '/payment/' + alias + '/delete', null, {
       headers: this.headers,
       withCredentials: true
     }).pipe(
       map(() => updatePayment(uid)),
-      tap(user=>this.user$.next(user))
+      tap((user) => this.user$.next(user))
     );
     /*
     var self = this, params = {};
@@ -744,25 +733,24 @@ export class UserService {
    * ADMIN
    */
   // app.post('/v1/users/:id/status', auth.ensureAdmin,users.status);
-  updateStatus(id, status): Observable<User> {
-    //var self = this, params = {};
-    return this.http.post<User>(this.config.API_SERVER + '/v1/users/' + id + '/status', { status: status }, {
+  public updateStatus(id, status): Observable<User> {
+    // var self = this, params = {};
+    return this.http.post<User>(this.config.API_SERVER + '/v1/users/' + id + '/status', { status }, {
       headers: this.headers,
       withCredentials: true
     }).pipe(
-      map(user => new User(user)),
-      tap(user=>this.user$.next(user))
+      map((user) => new User(user)),
+      tap((user) => this.user$.next(user))
     );
   }
-  
 
   /**
    * Subscribe to the user stream.
    */
-  subscribe(
+  public subscribe(
     onNext, onThrow?: ((exception: any) => void)|null,
     onReturn?: (() => void)|null): ISubscription {
       return this.user$.subscribe({next: onNext, error: onThrow, complete: onReturn});
-  }  
+  }
 
 }

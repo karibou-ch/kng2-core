@@ -1,24 +1,24 @@
-import { HttpClient,HttpHeaders } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Category } from './category.service';
 import { User } from './user.service';
 
 import { ConfigService } from './config.service';
-import { Utils } from './util'
+import { Utils } from './util';
 
 import { ReplaySubject } from 'rxjs/ReplaySubject';
 import { Observable } from 'rxjs/Observable';
 import { map } from 'rxjs/operators';
 
-//https://stackoverflow.com/questions/13142635/how-can-i-create-an-object-based-on-an-interface-file-definition-in-typescript
+// https://stackoverflow.com/questions/13142635/how-can-i-create-an-object-based-on-an-interface-file-definition-in-typescript
 
 export class Shop {
-  deleted:boolean;
-  urlpath: string;
-  name: string;
-  description: string;
-  url: string;
-  photo: {
+  public deleted: boolean;
+  public urlpath: string;
+  public name: string;
+  public description: string;
+  public url: string;
+  public photo: {
     owner: string;
     bg: string;
     fg: string;
@@ -27,18 +27,17 @@ export class Shop {
     source: string;
   };
 
-  details:{
-    bio:boolean;
-    gluten:boolean;
-    lactose:boolean;
-    vegetarian:boolean;
-    local:boolean;
+  public details: {
+    bio: boolean;
+    gluten: boolean;
+    lactose: boolean;
+    vegetarian: boolean;
+    local: boolean;
   };
-
 
   //
   // define where this shop is available for collect
-  collect?: {
+  public collect?: {
     streetAdress: string;
     postalCode: string;
     geo: {
@@ -49,7 +48,7 @@ export class Shop {
 
   //
   // where shop is located
-  address: {
+  public address: {
     // an other place where things are stored
     depository: string;
     name: string;
@@ -67,73 +66,69 @@ export class Shop {
   //
   // this shop belongsTo a category
 
-  catalog: Category;
+  public catalog: Category;
 
   //
   // answer question about your shop
-  faq?: [{
+  public faq?: [{
     q: string;
     a: string;
     updated: Date;
   }];
 
-
-  available:{
-    active:boolean;
-    from:Date,
-    to:Date,
-    weekdays:number[],
-    comment:string
+  public available: {
+    active: boolean;
+    from: Date,
+    to: Date,
+    weekdays: number[],
+    comment: string
 };
 
-  discount: {
+  public discount: {
     amount: number;
     threshold: number;
     active: boolean;
   };
 
-  info: {
+  public info: {
     //
     // requiere a detailled email for order preparation
     detailledOrder: boolean;
     active: boolean;
-    comment: { type: String }
+    comment: { type: String }  // TOCHECK 
   };
 
   //
   // type Date on pending, set true on active, false on deleted
-  status: any;
+  public status: any;
   // secret value for the business model
   // - > is available/displayed for shop owner and admin ONLY
   // - > is saved on each order to compute bill
-  account:{
-    IBAN?:string;
-    fees?:number;
-    tva:{
-      number?:string,
-      fees?:number
+  public account: {
+    IBAN?: string;
+    fees?: number;
+    tva: {
+      number?: string,
+      fees?: number
     },
     updated: Date;
   };
-  owner: User;
-  scoring: {
+  public owner: User;
+  public scoring: {
     weight: number;
     orders: number;
     issues: number;
     score: number;
   };
-  created: Date;
-  marketplace: string[];
+  public created: Date;
+  public marketplace: string[];
 
   //
   // Object methods
 
-
-
-
   constructor(json?: any) {
 
-    let defaultShop = {
+    const defaultShop = {
 
       photo: {
         gallery: []
@@ -199,10 +194,10 @@ export class Shop {
     description: "",
     name: ""
   }*/
-    json=json||{};
-    Object.assign(this,Utils.merge(defaultShop,json));      
-    this.account.tva=this.account.tva||{};
-    this.available.weekdays=this.available.weekdays||[];
+    json = json || {};
+    Object.assign(this, Utils.merge(defaultShop, json));
+    this.account.tva = this.account.tva || {};
+    this.available.weekdays = this.available.weekdays || [];
   }
 
 }
@@ -221,7 +216,6 @@ export class ShopService {
     map: new Map<string, Shop>()
   };
 
-
   constructor(
     private http: HttpClient
   ) {
@@ -232,129 +226,127 @@ export class ShopService {
     //
     // 1 means to keep the last value
     this.shop$ = new ReplaySubject(1);
-    this.cache={
-      list:[],
-      map:new Map()
+    this.cache = {
+      list: [],
+      map: new Map()
     };
   }
 
-
   //
   // simple cache manager
-  private deleteCache(shop: Shop, propagate?:boolean) {
-    shop.deleted=true;
+  private deleteCache(shop: Shop, propagate?: boolean) {
+    shop.deleted = true;
     if (this.cache.map[shop.urlpath]) {
       delete this.cache.map[shop.urlpath];
     }
-    if(propagate)this.shop$.next(shop);    
+    if (propagate) {this.shop$.next(shop); }
     return shop;
   }
 
-  private updateCache(shop: Shop, propagate?:boolean) {
+  private updateCache(shop: Shop, propagate?: boolean) {
     if (!this.cache.map[shop.urlpath]) {
       this.cache.map[shop.urlpath] = new Shop(shop);
       return this.cache.map[shop.urlpath];
     }
     //
-    //update existing entry
-    Object.assign(this.cache.map[shop.urlpath],shop)
-    if(propagate)this.shop$.next(shop);
+    // update existing entry
+    Object.assign(this.cache.map[shop.urlpath], shop);
+    if (propagate) {this.shop$.next(shop); }
     return this.cache.map[shop.urlpath];
   }
-
 
   //
   // REST api wrapper
   //
 
-  query(filter?: any):Observable<Shop[]> {
+  public query(filter?: any): Observable<Shop[]> {
     return this.http.get<Shop[]>(this.config.API_SERVER + '/v1/shops', {
       headers: this.headers,
       withCredentials: true,
       params: filter,
     }).pipe(
-      map(shops => shops.map(this.updateCache.bind(this)))
-    );    
-};
+      map((shops) => shops.map(this.updateCache.bind(this)))
+    );
+}
 
-  findByCatalog(cat, filter): Observable<Shop[]> {
+  public findByCatalog(cat, filter): Observable<Shop[]> {
     return this.http.get<Shop[]>(this.config.API_SERVER + '/v1/shops/category/' + cat, {
       headers: this.headers,
       withCredentials: true
     }).pipe(
-      map(shops => shops.map(this.updateCache.bind(this)))
-    );    
-  };
+      map((shops) => shops.map(this.updateCache.bind(this)))
+    );
+  }
 
   //
   // get a single shop
-  get(urlpath): Observable<Shop> {
+  public get(urlpath): Observable<Shop> {
     return this.http.get<Shop>(this.config.API_SERVER + '/v1/shops/' + urlpath, {
       headers: this.headers,
       withCredentials: true
     }).pipe(
-      map(shop => this.updateCache(shop))
+      map((shop) => this.updateCache(shop))
     );
-  };
+  }
 
   //
   // TODO: what is it used for ?
-  publish(shop: Shop): Observable<Shop> {
+  public publish(shop: Shop): Observable<Shop> {
     return this.http.get<Shop>(this.config.API_SERVER + '/v1/shops/' + shop.urlpath + '/status', {
       headers: this.headers,
       withCredentials: true
     }).pipe(
-      map(shop => this.updateCache(shop))
+      map((shop) => this.updateCache(shop))
     );
-  };
+  }
 
   //
   // send question to a shop
-  ask(shop: Shop, content: string): Observable<any> {
+  public ask(shop: Shop, content: string): Observable<any> {
     return this.http.post<Shop>(this.config.API_SERVER + '/v1/shops/' + shop.urlpath + '/status',
       {
-        content: content
+        content
       }, {
         headers: this.headers,
         withCredentials: true
       });
-    };
+    }
 
-  save(shop: Shop): Observable<Shop> {
+  public save(shop: Shop): Observable<Shop> {
     return this.http.post<Shop>(this.config.API_SERVER + '/v1/shops/' + shop.urlpath, shop, {
       headers: this.headers,
       withCredentials: true
     }).pipe(
-      map(shop => this.updateCache(shop))
+      map((shop) => this.updateCache(shop))
     );
-  };
+  }
 
   //
   // create a new shop for the current user
   // TODO: user must reload his profile when shop is modified
-  create(shop: Shop): Observable<Shop> {
+  public create(shop: Shop): Observable<Shop> {
     return this.http.post<Shop>(this.config.API_SERVER + '/v1/shops', shop, {
       headers: this.headers,
       withCredentials: true
     }).pipe(
-      map(shop => this.updateCache(shop))
+      map((shop) => this.updateCache(shop))
     );
-  };
+  }
 
   //
   // delete shop for the current user
   // TODO: user must reload his profile when shop is modified
-  remove(shop: Shop, password: string): Observable<any> {
+  public remove(shop: Shop, password: string): Observable<any> {
     // TODO user.shops.pop(me);
     // TODO $rootScope.$broadcast("shop.remove",me);
-    //return this.http.delete(this.config.API_SERVER + '/v1/shops/' + shop.urlpath, {
-    var passwordJson = { "password": password };
+    // return this.http.delete(this.config.API_SERVER + '/v1/shops/' + shop.urlpath, {
+    let passwordJson = { 'password': password };
     return this.http.put<Shop>(this.config.API_SERVER + '/v1/shops/' + shop.urlpath, passwordJson, {
       headers: this.headers,
       withCredentials: true,
     }).pipe(
-      map(shop => this.deleteCache(shop))
+      map((shop) => this.deleteCache(shop))
     );
-};
+}
 
 }

@@ -6,3 +6,5 @@ describe('UserPipe', () => {
     expect(pipe).toBeTruthy();
   });
 });
+
+// TOCHECK fichier à supprimer ?
