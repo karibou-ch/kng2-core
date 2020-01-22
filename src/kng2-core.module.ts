@@ -9,14 +9,12 @@ import { CategoryService } from './category.service';
 import { DocumentService } from './document.service';
 import { ProductService } from './product.service';
 import { ConfigService } from './config.service';
-import { LoaderService, 
+import { LoaderService,
          LoaderResolve } from './loader.service';
 import { OrderService } from './order/order.service';
 import { UserService } from './user.service';
 import { ShopService } from './shop.service';
 import { PhotoService } from './photo.service';
-
-
 
 //
 // directives & pipes
@@ -30,30 +28,29 @@ import { ReportingService } from './reporting.service';
 // dynamic injection of module configuration
 // export const KNG2_OPTIONS = new InjectionToken<any>('KNG2_OPTIONS');
 
-
 @NgModule({
   imports: [
     CommonModule,
     HttpClientModule
   ],
   declarations: [
-    bgSrcDirective, 
-    ConfirmDeleteDirective, 
+    bgSrcDirective,
+    ConfirmDeleteDirective,
     MarkdownDirective,
-    OrderPortionPipe, 
+    OrderPortionPipe,
     OrderBasepricePipe
   ],
   exports: [
-    bgSrcDirective, 
-    ConfirmDeleteDirective, 
+    bgSrcDirective,
+    ConfirmDeleteDirective,
     MarkdownDirective,
-    OrderPortionPipe, 
+    OrderPortionPipe,
     OrderBasepricePipe
   ]
 })
 export class Kng2CoreModule {
-  //https://angular-2-training-book.rangle.io/handout/modules/feature-modules.html
-  public static forRoot(options:any): ModuleWithProviders {
+  // https://angular-2-training-book.rangle.io/handout/modules/feature-modules.html
+  public static forRoot(options: any): ModuleWithProviders {
 
     // try{
     //   let server=localStorage.getItem(ConfigKeyStoreEnum[ConfigKeyStoreEnum.KIO2_SERVER]);
@@ -61,13 +58,13 @@ export class Kng2CoreModule {
     // }catch(e){
     //   console.log('--- localStorage',e);
     // }
-    
+
     return {
       ngModule: Kng2CoreModule,
       providers: [
         {
-          provide:"KNG2_OPTIONS",
-          useValue:options||{}
+          provide: 'KNG2_OPTIONS',
+          useValue: options || {}
         },
         CartService,
         CategoryService,
@@ -85,5 +82,5 @@ export class Kng2CoreModule {
         UserService
       ]
     };
-  }  
+  }
 }

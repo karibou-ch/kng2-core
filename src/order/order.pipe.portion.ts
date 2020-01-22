@@ -2,52 +2,58 @@ import { Pipe, PipeTransform } from '@angular/core';
 import { Utils } from '../util';
 
 @Pipe({
-  name: 'portion'
+  name: 'portion' 
+  // TODO TSLINT :
+  // The name of the Pipe decorator of class OrderPortionPipe should be named camelCase with prefix my, however its value is "portion".
 })
 export class OrderPortionPipe implements PipeTransform {
 
-  roundN(val:number){
-    if(val<=5){
+  public roundN(val: number) {
+    if (val <= 5) {
       return val.toFixed(1);
     }
-    if(val<=50){
+    if (val <= 50) {
       return Math.round(val);
     }
-    var N=5;
+    const N = 5;
     return (Math.round(val / N) * N);
   }
 
-  transform(weight: any, def?: any): any {
-    if(!def)def='';
-    if (!weight) return "";
-    var m=weight.match(/~([0-9.]+) ?(.+)/);
-    if(!m&&def)m=def.match(/~([0-9.]+) ?(.+)/);
-    if(!m||m.length<2)return '';
-    var w=parseFloat(m[1]), unit=(m[2]).toLowerCase();
-    return 'une portion entre '+this.roundN(w-w*0.07)+unit+' et '+this.roundN(w+w*0.07)+''+unit;    
+  public transform(weight: any, def?: any): any {
+    if (!def) {def = ''; }
+    if (!weight) { return ''; }
+    let m = weight.match(/~([0-9.]+) ?(.+)/);
+    if (!m && def) {m = def.match(/~([0-9.]+) ?(.+)/); }
+    if (!m || m.length < 2) {return ''; }
+    const w = parseFloat(m[1]);
+    const unit = (m[2]).toLowerCase();
+    return 'une portion entre ' + this.roundN(w - w * 0.07) + unit + ' et ' + this.roundN(w + w * 0.07) + '' + unit;
   }
 
 }
 
 @Pipe({
   name: 'baseprice'
+    // TODO TSLINT
+    // The name of the Pipe decorator of class OrderPortionPipe should be named camelCase with prefix my, however its value is "portion".
+
 })
 export class OrderBasepricePipe implements PipeTransform {
-  transform(weight: any, price?: any): any {
+  public transform(weight: any, price?: any): any {
 
-    if (!weight ||!price){ 
-      return "";
+    if (!weight || !price) {
+      return '';
     }
-    let portion=weight.split(/(kg|gr|ml)/i);
-    let w=(portion[0][0]==='~')?parseFloat(portion[0].substring(1)):parseFloat(portion[0]);
-    if(portion.length<2){
+    const portion = weight.split(/(kg|gr|ml)/i);
+    const w = (portion[0][0] === '~') ? parseFloat(portion[0].substring(1)) : parseFloat(portion[0]);
+    if (portion.length < 2) {
       return;
     }
-    let unit=(portion[1]).toLowerCase();
-    if(unit!=='gr'){
+    const unit = (portion[1]).toLowerCase();
+    if (unit !== 'gr') {
       return;
     }
-    
-    return Utils.roundAmount((100*price/w));
+
+    return Utils.roundAmount((100 * price / w));
   }
 }

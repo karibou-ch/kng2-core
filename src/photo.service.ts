@@ -5,79 +5,75 @@ import { Config, config, ConfigKeyStoreEnum } from './config';
 import { Observable } from 'rxjs/Observable';
 import { map } from 'rxjs/operators';
 
-
 export class Photo {
+  // TO DO TSLINT
   constructor(json) {
-    
-  }
-  slug:string;
-  url:string;
 }
-
+  public slug: string;
+  public url: string;
+}
 
 @Injectable()
 export class PhotoService {
   private headers: HttpHeaders;
-  public config:any;
+  public config: any;
 
   constructor(
     private http: HttpClient
   ) {
-    
 
     this.config = config;
     this.headers = new HttpHeaders();
     this.headers.append('Content-Type', 'application/json');
   }
 
-
   //
   // load shops photos
-  shops(criteria): Observable<Photo[]> {
-    let params:any={
-      active:criteria.active||false
+  public shops(criteria): Observable<Photo[]> {
+    const params: any = {
+      active: criteria.active || false
     };
 
-    if(criteria.slugs){
-      params.slugs=criteria.slugs;
+    if (criteria.slugs) {
+      params.slugs = criteria.slugs;
     }
-    if(criteria.random){
-      params.random=criteria.random;
+    if (criteria.random) {
+      params.random = criteria.random;
     }
 
     return this.http.get<Photo[]>(config.API_SERVER + '/v1/shops/photos', {
-      params:params,
+      params,
       headers: this.headers,
       withCredentials: true,
     }).pipe(
-      map((photos:any[]) => {
+      map((photos: any[]) => {
         return photos;
       })
-    )
+    );
   }
 
   //
   // load shops photos
-  products(criteria): Observable<Photo[]> {
-    let params:any={
-      active:criteria.active||false
+  public products(criteria): Observable<Photo[]> {
+    const params: any = {
+      active: criteria.active || false
     };
-    
-    if(criteria.skus){
-      params.skus=criteria.skus;
+
+    if (criteria.skus) {
+      params.skus = criteria.skus;
     }
-    if(criteria.random){
-      params.random=criteria.random;
+    if (criteria.random) {
+      params.random = criteria.random;
     }
     return this.http.get<Photo[]>(config.API_SERVER + '/v1/products/photos', {
-      params:params,
+      params,
       headers: this.headers,
       withCredentials: true,
     }).pipe(
-      map((photos:any[]) => {
+      map((photos: any[]) => {
         return photos;
       })
-    )
+    );
   }
 
 }
