@@ -1,5 +1,5 @@
 //
-// module 
+// module
 export { Kng2CoreModule } from './kng2-core.module';
 
 //
@@ -12,39 +12,39 @@ export { CartAction,
          CartService,
          CartState } from './cart.service';
 
-export { Category, 
+export { Category,
          CategoryService } from './category.service';
 
-export { Document, 
+export { Document,
          DocumentHeader,
          DocumentService } from './document.service';
-          
+
 export { IsAuthenticated, IsAdmin } from './is-authenticated.service';
 
-export { LoaderService, 
+export { LoaderService,
          LoaderResolve } from './loader.service';
 
-export { Order, 
+export { Order,
          OrderShipping,
          OrderItem } from './order/order';
 export { OrderService } from './order/order.service';
 
-export { Photo, 
+export { Photo,
          PhotoService } from './photo.service';
 
-export { Product, 
+export { Product,
          ProductService } from './product.service';
 
-export { Shop, 
+export { Shop,
          ShopService } from './shop.service';
 
-export { ReportOrders, 
+export { ReportOrders,
          ReportCustomer,
          ReportingService } from './reporting.service';
-         
-export { User, 
-         UserCard, 
-         UserAddress, 
+
+export { User,
+         UserCard,
+         UserAddress,
          DepositAddress,
          UserService } from './user.service';
 
@@ -55,8 +55,7 @@ export { EnumCancelReason,
          EnumShippingMode
        } from './order/order.enum';
 
-
-export { Utils } from './util';      
+export { Utils } from './util';
 //
 // directives & pipes
 export { bgSrcDirective } from './util.bg-src.directive';
@@ -65,8 +64,7 @@ export { OrderPortionPipe, OrderBasepricePipe } from './order/order.pipe.portion
 
 //
 // export variable instance
-export { Config, 
-         ConfigKeyStoreEnum, 
+export { Config,
+         ConfigKeyStoreEnum,
          ConfigMenu,
          config } from './config';
-

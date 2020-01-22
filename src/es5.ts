@@ -1,8 +1,8 @@
 //
-// useful statics methods 
+// useful statics methods
 
 interface Date {
-  message:string;
+  message: string;
   daysInMonth(month: number): number;
   monthDiff(d: Date): number;
   dayToDates(days: number[], limit?: number): Date[];
@@ -18,38 +18,41 @@ interface Array<T> {
   sortAlphaNum();
 }
 
-
 // Date
 // Month is 1 based
-Date.prototype.daysInMonth = function (month: number): number {
-  //var y=this.getFullYear(), m=(month||this.getMonth())
-  //return /8|3|5|10/.test(m)?30:m==1?(!(y%4)&&y%100)||!(y%400)?29:28:31;
+Date.prototype.daysInMonth = function(month: number): number {
+  // var y=this.getFullYear(), m=(month||this.getMonth())
+  // return /8|3|5|10/.test(m)?30:m==1?(!(y%4)&&y%100)||!(y%400)?29:28:31;
 
   return new Date(this.getFullYear(), (month || this.getMonth()) + 1, 0).getDate();
 };
 
 // the number of months in the difference
 // http://stackoverflow.com/questions/2536379/difference-in-months-between-two-dates-in-javascript
-Date.prototype.monthDiff = function (d1: Date): number {
-  var months;
+Date.prototype.monthDiff = function(d1: Date): number {
+  let months;
   months = (d1.getFullYear() - this.getFullYear()) * 12;
   months -= this.getMonth() + 1;
   months += d1.getMonth();
   return months <= 0 ? 0 : months;
 };
 
-
 //
 // give an array of days (in the form [0..6]) and return the ordered dates corresponding (starting from new Date())
 // Sun(0), Mon, tuesday, wednesday, thursday, Freeday, Saterday
-Date.prototype.dayToDates = function (days?: number[], limit?: number): Date[] {
-  var now = this, today = now.getDay(), h24 = 86400000, week = 86400000 * 7, result: any[] = [], potential;
+Date.prototype.dayToDates = function(days?: number[], limit?: number): Date[] {
+  const now = this;
+  const today = now.getDay();
+  const h24 = 86400000;
+  const week = 86400000 * 7;
+  const result: any[] = [];
+  let potential;
   days = days || [];
   days = days.sort(); // sort days in a week
 
   //
   // starting from today
-  days.forEach(function (day, i) {
+  days.forEach(function(day, i) {
     if ((day - today) >= 0) {
       result.push(new Date(now.getTime() + (day - today) * h24));
     }
@@ -57,7 +60,8 @@ Date.prototype.dayToDates = function (days?: number[], limit?: number): Date[] {
 
   // this is splitted in 2 loops to make the list ordered!
   // going to next week  ()
-  days.forEach(function (day) {
+  // TODO TSLINT 
+  days.forEach(function(day) {
     if ((day - today) < 0) {
       potential = new Date(now.getTime() + (day - today) * h24 + week);
       if (!limit || potential < limit) {
@@ -69,39 +73,38 @@ Date.prototype.dayToDates = function (days?: number[], limit?: number): Date[] {
   return result;
 };
 
-Date.prototype.toYYYYMMDD = function (): string {
+Date.prototype.toYYYYMMDD = function(): string {
   return '' + this.getFullYear() + this.getMonth() + this.getDate();
-}
+};
 
-Date.prototype.tomorrow = function (): Date {
+Date.prototype.tomorrow = function(): Date {
   return this.plusDays(1);
-}
+};
 
-Date.prototype.plusDays = function (nb: number): Date {
-  var plus = new Date(this);
+Date.prototype.plusDays = function(nb: number): Date {
+  const plus = new Date(this);
   plus.setDate(this.getDate() + nb);
   return plus;
-}
+};
 
 //
 // simple test : this in [d1,d2[
-Date.prototype.in = function (d1: Date, d2: Date): boolean {
-  return (this >= d1 && this < d2)
-}
+Date.prototype.in = function(d1: Date, d2: Date): boolean {
+  return (this >= d1 && this < d2);
+};
 
 //
 // simple equals day
-Date.prototype.equalsDate = function (d: Date): boolean {
+Date.prototype.equalsDate = function(d: Date): boolean {
   // one day 86400000 ms // => (5⁵+4⁴+3³+2²+1)
-  // getTime()/86400000|0 
-  if(!d){
+  // getTime()/86400000|0
+  if (!d) {
     return false;
   }
-  return this.getFullYear()==d.getFullYear()&&
-         this.getMonth()==d.getMonth()&&
-         this.getDate()==d.getDate();
-}
-  
+  return this.getFullYear() === d.getFullYear() &&
+         this.getMonth() === d.getMonth() &&
+         this.getDate() === d.getDate();
+};
 
 //
 // http://stackoverflow.com/questions/11887934/how-to-check-if-the-dst-daylight-saving-time-is-in-effect-and-if-it-is-whats
@@ -118,15 +121,14 @@ Date.prototype.equalsDate = function (d: Date): boolean {
 // Object.defineProperty(Array.prototype, "stdTimezoneOffset", { enumerable: false });
 // Object.defineProperty(Array.prototype, "dst", { enumerable: false });
 
-
 //
 // label alphanum sort for this case "2000.10"
-Array.prototype.sortSeparatedAlphaNum = function (separator?: string) {
+Array.prototype.sortSeparatedAlphaNum = function(separator?: string) {
   separator = separator || '.';
-
-  return this.sort(function (a, b) {
-    var aA = a.split(separator);
-    var bA = b.split(separator);
+  // TODO TSLINT
+  return this.sort(function(a, b) {
+    const aA = a.split(separator);
+    const bA = b.split(separator);
     // left part
     if (parseInt(aA[0]) > parseInt(bA[0])) {
       return 1;
@@ -134,7 +136,7 @@ Array.prototype.sortSeparatedAlphaNum = function (separator?: string) {
       if (parseInt(aA[0]) < parseInt(bA[0])) {
         return -1;
       }
-    //right part
+    // right part
     if (parseInt(aA[1]) > parseInt(bA[1])) {
       return 1;
     } else
@@ -144,19 +146,19 @@ Array.prototype.sortSeparatedAlphaNum = function (separator?: string) {
     return 0;
   });
 };
-Object.defineProperty(Array.prototype, "sortSeparatedAlphaNum", { enumerable: false });
+Object.defineProperty(Array.prototype, 'sortSeparatedAlphaNum', { enumerable: false });
 
 //
 // simple alpha num sorting
-Array.prototype.sortAlphaNum = function () {
-  var reA = /[^a-zA-Z]/g;
-  var reN = /[^0-9]/g;
-  return this.sort(function (a, b) {
-    var aA = a.replace(reA, "");
-    var bA = b.replace(reA, "");
+Array.prototype.sortAlphaNum = function() {
+  const reA = /[^a-zA-Z]/g;
+  const reN = /[^0-9]/g;
+  return this.sort(function(a, b) {
+    const aA = a.replace(reA, '');
+    const bA = b.replace(reA, '');
     if (aA === bA) {
-      var aN = parseInt(a.replace(reN, ""), 10);
-      var bN = parseInt(b.replace(reN, ""), 10);
+      const aN = parseInt(a.replace(reN, ''), 10);
+      const bN = parseInt(b.replace(reN, ''), 10);
       return aN === bN ? 0 : aN > bN ? 1 : -1;
     } else {
       return aA > bA ? 1 : -1;
@@ -164,4 +166,4 @@ Array.prototype.sortAlphaNum = function () {
   });
 };
 
-Object.defineProperty(Array.prototype, "sortAlphaNum", { enumerable: false });
+Object.defineProperty(Array.prototype, 'sortAlphaNum', { enumerable: false });
