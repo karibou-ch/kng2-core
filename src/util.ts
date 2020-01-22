@@ -3,45 +3,45 @@ import { of } from 'rxjs/observable/of';
 import { ReplaySubject } from 'rxjs/ReplaySubject';
 
   // TODO test utility class
-export class Utils{
-  static roundAmount(value) {
+export class Utils {
+  public static roundAmount(value) {
     return parseFloat((Math.round(value * 20) / 20).toFixed(2));
   }
 
-  static encodeQuery(params) {
-    let elems = [];
-    for (let d in params)
+  public static encodeQuery(params) {
+    const elems = [];
+    for (const d in params) {
       elems.push(encodeURIComponent(d) + '=' + encodeURIComponent(params[d]));
+    }
     return elems.join('&');
-  }  
-  
-  static isObject(item) {
+  }
+
+  public static isObject(item) {
     return (item && typeof item === 'object' && !Array.isArray(item) && item !== null);
   }
 
-  static merge(target, ...sources) {
-    if (!sources.length) return target;
+  public static merge(target, ...sources) {
+    if (!sources.length) { return target; }
     const source = sources.shift();
-  
+
     if (Utils.isObject(target) && Utils.isObject(source)) {
-      for (var key in source) {
+      for (const key in source) {
         if (Utils.isObject(source[key])) {
-          if (!target[key]) Object.assign(target, { [key]: {} });
+          if (!target[key]) { Object.assign(target, { [key]: {} }); }
           Utils.merge(target[key], source[key]);
         } else {
           Object.assign(target, { [key]: source[key] });
         }
       }
     }
-  
-    return Utils.merge(target, ...sources);
-  }  
 
+    return Utils.merge(target, ...sources);
+  }
 
   //
-  //https://github.com/ded/script.js/blob/master/dist/script.js
-  //https://netbasal.com/loading-external-libraries-on-demand-in-angular-9dad45701801
-  static script(url:string,key:string):Observable<string>{
+  // https://github.com/ded/script.js/blob/master/dist/script.js
+  // https://netbasal.com/loading-external-libraries-on-demand-in-angular-9dad45701801
+  public static script(url: string, key: string): Observable<string> {
     if (Utils.scripts[url]) {
       return Utils.scripts[url].asObservable();
     }
@@ -52,23 +52,23 @@ export class Utils{
     script.type = 'text/javascript';
     script.src = url;
     script.onload = () => {
-      let inst=(key&&window[key])||window;      
+      const inst = (key && window[key]) || window;
       Utils.scripts[url].next(inst);
       Utils.scripts[url].complete();
     };
 
     document.body.appendChild(script);
 
-    return Utils.scripts[url].asObservable();  
+    return Utils.scripts[url].asObservable();
   }
 
-  private static scripts:{ [url: string]: ReplaySubject<any> } = {};
+  private static scripts: { [url: string]: ReplaySubject<any> } = {};
 }
 
 //
 // useful simple crypto
-export class XorCipher{
-  constructor(){
+export class XorCipher {
+  constructor() {
   }
 
   // static encode(key, data:string) {
@@ -95,7 +95,5 @@ export class XorCipher{
   //   return data.split('').map((c, i)=>{
   //     return String.fromCharCode( c ^ this.keyCharAt(key, i) );
   //   }).join("");
-  // }    
-} 
-
-
+  // }
+}

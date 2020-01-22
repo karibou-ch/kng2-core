@@ -14,42 +14,41 @@ import { Observable } from 'rxjs/Observable';
 
 //
 // https://stackoverflow.com/questions/41274603/observable-of-component-attribute-changes-in-angular2
-export class ConfirmDeleteDirective implements OnInit{
-  @Output() onconfirm: EventEmitter<any> = new EventEmitter();
-  element;
-  style;
-  id:number=0;
-  constructor(el: ElementRef) { 
-    this.element=el.nativeElement;
-    this.style="z-index:1;left:0;right:0;min-width: 350px;position: absolute;border: 2px solid red;padding: 10px;background-color: white;margin-top:-20px;display:none;left:25%;box-shadow:1px 1px 1000px #333";
+export class ConfirmDeleteDirective implements OnInit {
+  @Output() public onconfirm: EventEmitter<any> = new EventEmitter();
+  public element;
+  public style;
+  public id: number = 0;
+  constructor(el: ElementRef) {
+    this.element = el.nativeElement;
+    this.style ='z-index:1;left:0;right:0;min-width: 350px;position: absolute;border: 2px solid red;padding: 10px;background-color: white;margin-top:-20px;display:none;left:25%;box-shadow:1px 1px 1000px #333';
     this.id++;
   }
 
   @Input() set bgSrc(url) {
-    // if(!url)return;    
+    // if(!url)return;
     // this.element.style.backgroundImage = "url("+url+")";
   }
 
-  ngOnInit(){
-    this.element.keyup((e)=> {
-      if (e.keyCode == 27) {
-        this.element.next('.prompt-passwd').remove();  
+  public ngOnInit() {
+    this.element.keyup((e) => {
+      if (e.keyCode === 27) {
+        this.element.next('.prompt-passwd').remove();
       }
     });
-    this.element.bind('click', (event)=> {
+    this.element.bind('click', (event) => {
       //
-      //angular.element('.prompt-passwd').hide();
+      // angular.element('.prompt-passwd').hide();
       this.element.next().show();
     });
-    this.element.next().submit(()=>{
-      let pwd=this.element.next().find('input[type=password]').val();
-      //scope.action({password:pwd});
+    this.element.next().submit(() => {
+      const pwd = this.element.next().find('input[type=password]').val();
+      // scope.action({password:pwd});
       this.onconfirm.emit(this.id);
       this.element.next().hide('.prompt-passwd');
       return false;
     });
-    
-  }
 
+  }
 
 }
