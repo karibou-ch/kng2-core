@@ -1,6 +1,6 @@
 import { HttpHeaders, HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { ReplaySubject, SubscriptionLike as ISubscription, throwError as _throw, Observable, of } from 'rxjs';
+import { ReplaySubject, SubscriptionLike as ISubscription, throwError as _throw, Observable, of, throwError } from 'rxjs';
 import { config, Config } from './config';
 
 import { Product } from './product.service';
@@ -347,10 +347,10 @@ export class CartService {
 
         //
         //  fast cart load
-        if (items[i].quantity > 15) {
+        if (items[i].quantity > 10) {
           items[i].quantity += 5;
-        } else if (items[i].quantity > 3) {
-          items[i].quantity += 3;
+        } else if (items[i].quantity > 4) {
+          items[i].quantity += 2;
         } else {
           items[i].quantity++;
         }
@@ -704,13 +704,7 @@ export class CartService {
     for (let i = 0; i < items.length; i++) {
       if (items[i].equalItem(item, variant)) {
         // if(items[i].sku===product.sku){
-        if (items[i].quantity > 15) {
-          items[i].quantity -= 3;
-        } else if (items[i].quantity > 6) {
-          items[i].quantity -= 2;
-        } else {
-          items[i].quantity -= 1;
-        }
+        items[i].quantity -= 1;
 
         //
         // update the finalprice
@@ -741,7 +735,6 @@ export class CartService {
     .subscribe(state => {
       this.cart$.next(state);
     },error => {
-      // console.log('--DEBUG ERR', error.message)
       this.cart$.next({ action: CartAction.CART_SAVE_ERROR});
     });
 
@@ -763,6 +756,9 @@ export class CartService {
     let model: CartModel = new CartModel();
     model.cid = this.cache.cid;
     model.items = this.cache.list;
+    if(!this.currentUser.isAuthenticated() || true ) {
+      return throwError('Unauthorized');
+    }
 
     return this.$http.post<CartModel>(ConfigService.defaultConfig.API_SERVER + '/v1/cart', model, {
       headers: this.headers,
