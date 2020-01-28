@@ -255,6 +255,7 @@ class Cache {
   payment: UserCard;
   currentShippingDay: Date;
   currentShippingTime: number;
+  updated: Date;
   constructor() {
     this.list = [];
     this.discount = {};
@@ -272,6 +273,7 @@ export class CartModel {
   address: string;
   payment: string;
   items: CartItem[];
+  updated: Date;
 }
 
 
@@ -568,65 +570,31 @@ export class CartService {
 
 
   load() {
+
     //
     // IFF next shipping day is Null (eg. hollidays)=> currentShippingDay
     const nextShippingDay = Order.nextShippingDay();
     const currentShippingDay = config.potentialShippingWeek()[0];
 
-// const localJsonCart = localStorage.getItem('kng2-cart');
-// this.$http.get<CartModel>(ConfigService.defaultConfig.API_SERVER + '/v1/cart', {
-//   params: {cart: localJsonCart},
-//   headers: this.headers,
-//   withCredentials: true
-// }).pipe(
-//   map(cart => {
-//     return cart.items.map(item => new CartItem(item));
-//   }),
-//   catchError(() => {
-//     const cart = JSON.parse(localJsonCart);
-//     return of(cart.list.map(item => new CartItem(item)));
-//   })
-// ).subscribe(items => {
-//   const cart = JSON.parse(localJsonCart);
-//   this.cache.list = cart.list.map(item => new CartItem(item));
-//   this.clearErrors();
-//   Object.assign(this.cache.discount, cart.discount);
-
-// });
-
-    try {
-      const cartCache = JSON.parse(localStorage.getItem('kng2-cart'));
-      if (!cartCache) {
-        this.cache.currentShippingDay = new Date(nextShippingDay || currentShippingDay);
-        this.cart$.next({ action: CartAction.CART_LOADED });
-        return;
-      }
-
+    const copyCartValue = (fromLocal) => {
       //
       // check shipping date or get the next one
-      cartCache.currentShippingDay = new Date(cartCache.currentShippingDay || nextShippingDay || currentShippingDay);
+      fromLocal.currentShippingDay = new Date(fromLocal.currentShippingDay || nextShippingDay || currentShippingDay);
 
       //
       // if selected shipping date is before the next one => reset the default date
-      if (cartCache.currentShippingDay < nextShippingDay) {
-        cartCache.currentShippingDay = nextShippingDay;
+      if (fromLocal.currentShippingDay < nextShippingDay) {
+        fromLocal.currentShippingDay = nextShippingDay;
       }
-      cartCache.currentShippingTime = cartCache.currentShippingTime || 16;
+      fromLocal.currentShippingTime = fromLocal.currentShippingTime || 16;
 
-      this.cache.currentShippingDay = cartCache.currentShippingDay;
-      this.cache.currentShippingTime = cartCache.currentShippingTime;
+      this.cache.currentShippingDay = fromLocal.currentShippingDay;
+      this.cache.currentShippingTime = fromLocal.currentShippingTime;
 
-      //
-      // check values
-      if (cartCache.list && cartCache.discount) {
-        this.cache.list = cartCache.list.map(item => new CartItem(item));
-        this.clearErrors();
-        Object.assign(this.cache.discount, cartCache.discount);
-      }
       //
       // load only available payment
-      if (cartCache.payment) {
-        this.cache.payment = new UserCard(cartCache.payment);
+      if (fromLocal.payment) {
+        this.cache.payment = new UserCard(fromLocal.payment);
         // check validity
         if (!this.cache.payment.isValid()) {
           this.cache.payment = null;
@@ -638,24 +606,23 @@ export class CartService {
 
       //
       // load address
-      if (cartCache.address) {
-        let AddressConstructor = (this.cache.address['fees'] >= 0) ? DepositAddress : UserAddress;
+      if (fromLocal.address) {
         this.cache.address = new UserAddress(
-          cartCache.address.name,
-          cartCache.address.streetAdress,
-          cartCache.address.floor,
-          cartCache.address.region,
-          cartCache.address.postalCode,
-          cartCache.address.note,
-          cartCache.address.primary,
-          cartCache.address.geo
+          fromLocal.address.name,
+          fromLocal.address.streetAdress,
+          fromLocal.address.floor,
+          fromLocal.address.region,
+          fromLocal.address.postalCode,
+          fromLocal.address.note,
+          fromLocal.address.primary,
+          fromLocal.address.geo
         );
 
-        if ((cartCache.address.fees >= 0)) {
+        if ((fromLocal.address.fees >= 0)) {
           this.cache.address = <DepositAddress>this.cache.address;
-          this.cache.address['weight'] = cartCache.address.weight;
-          this.cache.address['active'] = cartCache.address.active;
-          this.cache.address['fees'] = cartCache.address.fees;
+          this.cache.address['weight'] = fromLocal.address.weight;
+          this.cache.address['active'] = fromLocal.address.active;
+          this.cache.address['fees'] = fromLocal.address.fees;
           this.cache.address.floor = '-';
         }
 
@@ -667,8 +634,48 @@ export class CartService {
         }
       }
 
+    };
 
-      this.cart$.next({ action: CartAction.CART_LOADED });
+    //
+    //
+    // INIT local values
+    try {
+      const fromLocal = JSON.parse(localStorage.getItem('kng2-cart'));
+      this.cache.currentShippingDay = new Date(nextShippingDay || currentShippingDay);
+
+      //
+      // INIT cart items
+      // check values
+      const stringCart = {
+          items: [],
+          updated: null
+      };
+
+      if (fromLocal) {
+        stringCart.items = fromLocal.list;
+        copyCartValue(fromLocal);
+      }
+      this.$http.get<CartModel>(ConfigService.defaultConfig.API_SERVER + '/v1/cart', {
+        params: {cart: JSON.stringify(stringCart)},
+        headers: this.headers,
+        withCredentials: true
+      }).pipe(
+        map(cart => {
+          return cart;
+        }),
+        catchError(() => {
+          return of(fromLocal);
+        })
+      ).subscribe(cart => {
+        if (cart) {
+          this.cache.updated = new Date(cart.updated);
+          this.cache.list = cart.items.map( item => new CartItem(item));
+          this.clearErrors();
+          Object.assign(this.cache.discount, cart.discount);
+        }
+        this.cart$.next({ action: CartAction.CART_LOADED });
+      });
+
     } catch (e) {
       console.log('------------error on cart loading', e);
       this.cart$.next({ action: CartAction.CART_LOAD_ERROR });
@@ -743,6 +750,7 @@ export class CartService {
   private saveLocal(state: CartState): Observable<CartState> {
     return new Observable((observer) => {
       try {
+        this.cache.updated = new Date();
         localStorage.setItem('kng2-cart', JSON.stringify(this.cache));
         observer.next(state);
       } catch (e) {
@@ -753,10 +761,10 @@ export class CartService {
   }
 
   private saveServer(state: CartState): Observable<CartState> {
-    let model: CartModel = new CartModel();
+    const model: CartModel = new CartModel();
     model.cid = this.cache.cid;
     model.items = this.cache.list;
-    if(!this.currentUser.isAuthenticated() || true ) {
+    if(!this.currentUser.isAuthenticated()) {
       return throwError('Unauthorized');
     }
 
@@ -766,6 +774,7 @@ export class CartService {
     }).pipe(map(model => {
       this.cache.cid = model.cid;
       this.cache.list = model.items.map(item => new CartItem(item));
+      this.cache.updated = model.updated;
 
       //
       // sync with server is done!
