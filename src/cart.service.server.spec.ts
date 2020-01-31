@@ -5,13 +5,11 @@ import { CartService, CartItem } from './cart.service';
 
 import { OrderService } from './order/order.service';
 import { ConfigService } from './config.service';
-import { Observable } from 'rxjs';
 
 import { shared } from './test-payload/config';
 import { items } from './test-payload/items';
 import { CartAction } from './cart.service.v2';
 import { User } from './user.service';
-import { Product } from './product.service';
 
 describe('CartService : localStorage', () => {
   let cfg;
@@ -102,14 +100,14 @@ describe('CartService : localStorage', () => {
       expect( req.urlWithParams).toContain('items');
       expect( req.urlWithParams).toContain('updated');
       return true;
-    }).error(new Error('POOUET'));
+    }).flush(simpleResult);
 
   }));
 
 //
 //
 // Test
-  it('items should be stored on localstorage', inject([CartService, HttpTestingController], (cart: CartService, httpMock) => {
+  xit('items should be stored on server', inject([CartService, HttpTestingController], (cart: CartService, httpMock) => {
     expect(cart).toBeTruthy();
 
     cart.subscribe(state => {
@@ -133,6 +131,7 @@ describe('CartService : localStorage', () => {
       expect( cart.quantity()).toEqual(1);
 
       expect(store['kng2-cart']).toBeDefined();
+      expect(store['kng2-cart'].list.length).toEqual(0);
 
 
     });
@@ -143,13 +142,13 @@ describe('CartService : localStorage', () => {
       expect( req.urlWithParams).toContain('items');
       expect( req.urlWithParams).toContain('updated');
       return true;
-    }).error(new Error('POOUET'));
+    }).flush(simpleResult);
   }));
 
   //
   //
   // Test
-  it('items should be loaded from localStorage', inject([CartService, HttpTestingController], (cart: CartService, httpMock) => {
+  xit('items should be loaded from localStorage', inject([CartService, HttpTestingController], (cart: CartService, httpMock) => {
     expect(cart).toBeTruthy();
 
     cart.subscribe(state => {
@@ -165,6 +164,52 @@ describe('CartService : localStorage', () => {
       return true;
     }).error(new Error('POOUET'));
   }));
+
+//
+//
+// test
+  xit('items should be stored on serveur', inject([CartService, HttpTestingController], (cart: CartService, httpMock) => {
+    expect(cart).toBeTruthy();
+
+
+    cart.subscribe(state => {
+      if (state.action !== CartAction.CART_LOADED) {
+        return;
+      }
+      store = {};
+      cart.add(new CartItem(items[0]));
+      const result0 = Object.assign({}, simpleResult);
+      result0.items = [items[0]];
+      postSuccess(httpMock, result0);
+      expect( cart.quantity()).toEqual(1);
+      expect( cart.getItems()[0].sku).toEqual(items[0].sku);
+
+      cart.add(new CartItem(items[1]));
+      const result1 = Object.assign({}, simpleResult);
+      result1.items = [items[0], items[1]];
+      postSuccess(httpMock, result1);
+      expect( cart.quantity()).toEqual(2);
+
+      // cart.remove(new CartItem(items[0]));
+      // expect( cart.quantity()).toEqual(1);
+      // postError(httpMock, 400);
+
+      expect(store['kng2-cart']).toBeUndefined();
+      console.log('coucou');
+
+    });
+    cart.setContext(cfg, user);
+    cart.getCurrentShippingDay();
+    httpMock.expectOne(req => {
+      expect( req.urlWithParams).toContain('test/v1/cart?cart=');
+      expect( req.urlWithParams).toContain('items');
+      expect( req.urlWithParams).toContain('updated');
+      return true;
+    });
+
+  }));
+
+
 
 
 });

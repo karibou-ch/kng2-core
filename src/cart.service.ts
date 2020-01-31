@@ -646,7 +646,7 @@ export class CartService {
       //
       // INIT cart items
       // check values
-      const stringCart = {
+      const stringCart: any = {
           items: [],
           updated: null
       };
@@ -664,7 +664,7 @@ export class CartService {
           return cart;
         }),
         catchError(() => {
-          return of(fromLocal);
+          return of(stringCart);
         })
       ).subscribe(cart => {
         if (cart) {
@@ -741,7 +741,7 @@ export class CartService {
     )
     .subscribe(state => {
       this.cart$.next(state);
-    },error => {
+    }, error => {
       this.cart$.next({ action: CartAction.CART_SAVE_ERROR});
     });
 
@@ -767,18 +767,20 @@ export class CartService {
     if(!this.currentUser.isAuthenticated()) {
       return throwError('Unauthorized');
     }
-
     return this.$http.post<CartModel>(ConfigService.defaultConfig.API_SERVER + '/v1/cart', model, {
       headers: this.headers,
       withCredentials: true
-    }).pipe(map(model => {
+    }).pipe(
+      map(model => {
       this.cache.cid = model.cid;
       this.cache.list = model.items.map(item => new CartItem(item));
       this.cache.updated = model.updated;
-
       //
       // sync with server is done!
       return state;
+    }),
+    catchError(e => {
+      return this.saveLocal(state);
     }));
   }
 
