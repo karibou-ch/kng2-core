@@ -107,7 +107,7 @@ describe('CartService : localStorage', () => {
 //
 //
 // Test
-  xit('items should be stored on server', inject([CartService, HttpTestingController], (cart: CartService, httpMock) => {
+  it('items should be stored on server', inject([CartService, HttpTestingController], (cart: CartService, httpMock) => {
     expect(cart).toBeTruthy();
 
     cart.subscribe(state => {
@@ -119,16 +119,16 @@ describe('CartService : localStorage', () => {
       cart.getCurrentShippingDay();
 
       cart.add(new CartItem(items[0]));
-      expect( cart.quantity()).toEqual(1);
-      postError(httpMock, 400);
+      postSuccess(httpMock, simpleResult);
+      expect( cart.quantity()).toEqual(0);
 
       cart.add(new CartItem(items[1]));
-      httpMock.expectOne('test/v1/cart').error(new Error('POOUET')); // server error, (URL doesn't exist, server down...)
-      expect( cart.quantity()).toEqual(2);
+      postSuccess(httpMock, Object.assign({}, simpleResult,{items:[items[1]]}));
+      expect( cart.quantity()).toEqual(1);
 
       cart.remove(new CartItem(items[0]));
-      postError(httpMock, 400); // service error
-      expect( cart.quantity()).toEqual(1);
+      postSuccess(httpMock, simpleResult);
+      expect( cart.quantity()).toEqual(0);
 
       expect(store['kng2-cart']).toBeDefined();
       expect(store['kng2-cart'].list.length).toEqual(0);
