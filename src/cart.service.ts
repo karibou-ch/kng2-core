@@ -1,6 +1,6 @@
 import { HttpHeaders, HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { ReplaySubject, SubscriptionLike as ISubscription, throwError as _throw, Observable, of, throwError } from 'rxjs';
+import { ReplaySubject, SubscriptionLike as ISubscription, throwError as _throw, Observable, of, throwError, from } from 'rxjs';
 import { config, Config } from './config';
 
 import { Product } from './product.service';
@@ -10,7 +10,7 @@ import { OrderService } from './order/order.service';
 import { Order, OrderItem } from './order/order';
 import { Shop } from './shop.service';
 import { User, UserAddress, UserCard, DepositAddress } from './user.service';
-import { map, catchError } from 'rxjs/operators';
+import { map, catchError, switchMap } from 'rxjs/operators';
 import { ConfigService } from './config.service';
 
 //
@@ -240,13 +240,21 @@ export class CartConfig {
 
 }
 
+export class CartModel {
+  cid: string[];
+  items: CartItem[];
+  updated: Date;
+  constructor() {
+    this.items = [];
+  }
+}
+
 //
 // Cart Cache content
 // which is used over time (close/open navigator)
 // this should be serialized in server side
-class Cache {
-  cid: string[];
-  list: CartItem[];
+class Cache extends CartModel {
+
   //
   // vendors discounts
   // TODO vendors discount should feet actual vendors settings
@@ -255,9 +263,8 @@ class Cache {
   payment: UserCard;
   currentShippingDay: Date;
   currentShippingTime: number;
-  updated: Date;
   constructor() {
-    this.list = [];
+    super();
     this.discount = {};
     this.address = new DepositAddress();
     this.payment = new UserCard();
@@ -266,14 +273,6 @@ class Cache {
     // this.currentShippingDay=Order.nextShippingDay();
     // this.currentShippingTime=16;
   }
-}
-
-export class CartModel {
-  cid: string[];
-  address: string;
-  payment: string;
-  items: CartItem[];
-  updated: Date;
 }
 
 
@@ -329,7 +328,7 @@ export class CartService {
   add(product: Product | CartItem, variant?: string) {
     // if(window.fbq)fbq('track', 'AddToCart');
     this.checkIfReady();
-    const items = this.cache.list;
+    const items = this.cache.items;
     const item = (product instanceof CartItem) ? product : CartItem.fromProduct(product, variant);
 
 
@@ -376,7 +375,7 @@ export class CartService {
 
   // clear error
   clearErrors() {
-    const items = this.cache.list;
+    const items = this.cache.items;
     for (let i = 0; i < items.length; i++) {
       items[i].error = undefined;
     }
@@ -392,7 +391,7 @@ export class CartService {
   // compute discount by vendor
   computeVendorDiscount(vendor: Shop) {
     // init
-    const items = this.cache.list;
+    const items = this.cache.items;
     let amount = 0;
 
     //
@@ -404,20 +403,20 @@ export class CartService {
 
     //
     // subtotal for the vendor
-    items.forEach(function(item) {
-      if (item.vendor.urlpath == vendor.urlpath) {
+    items.forEach((item) => {
+      if (item.vendor.urlpath === vendor.urlpath) {
         amount += (item.price * item.quantity);
       }
     });
 
     //
     // compute discount based on vendor
-    let discountMagnitude = Math.floor(amount / vendor.discount.threshold);
+    const discountMagnitude = Math.floor(amount / vendor.discount.threshold);
     this.cache.discount[vendor.urlpath] = discountMagnitude * vendor.discount.amount;
 
     //
-    // return the discount
-    return this.cache.discount[vendor.urlpath];
+    // return the discount or 0
+    return this.cache.discount[vendor.urlpath] || 0;
   }
 
 
@@ -483,13 +482,13 @@ export class CartService {
     this.cache.payment = new UserCard();
     this.cache.address = new UserAddress();
     this.cartConfig.gateway = this.DEFAULT_GATEWAY;
-    this.cache.list = [];
+    this.cache.items = [];
     this.cache.discount = {};
     this.save({ action: CartAction.CART_CLEARED });
   }
 
   findBySku(sku: number): CartItem {
-    return this.cache.list.find(item => item.sku == sku);
+    return this.cache.items.find(item => item.sku == sku);
   }
 
   getCurrentGateway(): { fees: number, label: string } {
@@ -509,7 +508,7 @@ export class CartService {
 
   getItems() {
     this.checkIfReady();
-    return this.cache.list;
+    return this.cache.items;
   }
 
   getCurrentShippingAddress(): UserAddress {
@@ -543,7 +542,7 @@ export class CartService {
   }
 
   hasError(): boolean {
-    return this.cache.list.some(item => item.error != undefined);
+    return this.cache.items.some(item => item.error != undefined);
   }
 
   hasShippingReduction(): boolean {
@@ -568,28 +567,41 @@ export class CartService {
     return shop.available.weekdays.indexOf(weekday) > -1;
   }
 
-
-  load() {
-
+  loadCache() {
     //
     // IFF next shipping day is Null (eg. hollidays)=> currentShippingDay
     const nextShippingDay = Order.nextShippingDay();
     const currentShippingDay = config.potentialShippingWeek()[0];
+    this.cache.currentShippingDay = new Date(nextShippingDay || currentShippingDay);
+    this.cache.updated = new Date('1990-12-01T00:00:00');
+    this.cache.discount = {};
 
-    const copyCartValue = (fromLocal) => {
+    try {
+      const fromLocal = JSON.parse(localStorage.getItem('kng2-cart')) as Cache;
+
+      if (!fromLocal) {
+        return;
+      }
       //
       // check shipping date or get the next one
-      fromLocal.currentShippingDay = new Date(fromLocal.currentShippingDay || nextShippingDay || currentShippingDay);
+      this.cache.currentShippingTime = fromLocal.currentShippingTime || 16;      
+      this.cache.currentShippingDay = new Date(fromLocal.currentShippingDay || nextShippingDay || currentShippingDay);
 
       //
       // if selected shipping date is before the next one => reset the default date
-      if (fromLocal.currentShippingDay < nextShippingDay) {
-        fromLocal.currentShippingDay = nextShippingDay;
+      if (this.cache.currentShippingDay < nextShippingDay) {
+        this.cache.currentShippingDay = nextShippingDay;
       }
-      fromLocal.currentShippingTime = fromLocal.currentShippingTime || 16;
 
-      this.cache.currentShippingDay = fromLocal.currentShippingDay;
-      this.cache.currentShippingTime = fromLocal.currentShippingTime;
+      if (fromLocal.updated) {
+        this.cache.updated = new Date(fromLocal.updated);
+      }
+
+      //
+      // items will be completed on load()
+      if (fromLocal.items) {
+        this.cache.items = fromLocal.items as CartItem[];
+      }
 
       //
       // load only available payment
@@ -605,6 +617,7 @@ export class CartService {
       }
 
       //
+      // FIXME create function that return UserAddress DepositAddress
       // load address
       if (fromLocal.address) {
         this.cache.address = new UserAddress(
@@ -618,11 +631,9 @@ export class CartService {
           fromLocal.address.geo
         );
 
-        if ((fromLocal.address.fees >= 0)) {
-          this.cache.address = <DepositAddress>this.cache.address;
-          this.cache.address['weight'] = fromLocal.address.weight;
-          this.cache.address['active'] = fromLocal.address.active;
-          this.cache.address['fees'] = fromLocal.address.fees;
+        if ((fromLocal.address['fees'] >= 0)) {
+          this.cache.address = this.cache.address as DepositAddress;
+          Object.assign(this.cache.address, fromLocal.address);
           this.cache.address.floor = '-';
         }
 
@@ -634,58 +645,54 @@ export class CartService {
         }
       }
 
-    };
+    } catch(err) {
+      // First time in karibou.ch localStorage is undefined
+    }
+  }
 
-    //
+  load() {
     //
     // INIT local values
-    try {
-      const fromLocal = JSON.parse(localStorage.getItem('kng2-cart'));
-      this.cache.currentShippingDay = new Date(nextShippingDay || currentShippingDay);
+    this.loadCache();
 
-      //
-      // INIT cart items
-      // check values
-      const stringCart: any = {
-          items: [],
-          updated: null
-      };
+    //
+    // INIT cart items
+    // check values
+    const stringCart: any = {
+        items: this.cache.items || [],
+        updated: this.cache.updated
+    };
 
-      if (fromLocal) {
-        stringCart.items = fromLocal.list;
-        copyCartValue(fromLocal);
+    this.$http.get<CartModel>(ConfigService.defaultConfig.API_SERVER + '/v1/cart', {
+      params: {cart: JSON.stringify(stringCart)},
+      headers: this.headers,
+      withCredentials: true
+    }).pipe(
+      map(cart => {
+        return cart;
+      }),
+      catchError(() => {
+        return of(stringCart);
+      })
+    ).subscribe(cart => {
+      if (cart) {
+        this.cache.updated = new Date(cart.updated);
+        this.cache.items = cart.items.map( item => new CartItem(item));
+        this.clearErrors();
+        Object.assign(this.cache.discount, cart.discount);
       }
-      this.$http.get<CartModel>(ConfigService.defaultConfig.API_SERVER + '/v1/cart', {
-        params: {cart: JSON.stringify(stringCart)},
-        headers: this.headers,
-        withCredentials: true
-      }).pipe(
-        map(cart => {
-          return cart;
-        }),
-        catchError(() => {
-          return of(stringCart);
-        })
-      ).subscribe(cart => {
-        if (cart) {
-          this.cache.updated = new Date(cart.updated);
-          this.cache.list = cart.items.map( item => new CartItem(item));
-          this.clearErrors();
-          Object.assign(this.cache.discount, cart.discount);
-        }
-        this.cart$.next({ action: CartAction.CART_LOADED });
-      });
+      this.cart$.next({ action: CartAction.CART_LOADED });
+    });
 
-    } catch (e) {
-      console.log('------------error on cart loading', e);
-      this.cart$.next({ action: CartAction.CART_LOAD_ERROR });
-    }
+    //
+    // TODO
+    // this.cart$.next({ action: CartAction.CART_LOAD_ERROR });
   }
 
   removeAll(product: Product | CartItem, variant?: string) {
     this.checkIfReady();
     // init
-    const items = this.cache.list;
+    const items = this.cache.items;
     const item = (product instanceof CartItem) ? product : CartItem.fromProduct(product);
 
     //
@@ -704,7 +711,7 @@ export class CartService {
   remove(product: Product | CartItem, variant?: string) {
     this.checkIfReady();
     // init
-    const items = this.cache.list;
+    const items = this.cache.items;
     const item = (product instanceof CartItem) ? product : CartItem.fromProduct(product);
 
     //
@@ -736,8 +743,11 @@ export class CartService {
     this.saveServer(state)
     .pipe(
       catchError(e => {
-        return this.saveLocal(state);
+        return of(state);
       }),
+      switchMap(state => {
+        return this.saveLocal(state);
+      })
     )
     .subscribe(state => {
       this.cart$.next(state);
@@ -763,7 +773,7 @@ export class CartService {
   private saveServer(state: CartState): Observable<CartState> {
     const model: CartModel = new CartModel();
     model.cid = this.cache.cid;
-    model.items = this.cache.list;
+    model.items = this.cache.items;
     if(!this.currentUser.isAuthenticated()) {
       return throwError('Unauthorized');
     }
@@ -773,8 +783,8 @@ export class CartService {
     }).pipe(
       map(model => {
       this.cache.cid = model.cid;
-      this.cache.list = model.items.map(item => new CartItem(item));
-      this.cache.updated = model.updated;
+      this.cache.items = model.items.map(item => new CartItem(item));
+      this.cache.updated = new Date(model.updated);
       //
       // sync with server is done!
       return state;
@@ -849,7 +859,7 @@ export class CartService {
 
     // Compute shipping and substract discount
     if (removeDiscount) {
-      let fees = this.getCurrentGateway().fees * (total + price);
+      const fees = this.getCurrentGateway().fees * (total + price);
       price -= Math.max(this.totalDiscount() - fees, 0);
     }
 
@@ -858,9 +868,9 @@ export class CartService {
 
 
   subTotal(): number {
-    const items = this.cache.list;
+    const items = this.cache.items;
     let total = 0;
-    items.forEach(function(item) {
+    items.forEach((item) => {
       total += (item.price * item.quantity);
     });
     return Utils.roundAmount(total);
@@ -878,9 +888,9 @@ export class CartService {
 
 
   quantity(): number {
-    const items = this.cache.list;
+    const items = this.cache.items;
     let quantity = 0;
-    items.forEach(function(item) {
+    items.forEach((item) => {
       quantity += item.quantity;
     });
     return quantity;
@@ -892,7 +902,8 @@ export class CartService {
   // total = stotal + stotal*payment.fees
   // WARNNG -- WARNNG -- WARNNG -- edit in all places
   total(): number {
-    let total = this.subTotal(), shipping = this.shipping();
+    let total = this.subTotal();
+    const shipping = this.shipping();
     const fees = this.getCurrentGateway().fees * (total + shipping - this.totalDiscount()) + shipping;
     total += (fees - this.totalDiscount());
 
@@ -906,7 +917,7 @@ export class CartService {
   totalDiscount(): number {
     let amount = 0;
     for (const slug in this.cache.discount) {
-      amount += this.cache.discount[slug];
+      amount += (this.cache.discount[slug] || 0);
     }
     return Utils.roundAmount(amount);
   }
