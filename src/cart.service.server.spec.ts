@@ -14,9 +14,9 @@ import { User } from './user.service';
 describe('CartService : localStorage', () => {
   let cfg;
   const user = new User({
-    id: 1,
+    cid: ['85845062-01a1-58a2-8b99-2b9bedd8e522'],
     name: {
-      givenName: 'Hello', familyName : 'World'
+      givenName: 'Nathalie', familyName : 'Chabert'
     },
     tags: []
   });
@@ -75,7 +75,7 @@ describe('CartService : localStorage', () => {
     // expect(config).toBeTruthy();
     config.get().subscribe((c) => {
       cfg = c;
-    });
+     });
     const req = httpMock.expectOne('test/v1/config?lang=en-US');
     expect(req.request.method).toBe('GET');
     req.flush(shared);
@@ -92,7 +92,7 @@ describe('CartService : localStorage', () => {
       const items = cart.getItems();
       expect( cart.quantity()).toEqual(0);
       expect( items.length).toEqual(0);
-    });
+      });
     cart.setContext(cfg, user);
     cart.getCurrentShippingDay();
     httpMock.expectOne(req => {
@@ -123,11 +123,11 @@ describe('CartService : localStorage', () => {
       expect( cart.quantity()).toEqual(0);
 
       cart.add(new CartItem(items[0]));
-      postSuccess(httpMock, Object.assign({}, simpleResult,{items:[items[0]]}));
+      postSuccess(httpMock, Object.assign({}, simpleResult, {items: [items[0]]}));
       expect( cart.quantity()).toEqual(1);
 
       cart.add(new CartItem(items[1]));
-      postSuccess(httpMock, Object.assign({}, simpleResult,{items:[items[0],items[1]]}));
+      postSuccess(httpMock, Object.assign({}, simpleResult, {items: [items[0], items[1]]}));
       expect( cart.quantity()).toEqual(2);
 
       cart.remove(new CartItem(items[0]));
@@ -136,7 +136,6 @@ describe('CartService : localStorage', () => {
 
       expect(store['kng2-cart']).toBeDefined();
       expect(JSON.parse(store['kng2-cart']).items.length).toEqual(0);
-
 
     });
     cart.setContext(cfg, user);
@@ -166,13 +165,13 @@ describe('CartService : localStorage', () => {
       expect( req.urlWithParams).toContain('items');
       expect( req.urlWithParams).toContain('updated');
       return true;
-    }).flush(Object.assign({}, simpleResult,{items:[items[1]]}));
+    }).flush(Object.assign({}, simpleResult, {items: [items[1]]}));
   }));
 
 //
 //
 // test
-  xit('items should be stored on serveur', inject([CartService, HttpTestingController], (cart: CartService, httpMock) => {
+  it('items should be stored on serveur', inject([CartService, HttpTestingController], (cart: CartService, httpMock) => {
     expect(cart).toBeTruthy();
 
 
@@ -181,25 +180,15 @@ describe('CartService : localStorage', () => {
         return;
       }
       store = {};
+
       cart.add(new CartItem(items[0]));
-      const result0 = Object.assign({}, simpleResult);
-      result0.items = [items[0]];
-      postSuccess(httpMock, result0);
+      postSuccess(httpMock, Object.assign({}, simpleResult, {items: [items[0]]}));
       expect( cart.quantity()).toEqual(1);
       expect( cart.getItems()[0].sku).toEqual(items[0].sku);
 
       cart.add(new CartItem(items[1]));
-      const result1 = Object.assign({}, simpleResult);
-      result1.items = [items[0], items[1]];
-      postSuccess(httpMock, result1);
+      postSuccess(httpMock, Object.assign({}, simpleResult, {items: [items[0], items[1]]}));
       expect( cart.quantity()).toEqual(2);
-
-      // cart.remove(new CartItem(items[0]));
-      // expect( cart.quantity()).toEqual(1);
-      // postError(httpMock, 400);
-
-      expect(store['kng2-cart']).toBeUndefined();
-      console.log('coucou');
 
     });
     cart.setContext(cfg, user);
@@ -209,7 +198,7 @@ describe('CartService : localStorage', () => {
       expect( req.urlWithParams).toContain('items');
       expect( req.urlWithParams).toContain('updated');
       return true;
-    });
+    }).flush(Object.assign({}, simpleResult, {items: [items[1]]}));
 
   }));
 
