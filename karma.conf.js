@@ -29,6 +29,11 @@ module.exports = function (config) {
     logLevel: config.LOG_INFO,
     autoWatch: true,
     browsers: ['ChromeHeadless'],
+    customLaunchers: {
+      ChromeHeadless: {
+        flags: ['--no-sandbox','--disable-gpu']
+      }
+    },
     singleRun: true,
     restartOnFileChange: true
   });
