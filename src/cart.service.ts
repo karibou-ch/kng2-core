@@ -10,7 +10,7 @@ import { OrderService } from './order/order.service';
 import { Order, OrderItem } from './order/order';
 import { Shop } from './shop.service';
 import { User, UserAddress, UserCard, DepositAddress } from './user.service';
-import { map, catchError, switchMap } from 'rxjs/operators';
+import { map, catchError, switchMap, debounceTime } from 'rxjs/operators';
 import { ConfigService } from './config.service';
 
 //
@@ -668,6 +668,7 @@ export class CartService {
       headers: this.headers,
       withCredentials: true
     }).pipe(
+      debounceTime(500),
       map(cart => {
         return cart;
       }),
