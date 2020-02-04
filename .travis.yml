@@ -20,7 +20,7 @@ script:
 
 env:
   - CHROME_BIN=google-chrome-beta
-  
+    
 # deploy:
 #   skip_cleanup: true
 #   provider: firebase
