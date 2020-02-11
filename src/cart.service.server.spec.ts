@@ -1,14 +1,13 @@
 import { TestBed, inject, async } from '@angular/core/testing';
 import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
 
-import { CartService, CartItem } from './cart.service';
+import { CartService, CartItem, CartAction } from './cart.service';
 
 import { OrderService } from './order/order.service';
 import { ConfigService } from './config.service';
 
 import { shared } from './test-payload/config';
 import { items } from './test-payload/items';
-import { CartAction } from './cart.service.v2';
 import { User } from './user.service';
 
 describe('CartService : localStorage', () => {

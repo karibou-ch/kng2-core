@@ -761,7 +761,13 @@ export class CartService {
   private saveLocal(state: CartState): Observable<CartState> {
     return new Observable((observer) => {
       try {
-        this.cache.updated = new Date();
+        //
+        // update local date IFF not authenticated or invalid
+        if(!this.cache.updated ||
+           !this.cache.updated.getTime() ||
+           !this.currentUser.isAuthenticated()) {
+            this.cache.updated = new Date();
+        }
         localStorage.setItem('kng2-cart', JSON.stringify(this.cache));
         observer.next(state);
       } catch (e) {
@@ -775,8 +781,11 @@ export class CartService {
     const model: CartModel = new CartModel();
     model.cid = this.cache.cid;
     model.items = this.cache.items;
-    if(!this.currentUser.isAuthenticated()) {
+    if (!this.currentUser.isAuthenticated()) {
       return throwError('Unauthorized');
+    }
+    if ([CartAction.ITEM_ADD, CartAction.ITEM_REMOVE].indexOf(state.action) === -1) {
+      return of(state);
     }
     return this.$http.post<CartModel>(ConfigService.defaultConfig.API_SERVER + '/v1/cart', model, {
       headers: this.headers,
