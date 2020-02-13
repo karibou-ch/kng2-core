@@ -28,6 +28,7 @@ export enum CartAction {
   ITEM_ADD = 1,
   ITEM_REMOVE = 2,
   ITEM_MAX = 3,
+  ITEM_ALL = 12,
   CART_INIT = 4,
   CART_LOADED = 5,
   CART_LOAD_ERROR = 6,
@@ -72,7 +73,7 @@ export class CartItem {
   category: {
     slug: string;
     name: string;
-  }
+  };
   vendor: {
     urlpath: string;
     name: string;
@@ -87,20 +88,8 @@ export class CartItem {
   part: string;
   quantity: number;
 
-  static fromOrder(orderItem: OrderItem) {
-    /**
-     * TODO missing props CartItem.fromOrderItem
-       - thumb:orderItem.thumb,
-       - category.slug: orderItem.category,
-       - name: product.vendor.name,
-       - weekdays: product.vendor.available.weekdays,
-       - photo: product.vendor.photo.owner,
-       - discount: 
-       - weight:product.categories.weight,
-       - discount:product.isDiscount(),
-     * 
-     */
-    let item = {
+  static fromOrder(orderItem: OrderItem, vendor: Shop) {
+    const item = {
       timestamp: (new Date()),
       title: orderItem.title,
       sku: orderItem.sku,
@@ -113,19 +102,31 @@ export class CartItem {
         name: orderItem.category
       },
       vendor: {
-        urlpath: orderItem.vendor,
+        urlpath: vendor.urlpath,
+        name: vendor.name,
+        weekdays: vendor.available.weekdays,
+        photo: vendor.photo.owner,
+        discount: { threshold: null, amount: 0 }
       },
       part: orderItem.part,
-      quantity: 1
+      quantity: orderItem.quantity
+    };
+    //
+    // init discount
+    // TODO howto manage discount link
+    if (vendor.discount &&
+      vendor.discount.active) {
+      item.vendor.discount.threshold = (vendor.discount.threshold);
+      item.vendor.discount.amount = (vendor.discount.amount);
     }
-    throw new Error("Not implemented");
+    return new CartItem(item);
   }
   static fromProduct(product: Product, variant?: string) {
-    let item = {
+    const item = {
       timestamp: (new Date()),
       title: product.title,
       sku: product.sku,
-      variant: variant,
+      variant: (variant),
       thumb: product.photo.url,
       price: product.getPrice(),
       finalprice: product.getPrice(),
@@ -153,7 +154,6 @@ export class CartItem {
       product.vendor.discount.active) {
       item.vendor.discount.threshold = parseFloat(product.vendor.discount.threshold);
       item.vendor.discount.amount = parseFloat(product.vendor.discount.amount);
-
     }
     return new CartItem(item);
   }
@@ -322,10 +322,19 @@ export class CartService {
   //
 
 
+  //
+  // add multiples items
+  addAll(products: Product[] | CartItem[]) {
+    if(!products || !products.length) {
+      return;
+    }
+    products.forEach(item => this.add(item, item.variant, true));
+    this.save({ action: CartAction.ITEM_ALL });
+  }
 
   //
   // add one item
-  add(product: Product | CartItem, variant?: string) {
+  add(product: Product | CartItem, variant?: string, quiet?: boolean) {
     // if(window.fbq)fbq('track', 'AddToCart');
     this.checkIfReady();
     const items = this.cache.items;
@@ -342,6 +351,9 @@ export class CartService {
           product.pricing &&
           product.pricing.stock <= items[i].quantity) {
           // return api.info($rootScope,"La commande maximum pour ce produit à été atteintes.",4000);
+          if (quiet) {
+            return;
+          }
           this.cart$.next({ item: items[i], action: CartAction.ITEM_MAX });
           return;
         }
@@ -361,6 +373,10 @@ export class CartService {
 
         // TODO warn update
         this.computeVendorDiscount(product.vendor);
+
+        if (quiet) {
+          return;
+        }
         this.save({ item: items[i], action: CartAction.ITEM_ADD });
         return;
       }
@@ -779,15 +795,27 @@ export class CartService {
 
   private saveServer(state: CartState): Observable<CartState> {
     const model: CartModel = new CartModel();
+    const params: any = {};
     model.cid = this.cache.cid;
     model.items = this.cache.items;
     if (!this.currentUser.isAuthenticated()) {
       return throwError('Unauthorized');
     }
-    if ([CartAction.ITEM_ADD, CartAction.ITEM_REMOVE].indexOf(state.action) === -1) {
+    if ([CartAction.ITEM_ADD, CartAction.ITEM_REMOVE, CartAction.ITEM_ALL, CartAction.CART_CLEARED].indexOf(state.action) === -1) {
       return of(state);
     }
+    //
+    // case of add/remove item
+    if (state.item) {
+      model.items = [state.item];
+      params.action = CartAction[state.action];
+    }
+
+    //
+    // FIXME implement the case of Clear!
+
     return this.$http.post<CartModel>(ConfigService.defaultConfig.API_SERVER + '/v1/cart', model, {
+      params: (params),
       headers: this.headers,
       withCredentials: true
     }).pipe(
