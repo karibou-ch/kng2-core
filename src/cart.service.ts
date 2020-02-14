@@ -501,6 +501,12 @@ export class CartService {
     this.cache.items = [];
     this.cache.discount = {};
     this.save({ action: CartAction.CART_CLEARED });
+    return new Observable((obs) => {
+      this.cart$.subscribe(state => {
+        obs.next(state);
+        obs.complete();
+      },obs.error);
+    });
   }
 
   findBySku(sku: number): CartItem {
@@ -771,7 +777,6 @@ export class CartService {
     }, error => {
       this.cart$.next({ action: CartAction.CART_SAVE_ERROR});
     });
-
   }
 
   private saveLocal(state: CartState): Observable<CartState> {
