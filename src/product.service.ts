@@ -5,10 +5,7 @@ import { ConfigService } from './config.service';
 
 import { Utils } from './util';
 
-import { Observable } from 'rxjs/Observable';
-import { ReplaySubject } from 'rxjs/ReplaySubject';
-import { of } from 'rxjs/observable/of';
-import { _throw } from 'rxjs/observable/throw';
+import { Observable ,  ReplaySubject ,  of ,  throwError as _throw } from 'rxjs';
 import { map,tap } from 'rxjs/operators';
 
 

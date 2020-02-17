@@ -1,6 +1,6 @@
 import { Directive, ElementRef, Input, OnInit } from '@angular/core';
 
-import { Observable } from 'rxjs/Observable';
+import { Observable } from 'rxjs';
 
 @Directive({
   selector: '[bgSrc]'
@@ -19,8 +19,10 @@ export class bgSrcDirective implements OnInit{
   @Input() bgGradient : boolean;
   element;
 
-  constructor(el: ElementRef) { 
-    this.element=el.nativeElement;
+  constructor(
+    private el: ElementRef
+  ) { 
+    this.element=this.el.nativeElement;
   }
 
   @Input() set bgSrc(url) {

@@ -6,11 +6,10 @@ import { UserAddress, DepositAddress } from './user.service';
 
 
 //import { _throw } from 'rxjs/observable/throw';
-import { Observable } from 'rxjs/Observable';
+import { Observable } from 'rxjs';
 //import { of } from 'rxjs/observable/of';
-import { ReplaySubject } from 'rxjs/ReplaySubject';
+import { ReplaySubject } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
-import { ISubscription } from 'rxjs/Subscription';
 
 
 @Injectable()
@@ -179,10 +178,10 @@ export class ConfigService {
   /**
    * Subscribe to the user stream.
    */
-  subscribe(
-    onNext, onThrow?: ((exception: any) => void)|null,
-    onReturn?: (() => void)|null): ISubscription {
-      return this.config$.subscribe({next: onNext, error: onThrow, complete: onReturn});
-  }  
+  // subscribe(
+  //   onNext, onThrow?: ((exception: any) => void)|null,
+  //   onReturn?: (() => void)|null) {
+  //     return this.config$.subscribe({next: onNext, error: onThrow, complete: onReturn});
+  // }  
 
 }

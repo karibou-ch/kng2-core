@@ -1,17 +1,28 @@
+dist: trusty
+sudo: false
+
 language: node_js
+node_js:
+  - '10'
+
+addons:
+  chrome: beta
+
 cache:
   directories:
-    - ~/.npm
-notifications:
-  email: false
-node_js:
-  - '9'
+    - ./node_modules
+
+install:
+  - npm install
+
 script:
-  - npm run build
-# after_success:
-#   - npm run travis-deploy-once "npm run semantic-release"
-after_success:
-  - npm run semantic-release
-branches:
-  except:
-    - /^v\d+\.\d+\.\d+$/
+  - npm run test -- --watch=false --no-progress --browsers=ChromeHeadless
+
+env:
+  - CHROME_BIN=google-chrome-beta
+    
+# deploy:
+#   skip_cleanup: true
+#   provider: firebase
+#   token:
+#     secure: ""  

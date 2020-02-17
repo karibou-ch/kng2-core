@@ -26,13 +26,11 @@ export class MarkdownDirective implements AfterViewInit{
 
   html:string;
 
-  @Input()
-  removeRoot:boolean=false;
+  @Input() removeRoot:boolean=false;
 
-  @Input()
-  src;
+  @Input() src;
 
-  @Input()
+  @Input() 
   set data(value: string) {
     this.fromData(value||'');
   }  

@@ -13,10 +13,12 @@ interface Date {
   equalsDate(d: Date): boolean;
 }
 
-interface Array<T> {
-  sortSeparatedAlphaNum(separator?: string);
-  sortAlphaNum();
-}
+//
+// FIXME extending Array cause issue with Angular 8 
+// interface Array<T> {
+//   sortSeparatedAlphaNum(separator?: string);
+//   sortAlphaNum();
+// }
 
 
 // Date
@@ -121,47 +123,47 @@ Date.prototype.equalsDate = function (d: Date): boolean {
 
 //
 // label alphanum sort for this case "2000.10"
-Array.prototype.sortSeparatedAlphaNum = function (separator?: string) {
-  separator = separator || '.';
+// Array.prototype.sortSeparatedAlphaNum = function (separator?: string) {
+//   separator = separator || '.';
 
-  return this.sort(function (a, b) {
-    var aA = a.split(separator);
-    var bA = b.split(separator);
-    // left part
-    if (parseInt(aA[0]) > parseInt(bA[0])) {
-      return 1;
-    } else
-      if (parseInt(aA[0]) < parseInt(bA[0])) {
-        return -1;
-      }
-    //right part
-    if (parseInt(aA[1]) > parseInt(bA[1])) {
-      return 1;
-    } else
-      if (parseInt(aA[1]) < parseInt(bA[1])) {
-        return -1;
-      }
-    return 0;
-  });
-};
-Object.defineProperty(Array.prototype, "sortSeparatedAlphaNum", { enumerable: false });
+//   return this.sort(function (a, b) {
+//     var aA = a.split(separator);
+//     var bA = b.split(separator);
+//     // left part
+//     if (parseInt(aA[0]) > parseInt(bA[0])) {
+//       return 1;
+//     } else
+//       if (parseInt(aA[0]) < parseInt(bA[0])) {
+//         return -1;
+//       }
+//     //right part
+//     if (parseInt(aA[1]) > parseInt(bA[1])) {
+//       return 1;
+//     } else
+//       if (parseInt(aA[1]) < parseInt(bA[1])) {
+//         return -1;
+//       }
+//     return 0;
+//   });
+// };
+// Object.defineProperty(Array.prototype, "sortSeparatedAlphaNum", { enumerable: false });
 
 //
 // simple alpha num sorting
-Array.prototype.sortAlphaNum = function () {
-  var reA = /[^a-zA-Z]/g;
-  var reN = /[^0-9]/g;
-  return this.sort(function (a, b) {
-    var aA = a.replace(reA, "");
-    var bA = b.replace(reA, "");
-    if (aA === bA) {
-      var aN = parseInt(a.replace(reN, ""), 10);
-      var bN = parseInt(b.replace(reN, ""), 10);
-      return aN === bN ? 0 : aN > bN ? 1 : -1;
-    } else {
-      return aA > bA ? 1 : -1;
-    }
-  });
-};
+// Array.prototype.sortAlphaNum = function () {
+//   var reA = /[^a-zA-Z]/g;
+//   var reN = /[^0-9]/g;
+//   return this.sort(function (a, b) {
+//     var aA = a.replace(reA, "");
+//     var bA = b.replace(reA, "");
+//     if (aA === bA) {
+//       var aN = parseInt(a.replace(reN, ""), 10);
+//       var bN = parseInt(b.replace(reN, ""), 10);
+//       return aN === bN ? 0 : aN > bN ? 1 : -1;
+//     } else {
+//       return aA > bA ? 1 : -1;
+//     }
+//   });
+// };
 
-Object.defineProperty(Array.prototype, "sortAlphaNum", { enumerable: false });
+//Object.defineProperty(Array.prototype, "sortAlphaNum", { enumerable: false });

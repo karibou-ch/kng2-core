@@ -4,10 +4,7 @@ import { config } from './config';
 import { Utils } from './util';
 
 
-import { ReplaySubject } from 'rxjs/ReplaySubject';
-import { Observable } from 'rxjs/Observable';
-import { _throw } from 'rxjs/observable/throw';
-import { of } from 'rxjs/observable/of';
+import { ReplaySubject ,  Observable ,  throwError as _throw ,  of } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
 
 
@@ -27,6 +24,7 @@ export class Category {
   slug: string;
   group: string;  /* permet de grouper une catégorie (toutes les catégories des artisans, producteurs*/
   cover: string;  /* image de la catégorie */
+  color: string;  /* couleur de la catégorie */
   description?: string;
   image: string; /* icon associé à la catégorie */
   name: string;

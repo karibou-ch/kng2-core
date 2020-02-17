@@ -6,8 +6,7 @@ import { User } from './user.service';
 import { ConfigService } from './config.service';
 import { Utils } from './util'
 
-import { ReplaySubject } from 'rxjs/ReplaySubject';
-import { Observable } from 'rxjs/Observable';
+import { ReplaySubject ,  Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 
 //https://stackoverflow.com/questions/13142635/how-can-i-create-an-object-based-on-an-interface-file-definition-in-typescript
