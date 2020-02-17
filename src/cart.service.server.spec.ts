@@ -23,13 +23,19 @@ describe('CartService : localStorage', () => {
   const postError = (httpMock, status) => {
       //
       // define defaul error when posting cart on server
-      const req = httpMock.expectOne('test/v1/cart');
+      const req = httpMock.expectOne(req => {
+        expect(req.urlWithParams).toContain('test/v1/cart');
+        return true;
+      });
       expect(req.request.method).toBe('POST');
       req.flush({}, { status: (status), statusText: 'Bad Request' });
   };
 
   const postSuccess = (httpMock, value) => {
-    const req = httpMock.expectOne('test/v1/cart');
+    const req = httpMock.expectOne(req => {
+      expect(req.urlWithParams).toContain('test/v1/cart');
+      return true;
+    });
     expect(req.request.method).toBe('POST');
     req.flush(value);
   };
@@ -74,9 +80,15 @@ describe('CartService : localStorage', () => {
     // expect(config).toBeTruthy();
     config.get().subscribe((c) => {
       cfg = c;
-     });
-    const req = httpMock.expectOne('test/v1/config?lang=en-US');
-    expect(req.request.method).toBe('GET');
+    });
+
+    const req = httpMock.expectOne(req => {
+      expect(req.urlWithParams).toContain('test/v1/config?lang=');
+      expect(req.method).toBe('GET');
+      return true;
+    });
+
+    // const req = httpMock.expectOne('test/v1/config?lang=en-US');
     req.flush(shared);
   }));
 
