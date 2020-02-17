@@ -115,13 +115,13 @@ export class CartItem {
     // init discount
     // TODO howto manage discount link
     if (vendor.discount &&
-      vendor.discount.active) {
+        vendor.discount.active) {
       item.vendor.discount.threshold = (vendor.discount.threshold);
       item.vendor.discount.amount = (vendor.discount.amount);
     }
     return new CartItem(item);
   }
-  static fromProduct(product: Product, variant?: string) {
+  static fromProduct(product: Product, variant?: string, quantity?: number) {
     const item = {
       timestamp: (new Date()),
       title: product.title,
@@ -145,13 +145,13 @@ export class CartItem {
       weight: product.categories.weight,
       discount: product.isDiscount(),
       part: product.pricing.part,
-      quantity: 1
+      quantity: (quantity || 1)
     };
     //
     // init discount 
     // TODO howto manage discount link
     if (product.vendor.discount &&
-      product.vendor.discount.active) {
+        product.vendor.discount.active) {
       item.vendor.discount.threshold = parseFloat(product.vendor.discount.threshold);
       item.vendor.discount.amount = parseFloat(product.vendor.discount.amount);
     }
@@ -159,7 +159,7 @@ export class CartItem {
   }
 
   equalItem(other: CartItem, variant?: string) {
-    let bSku = this.sku == other.sku;
+    const bSku = this.sku == other.sku;
     if (!variant) {
       return bSku;
     }
@@ -368,8 +368,9 @@ export class CartService {
           items[i].quantity++;
         }
         //
-        // update the finalprice
+        // update the finalprice and vendor
         items[i].finalprice = items[i].price * items[i].quantity;
+        items[i].vendor = item.vendor;
 
         // TODO warn update
         this.computeVendorDiscount(product.vendor);
@@ -626,6 +627,16 @@ export class CartService {
       }
 
       //
+      // compute temporary discount on load
+      const vendors: {[key: string]: Shop } = {};
+      this.cache.items.forEach(item => vendors[item.vendor.urlpath] = (item.vendor as any as Shop));
+      Object.values(vendors).forEach(vendor => {
+        const elem = this.currentShops.find(v => v.urlpath === vendor.urlpath);
+        vendor.discount.active = true;
+        this.computeVendorDiscount(elem || vendor);
+      });
+
+      //
       // load only available payment
       if (fromLocal.payment) {
         this.cache.payment = new UserCard(fromLocal.payment);
@@ -676,7 +687,6 @@ export class CartService {
     //
     // INIT local values
     this.loadCache();
-
     //
     // INIT cart items
     // check values
@@ -721,6 +731,9 @@ export class CartService {
     //
     for (let i = 0; i < items.length; i++) {
       if (items[i].equalItem(item, variant)) {
+        //
+        // sure to send remove quantity to the server
+        item.quantity = items[i].quantity;
         items.splice(i, 1);
         break;
       }
@@ -735,7 +748,10 @@ export class CartService {
     this.checkIfReady();
     // init
     const items = this.cache.items;
-    const item = (product instanceof CartItem) ? product : CartItem.fromProduct(product);
+    const item = (product instanceof CartItem) ? Object.assign({}, product) : CartItem.fromProduct(product, variant);
+
+    // propagate server : remove one
+    item.quantity = 1;
 
     //
     for (let i = 0; i < items.length; i++) {
@@ -811,7 +827,7 @@ export class CartService {
     }
     //
     // case of add/remove item
-    if (state.item) {
+    if (state.item && [CartAction.ITEM_ADD, CartAction.ITEM_REMOVE].indexOf(state.action) > -1) {
       model.items = [state.item];
       params.action = CartAction[state.action];
     }
@@ -962,6 +978,7 @@ export class CartService {
     for (const slug in this.cache.discount) {
       amount += (this.cache.discount[slug] || 0);
     }
+
     return Utils.roundAmount(amount);
   }
 
