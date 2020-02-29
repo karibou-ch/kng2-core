@@ -89,11 +89,12 @@ export class CartItem {
   quantity: number;
 
   static fromOrder(orderItem: OrderItem, vendor: Shop) {
+    const variant = (orderItem.variant) ? orderItem.variant.title : null;
     const item = {
       timestamp: (new Date()),
       title: orderItem.title,
       sku: orderItem.sku,
-      variant: orderItem.variant,
+      variant: (variant),
       thumb: orderItem.thumb,
       price: orderItem.price,
       finalprice: orderItem.price,
@@ -244,6 +245,7 @@ export class CartModel {
   cid: string[];
   items: CartItem[];
   updated: Date;
+  reset: Date;
   constructor() {
     this.items = [];
   }
