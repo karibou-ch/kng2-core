@@ -692,25 +692,29 @@ export class CartService {
     //
     // INIT cart items
     // check values
-    const stringCart: any = {
+    const syncCart: any = {
         items: this.cache.items || [],
         updated: this.cache.updated
     };
 
-    this.$http.get<CartModel>(ConfigService.defaultConfig.API_SERVER + '/v1/cart', {
-      params: {cart: JSON.stringify(stringCart)},
+    this.$http.post<CartModel>(ConfigService.defaultConfig.API_SERVER + '/v1/cart/get', {cart: syncCart}, {
       headers: this.headers,
       withCredentials: true
     }).pipe(
       debounceTime(500),
       map(cart => {
+
+
         return cart;
       }),
       catchError(() => {
-        return of(stringCart);
+        return of(syncCart);
       })
     ).subscribe(cart => {
       if (cart) {
+        //
+        // reset local cart ?
+        this.resetLocalItems(cart);
         this.cache.updated = new Date(cart.updated);
         this.cache.items = cart.items.map( item => new CartItem(item));
         this.clearErrors();
@@ -722,6 +726,20 @@ export class CartService {
     //
     // TODO
     // this.cart$.next({ action: CartAction.CART_LOAD_ERROR });
+  }
+
+  resetLocalItems(cart: any) {
+    if (cart.reset) {
+      const updated = new Date(cart.updated);
+      const reset = new Date(cart.reset);
+      if (this.cache.updated < reset) {
+        this.cache.updated = updated;
+        this.cache.items = [];
+        try {
+          localStorage.setItem('kng2-cart', JSON.stringify(this.cache));
+        } catch (e) {}
+      }
+    }
   }
 
   removeAll(product: Product | CartItem, variant?: string) {
