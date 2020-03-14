@@ -473,6 +473,7 @@ export class CartService {
     });
     if (deposit) {
       price = deposit.fees;
+      return price;
     }
 
     //
