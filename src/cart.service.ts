@@ -984,8 +984,15 @@ export class CartService {
   total(): number {
     let total = this.subTotal();
     const shipping = this.shipping();
-    const fees = this.getCurrentGateway().fees * (total + shipping - this.totalDiscount()) + shipping;
-    total += (fees - this.totalDiscount());
+    const discount = this.totalDiscount();
+    const gateway  = this.getCurrentGateway().fees;
+    // const karibouFees = 0;
+    // console.log('-- DEBUG total   ', total);
+    // console.log('-- DEBUG shipping', shipping);
+    // console.log('-- DEBUG discount', discount);
+    // console.log('-- DEBUG payment ', gateway);
+    const fees = gateway * (total + shipping - discount);
+    total += (shipping + fees - discount);
 
     // Rounding up to the nearest 0.05
     return Utils.roundAmount(total);

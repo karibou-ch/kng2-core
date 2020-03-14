@@ -60,7 +60,7 @@ export interface OrderItem {
 
   //
   // thumbnail
-  thumb?:string;
+  thumb?: string;
 
   //
   // real price, maximum +/- 10% of given price
@@ -78,7 +78,7 @@ export interface OrderItem {
 
   /* where is the product now? */
   fulfillment: {
-    refunded?:boolean;
+    refunded?: boolean;
     request: string;//string|EnumOrderIssue;
     issue: string;//string|EnumOrderIssue;
     status: string;//string|EnumFulfillments;
