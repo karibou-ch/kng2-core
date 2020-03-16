@@ -630,16 +630,6 @@ export class CartService {
       }
 
       //
-      // compute temporary discount on load
-      const vendors: {[key: string]: Shop } = {};
-      this.cache.items.forEach(item => vendors[item.vendor.urlpath] = (item.vendor as any as Shop));
-      Object.values(vendors).forEach(vendor => {
-        const elem = this.currentShops.find(v => v.urlpath === vendor.urlpath);
-        vendor.discount.active = true;
-        this.computeVendorDiscount(elem || vendor);
-      });
-
-      //
       // load only available payment
       if (fromLocal.payment) {
         this.cache.payment = new UserCard(fromLocal.payment);
@@ -704,8 +694,6 @@ export class CartService {
     }).pipe(
       debounceTime(500),
       map(cart => {
-
-
         return cart;
       }),
       catchError(() => {
@@ -719,6 +707,27 @@ export class CartService {
         this.cache.updated = new Date(cart.updated);
         this.cache.items = cart.items.map( item => new CartItem(item));
         this.clearErrors();
+
+        //
+        // compute temporary discount on load
+        const vendors: {[key: string]: Shop } = {};
+        this.cache.items.forEach(item => vendors[item.vendor.urlpath] = (item.vendor as any as Shop));
+
+        //
+        // vendors
+        Object.keys(vendors).forEach(slug => {
+          const vendor = vendors[slug];
+          const elem = this.currentShops.find(v => v.urlpath === vendor.urlpath);
+          if(!vendor.discount) {
+            vendor.discount = {
+              active : true,
+              threshold : 0,
+              amount : 0
+            };
+          }
+          vendor.discount.active = true;
+          this.computeVendorDiscount(elem || vendor);
+        });
         Object.assign(this.cache.discount, cart.discount);
       }
       this.cart$.next({ action: CartAction.CART_LOADED });
@@ -987,10 +996,7 @@ export class CartService {
     const discount = this.totalDiscount();
     const gateway  = this.getCurrentGateway().fees;
     // const karibouFees = 0;
-    // console.log('-- DEBUG total   ', total);
-    // console.log('-- DEBUG shipping', shipping);
-    // console.log('-- DEBUG discount', discount);
-    // console.log('-- DEBUG payment ', gateway);
+    // console.log('-- DEBUG total   ', total,'shipping', shipping,'discount', discount,'payment ', gateway);
     const fees = gateway * (total + shipping - discount);
     total += (shipping + fees - discount);
 
