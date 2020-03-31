@@ -103,12 +103,21 @@ export class Order {
   //
   // the next shipping day
   static nextShippingDay() {
-    let potential = config.potentialShippingDay();
-    let noshipping;
-    let next = potential.dayToDates(
+    const potential = config.potentialShippingDay();
+    const next = potential.dayToDates(
       config.shared.order.weekdays
     );
 
+    //
+    // remove complete shipping days
+    // its a weak remove
+    const currentRanks = config.shared.order.currentRanks || {};
+    const currentLimit = config.shared.order.currentLimit || 1000;
+    for (let i = next.length - 1; i >= 0; i--) {
+      if (currentRanks[next[i].getDay()] >= currentLimit) {
+        next.splice(i, 1);
+      }
+    }
 
     //
     // no closed date
@@ -121,7 +130,7 @@ export class Order {
     // we must return the first date available for shipping
     for (var j = 0; j < next.length; j++) {
       for (var i = 0; i < config.shared.noshipping.length; i++) {
-        noshipping = config.shared.noshipping[i];
+        const noshipping = config.shared.noshipping[i];
         if (!next[j].in(noshipping.from, noshipping.to)) return next[j];
       }
     }

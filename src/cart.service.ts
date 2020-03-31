@@ -1,6 +1,7 @@
 import { HttpHeaders, HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { ReplaySubject, SubscriptionLike as ISubscription, throwError as _throw, Observable, of, throwError, from } from 'rxjs';
+
 import { config, Config } from './config';
 
 import { Product } from './product.service';
@@ -12,6 +13,7 @@ import { Shop } from './shop.service';
 import { User, UserAddress, UserCard, DepositAddress } from './user.service';
 import { map, catchError, switchMap, debounceTime } from 'rxjs/operators';
 import { ConfigService } from './config.service';
+import './es5';
 
 //
 // on recurrent order
@@ -610,7 +612,8 @@ export class CartService {
       }
       //
       // check shipping date or get the next one
-      this.cache.currentShippingTime = fromLocal.currentShippingTime || 16;      
+      // FIXME default shipping time is hardcoded
+      this.cache.currentShippingTime = fromLocal.currentShippingTime || 16;
       this.cache.currentShippingDay = new Date(fromLocal.currentShippingDay || nextShippingDay || currentShippingDay);
 
       //

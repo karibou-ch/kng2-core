@@ -66,28 +66,29 @@ export class ConfigService {
 
 
   get(): Observable<Config> {
-    let lang=this.locale;
+    const lang = this.locale;
     this.config = this.http.get<any>(ConfigService.defaultConfig.API_SERVER + '/v1/config?lang='+lang, {
       headers: this.headers,
       withCredentials: true,
     }).pipe(
-      map((shared:any) => {
+      map((shared: any) => {
         Object.assign(config,ConfigService.defaultConfig)
         Object.assign(config.shared, shared);
 
         //
         // fill dates 
-        config.shared.shippingweek=(shared.shippingweek||[]).map(date=>new Date(date));
-        config.shared.noshipping.forEach(noshipping=>{
-          noshipping.from=new Date(noshipping.from);
-          noshipping.to=new Date(noshipping.to);
+        config.shared.shippingweek = (shared.shippingweek || []).map(date => new Date(date));
+        config.shared.noshipping = config.shared.noshipping || [];
+        config.shared.noshipping.forEach(noshipping => {
+          noshipping.from = new Date(noshipping.from);
+          noshipping.to = new Date(noshipping.to);
         });
-          
+
         //
         // deposit
-        config.shared.deposits=(config.shared.deposits||[]).map(deposit=>new DepositAddress(
+        config.shared.deposits = (config.shared.deposits || []).map(deposit=>new DepositAddress(
           deposit.name,
-          deposit.streetAddress||deposit.streetAdress,
+          deposit.streetAddress || deposit.streetAdress,
           deposit.floor,
           deposit.region,
           deposit.postalCode,
@@ -104,8 +105,8 @@ export class ConfigService {
   }
 
 
-  setServer(url:string){
-    if(!url){
+  setServer(url: string) {
+    if (!url) {
       throw new Error("set server url is Null");
     }
     ConfigService.defaultConfig.API_SERVER=url;
@@ -113,27 +114,28 @@ export class ConfigService {
     //TODO save url to the localStorage AND use it on load
   }
 
-  save(config:Config,cid?:string):Observable<any>{    
-    return this.http.post<any>(ConfigService.defaultConfig.API_SERVER + '/v1/config',config.shared, {
+  save(config: Config, cid?: string): Observable<any> {
+    return this.http.post<any>(ConfigService.defaultConfig.API_SERVER + '/v1/config', config.shared, {
       headers: this.headers,
       withCredentials: true
     }).pipe(
-      map((shared:any) => {
+      map((shared: any) => {
         Object.assign(config,ConfigService.defaultConfig)
         Object.assign(config.shared, shared);
-        
+
         //
         // dates 
-        config.shared.shippingweek=(shared.shippingweek||[]).map(date=>new Date(date));
-        config.shared.noshipping.forEach(noshipping=>{
-          noshipping.from=new Date(noshipping.from);
-          noshipping.to=new Date(noshipping.to);
+        config.shared.shippingweek=(shared.shippingweek || []).map(date => new Date(date));
+        config.shared.noshipping = config.shared.noshipping || [];
+        config.shared.noshipping.forEach(noshipping => {
+          noshipping.from = new Date(noshipping.from);
+          noshipping.to = new Date(noshipping.to);
         });
-          
+
 
         //
         // deposit
-        config.shared.deposits=(config.shared.deposits||[]).map(deposit=>new DepositAddress(
+        config.shared.deposits=(config.shared.deposits || []).map(deposit => new DepositAddress(
           deposit.name,
           deposit.streetAddress||deposit.streetAdress,
           deposit.floor,
@@ -145,7 +147,7 @@ export class ConfigService {
           deposit.active,
           deposit.fees
         ));
-        
+
         return config;
       }),
       tap(config=>this.config$.next(config))

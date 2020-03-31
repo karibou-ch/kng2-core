@@ -31,11 +31,11 @@ export class ProductService {
     }
 
     private updateCache(product: Product) {
-        if(!this.cache.map.get(product.sku)){
-            this.cache.map.set(product.sku,new Product(product))
+        if (!this.cache.map.get(product.sku)) {
+            this.cache.map.set(product.sku, new Product(product));
             return this.cache.map.get(product.sku);
         }
-        //
+
         // clear date field to avoid type collusion
         delete product.updated;
         delete product.created;
