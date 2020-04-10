@@ -965,7 +965,7 @@ export class CartService {
     items.forEach((item) => {
       total += (item.price * item.quantity);
     });
-    const fees = (1 + config.shared.order.serviceFees) * total;
+    const fees = (config.shared.order.serviceFees) * total;
     return Utils.roundAmount(total + fees);
   }
 
