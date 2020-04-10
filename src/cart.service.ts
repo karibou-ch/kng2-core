@@ -965,7 +965,8 @@ export class CartService {
     items.forEach((item) => {
       total += (item.price * item.quantity);
     });
-    return Utils.roundAmount(total);
+    const fees = (1 + config.shared.order.serviceFees) * total;
+    return Utils.roundAmount(total+fees);
   }
 
 
@@ -997,11 +998,7 @@ export class CartService {
     let total = this.subTotal();
     const shipping = this.shipping();
     const discount = this.totalDiscount();
-    const gateway  = this.getCurrentGateway().fees;
-    // const karibouFees = 0;
-    // console.log('-- DEBUG total   ', total,'shipping', shipping,'discount', discount,'payment ', gateway);
-    const fees = gateway * (total + shipping - discount);
-    total += (shipping + fees - discount);
+    total += (shipping - discount);
 
     // Rounding up to the nearest 0.05
     return Utils.roundAmount(total);
