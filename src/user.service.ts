@@ -211,6 +211,12 @@ export class User {
     time: Date;
   };
 
+  orders: {
+    avg: number;
+    last1Month: number;
+    last6Month: number;
+  };
+
 
   status: boolean;
   created: Date;
@@ -238,7 +244,12 @@ export class User {
       }],
       addresses: [],
       payments: [],
-      logistic: {postalCode: []}
+      logistic: {postalCode: []},
+      orders: {
+        avg: 0,
+        last1Month: 0,
+        last6Month: 0
+      }
     };
     Object.assign(this, defaultUser, json || {});
     this.payments = this.payments.map(payment => new UserCard(payment));
@@ -298,6 +309,35 @@ export class User {
 
   isAdmin() {
     return this.hasRole('admin');
+  }
+
+  isPremium() {
+    const shared = {
+      new : config.shared.order.new || {},
+      recurrent: config.shared.order.recurrent || {}
+    };
+
+    const newclient = {
+      avg: shared.new.avg || 180,
+      last6Month: shared.new.last6Month || 1
+    };
+
+    const recurrent = {
+      last1Month: shared.recurrent.last1Month || 3,
+      last6Month: shared.recurrent.last6Month || 5,
+      avg: shared.recurrent.avg || 70
+    };
+
+    if (this.orders.avg > newclient.avg && this.orders.last6Month >= newclient.last6Month) {
+      return true;
+    }
+
+
+    if (this.orders.last1Month >= recurrent.last1Month || this.orders.last6Month >= recurrent.last6Month){
+      return (this.orders.avg > recurrent.avg);
+    }
+
+    return false;
   }
 
   isReady() {

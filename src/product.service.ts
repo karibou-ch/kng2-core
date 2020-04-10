@@ -331,17 +331,16 @@ export class Product {
         return this.pricing.discount;
         }
         return this.pricing.price;
-    }    
-
-    isDiscount(){
-        return(this.attributes.discount && this.pricing.discount);
-    }    
-
-    isAvailableForOrder() {
-        var ok=(this.attributes.available && this.vendor &&
-                this.vendor.status===true);
-        return ok;
     }
 
-    
+    isDiscount(){
+        return !!(this.attributes.discount && this.pricing.discount);
+    }
+
+    isAvailableForOrder() {
+        const ok = (this.attributes.available &&
+                    this.vendor &&
+                    this.vendor.status === true);
+        return ok;
+    }
 }

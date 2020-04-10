@@ -370,9 +370,9 @@ export class Order {
 
 
   getSubTotal() {
-    var total = 0.0;
+    let total = 0.0;
     if (this.items) {
-      this.items.forEach(function (item) {
+      this.items.forEach((item) => {
         //
         // item should not be failure (fulfillment)
         if (item.fulfillment.status !== EnumFulfillments[EnumFulfillments.failure]) {
@@ -380,6 +380,10 @@ export class Order {
         }
       });
     }
+
+    //
+    // add karibou fees
+    total += this.payment.fees.charge * total;
 
     return Utils.roundAmount(total);
   }
@@ -390,16 +394,8 @@ export class Order {
   //  total = stotal + stotal*payment.fees
   // WARNNG -- WARNNG -- WARNNG -- edit in all places
   getTotalPrice(factor?: number) {
-    var total = 0.0;
-    if (this.items) {
-      this.items.forEach(function (item) {
-        //
-        // item should not be failure (fulfillment)
-        if (item.fulfillment.status !== EnumFulfillments[EnumFulfillments.failure]) {
-          total += item.finalprice;
-        }
-      });
-    }
+    let total = this.getSubTotal();
+
     // before the payment fees!
     // add shipping fees
     total += this.getShippingPrice();
@@ -407,10 +403,6 @@ export class Order {
     //
     // remove discout offer by shop
     total -= this.getTotalDiscount();
-
-    //
-    // add gateway fees
-    total += this.payment.fees.charge * total;
 
     // add mul factor
     if (factor) { total *= factor; }
@@ -434,10 +426,10 @@ export class Order {
 
   }
 
-  getOriginPrice(factor) {
-    var total = 0.0;
+  getOriginPrice(addFees?: boolean) {
+    let total = 0.0;
     if (this.items) {
-      this.items.forEach(function (item) {
+      this.items.forEach((item) => {
         //
         // item should not be failure (fulfillment)
         if (item.fulfillment.status !== EnumFulfillments[EnumFulfillments.failure]) {
@@ -445,18 +437,15 @@ export class Order {
         }
       });
     }
+    if (addFees) {
+      // before the payment fees!
+      // add shipping fees (10CHF)
+      total += this.getShippingPrice();
 
-    // before the payment fees!
-    // add shipping fees (10CHF)
-    total += this.getShippingPrice();
-
-    //
-    // add gateway fees
-    total += this.payment.fees.charge * total;
-
-    // add mul factor
-    if (factor) { total *= factor; }
-
+      //
+      // add gateway fees
+      total += this.payment.fees.charge * total;
+    }
 
     return Utils.roundAmount(total);
   }
