@@ -165,26 +165,27 @@ export class OrderService {
     }).pipe(
       map(order => this.updateCache(order))
     );
-  };
+  }
 
   //
   // update item for one order (shop preparation process)
   // role:shop:admin
   // app.post('/v1/orders/:oid/items', orders.ensureShopOwnerOrAdmin, queued(orders.updateItem));
-  updateItem(order: Order, item, fulfillment: EnumFulfillments): Observable<Order> {
-    let tosave = Object.assign({}, item);
-    tosave.finalprice = parseFloat(item.finalprice);
-    tosave.fulfillment.status = EnumFulfillments[fulfillment];
-    // this.chain(backend.$order.save({action:this.oid,id:'items'},[tosave]).$promise).$promise.then(function () {
-    //   _.find(me.items,function(i){return i.sku===item.sku;}).fulfillment.status=fulfillment;
-    // });
-    return this.http.post<Order>(this.config.API_SERVER + '/v1/orders/' + order.oid + '/items', [tosave], {
+  updateItem(order: Order, items, fulfillment: EnumFulfillments): Observable<Order> {
+
+    const tosave = items.map(item => {
+      const elem = Object.assign({}, item);
+      elem.finalprice = parseFloat(item.finalprice);
+      elem.fulfillment.status = EnumFulfillments[fulfillment];
+    });
+
+    return this.http.post<Order>(this.config.API_SERVER + '/v1/orders/' + order.oid + '/items', tosave, {
       headers: this.headers,
       withCredentials: true
     }).pipe(
       map(order => this.updateCache(order))
     );
-  };
+  }
 
   // update order with specific issue made by one shop
   // role:admin
