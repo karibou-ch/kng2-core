@@ -60,7 +60,7 @@ export interface OrderItem {
 
   //
   // thumbnail
-  thumb?:string;
+  thumb?: string;
 
   //
   // real price, maximum +/- 10% of given price
@@ -78,7 +78,7 @@ export interface OrderItem {
 
   /* where is the product now? */
   fulfillment: {
-    refunded?:boolean;
+    refunded?: boolean;
     request: string;//string|EnumOrderIssue;
     issue: string;//string|EnumOrderIssue;
     status: string;//string|EnumFulfillments;
@@ -103,12 +103,21 @@ export class Order {
   //
   // the next shipping day
   static nextShippingDay() {
-    let potential = config.potentialShippingDay();
-    let noshipping;
-    let next = potential.dayToDates(
+    const potential = config.potentialShippingDay();
+    const next = potential.dayToDates(
       config.shared.order.weekdays
     );
 
+    //
+    // remove complete shipping days
+    // its a weak remove
+    const currentRanks = config.shared.order.currentRanks || {};
+    const currentLimit = config.shared.order.currentLimit || 1000;
+    for (let i = next.length - 1; i >= 0; i--) {
+      if (currentRanks[next[i].getDay()] >= currentLimit) {
+        next.splice(i, 1);
+      }
+    }
 
     //
     // no closed date
@@ -121,7 +130,7 @@ export class Order {
     // we must return the first date available for shipping
     for (var j = 0; j < next.length; j++) {
       for (var i = 0; i < config.shared.noshipping.length; i++) {
-        noshipping = config.shared.noshipping[i];
+        const noshipping = config.shared.noshipping[i];
         if (!next[j].in(noshipping.from, noshipping.to)) return next[j];
       }
     }
@@ -361,9 +370,9 @@ export class Order {
 
 
   getSubTotal() {
-    var total = 0.0;
+    let total = 0.0;
     if (this.items) {
-      this.items.forEach(function (item) {
+      this.items.forEach((item) => {
         //
         // item should not be failure (fulfillment)
         if (item.fulfillment.status !== EnumFulfillments[EnumFulfillments.failure]) {
@@ -371,6 +380,10 @@ export class Order {
         }
       });
     }
+
+    //
+    // add karibou fees
+    total += this.payment.fees.charge * total;
 
     return Utils.roundAmount(total);
   }
@@ -381,16 +394,8 @@ export class Order {
   //  total = stotal + stotal*payment.fees
   // WARNNG -- WARNNG -- WARNNG -- edit in all places
   getTotalPrice(factor?: number) {
-    var total = 0.0;
-    if (this.items) {
-      this.items.forEach(function (item) {
-        //
-        // item should not be failure (fulfillment)
-        if (item.fulfillment.status !== EnumFulfillments[EnumFulfillments.failure]) {
-          total += item.finalprice;
-        }
-      });
-    }
+    let total = this.getSubTotal();
+
     // before the payment fees!
     // add shipping fees
     total += this.getShippingPrice();
@@ -398,10 +403,6 @@ export class Order {
     //
     // remove discout offer by shop
     total -= this.getTotalDiscount();
-
-    //
-    // add gateway fees
-    total += this.payment.fees.charge * total;
 
     // add mul factor
     if (factor) { total *= factor; }
@@ -425,10 +426,10 @@ export class Order {
 
   }
 
-  getOriginPrice(factor) {
-    var total = 0.0;
+  getOriginPrice(addFees?: boolean) {
+    let total = 0.0;
     if (this.items) {
-      this.items.forEach(function (item) {
+      this.items.forEach((item) => {
         //
         // item should not be failure (fulfillment)
         if (item.fulfillment.status !== EnumFulfillments[EnumFulfillments.failure]) {
@@ -436,18 +437,15 @@ export class Order {
         }
       });
     }
+    if (addFees) {
+      // before the payment fees!
+      // add shipping fees (10CHF)
+      total += this.getShippingPrice();
 
-    // before the payment fees!
-    // add shipping fees (10CHF)
-    total += this.getShippingPrice();
-
-    //
-    // add gateway fees
-    total += this.payment.fees.charge * total;
-
-    // add mul factor
-    if (factor) { total *= factor; }
-
+      //
+      // add gateway fees
+      total += this.payment.fees.charge * total;
+    }
 
     return Utils.roundAmount(total);
   }

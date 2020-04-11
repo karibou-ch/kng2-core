@@ -14,8 +14,8 @@ import { catchError, map, tap } from 'rxjs/operators';
 // Cannot call a namespace ('moment')
 // import * as moment from 'moment';
 // https://stackoverflow.com/questions/39519823/using-rollup-for-angular-2s-aot-compiler-and-importing-moment-js
-//import  moment from 'moment';
-//import 'moment/locale/fr';
+// import  moment from 'moment';
+// import 'moment/locale/fr';
 
 //
 import { config } from './config';
@@ -27,23 +27,23 @@ import { Utils } from './util';
 export class UserAddress {
 
   constructor(
-    name?:string,
-    street?:string,
-    floor?:string,
-    region?:string,
-    postalCode?:string,
-    note?:string,
-    primary?:boolean,
-    geo?:any
+    name?: string,
+    street?: string,
+    floor?: string,
+    region?: string,
+    postalCode?: string,
+    note?: string,
+    primary?: boolean,
+    geo?: any
   ) {
-    this.name=name;
-    this.streetAdress=street;
-    this.floor=floor;
-    this.region=region;
-    this.postalCode=postalCode;
-    this.note=note;
-    this.primary=primary;
-    this.geo=geo||{lat:0,lng:0};
+    this.name = name;
+    this.streetAdress = street;
+    this.floor = floor;
+    this.region = region;
+    this.postalCode = postalCode;
+    this.note = note;
+    this.primary = primary;
+    this.geo = geo || {lat: 0, lng: 0};
   }
   name: string;
   note: string;
@@ -55,51 +55,51 @@ export class UserAddress {
   geo: {
     lat: number;
     lng: number;
+  };
+
+  isEqual(address: UserAddress): boolean {
+    return this.streetAdress == address.streetAdress &&
+           this.name == address.name &&
+           this.floor == address.floor &&
+           this.postalCode == address.postalCode;
   }
 
-  isEqual(address:UserAddress):boolean{
-    return this.streetAdress==address.streetAdress&&
-           this.name==address.name&&
-           this.floor==address.floor&&
-           this.postalCode==address.postalCode;
-  }
-  
 
 }
 
 
-export class DepositAddress extends UserAddress{
-  weight:number;
-  active:boolean;
-  fees:number;
+export class DepositAddress extends UserAddress {
+  weight: number;
+  active: boolean;
+  fees: number;
   constructor(
-    name?:string,
-    street?:string,
-    floor?:string,
-    region?:string,
-    postalCode?:string,
-    note?:string,
-    geo?:any,
-    weight?:number,
-    active?:boolean,
-    fees?:number
-  ){
-    super(name,street,floor,region,postalCode,note,false,geo);
-    this.weight=weight||0;
-    this.fees=fees||0;
-    this.active=active||false;  
+    name?: string,
+    street?: string,
+    floor?: string,
+    region?: string,
+    postalCode?: string,
+    note?: string,
+    geo?: any,
+    weight?: number,
+    active?: boolean,
+    fees?: number
+  ) {
+    super(name, street, floor, region, postalCode, note, false, geo);
+    this.weight = weight || 0;
+    this.fees = fees || 0;
+    this.active = active || false;
   }
 }
 
 export class UserCard {
 
-  constructor(json?:any) {
-    Object.assign(this,json||{});
-    if(!this.expiry){
-      this.error="Unvalid instance";
-      this.expiry=new Date(1970,0,0).toISOString();
+  constructor(json?: any) {
+    Object.assign(this, json || {});
+    if (!this.expiry) {
+      this.error ='Unvalid instance';
+      this.expiry = new Date(1970, 0, 0).toISOString();
     }
-    this.updated=new Date(this.updated);
+    this.updated = new Date(this.updated);
   }
 
   id?: string;
@@ -109,51 +109,51 @@ export class UserCard {
   name: string;
   number: string;
   provider: string;
-  updated:Date;
-  error:string;
+  updated: Date;
+  error: string;
 
   //
   // display expiry
-  expiryToDate(){
-    let date=new Date(this.expiry);
-    let splitted=this.expiry.split('/');
-    let month,year;
-    if(!isNaN(date.getTime())){
+  expiryToDate() {
+    const date = new Date(this.expiry);
+    const splitted = this.expiry.split('/');
+    let month, year;
+    if (!isNaN(date.getTime())) {
       return date;
     }
 
-    if(splitted.length>0){
+    if (splitted.length > 0) {
       month = parseInt(splitted[0], 10);
       year = parseInt(splitted[1], 10);
-      if(year<1000){
-        year+=2000;
+      if (year < 1000) {
+        year += 2000;
       }
-      return new Date(year,month);
+      return new Date(year, month);
     }
   }
   //
   // check if card is valid
-  isValid(){
-    if(this.error){
+  isValid() {
+    if (this.error) {
       return false;
     }
 
-    let now=new Date();
-    let date=this.expiryToDate();
+    const now = new Date();
+    const date = this.expiryToDate();
     now.setDate(1);
-    now.setHours(0,0,0,1);
-    return date>now;
+    now.setHours(0, 0, 0, 1);
+    return date > now;
   }
 
-  isEqual(payment:UserCard){
-    return this.number==payment.number&&
-           this.alias==payment.alias;
+  isEqual(payment: UserCard) {
+    return this.number == payment.number &&
+           this.alias == payment.alias;
   }
 }
 
 export class User {
 
-  deleted:boolean;
+  deleted: boolean;
   id: number;
 
   /* The provider which with the user authenticated (facebook, twitter, etc.) */
@@ -220,6 +220,12 @@ export class User {
     time: Date;
   };
 
+  orders: {
+    avg: number;
+    last1Month: number;
+    last6Month: number;
+  };
+
 
   status: boolean;
   created: Date;
@@ -229,8 +235,8 @@ export class User {
   rank: string;
 
   constructor(json?: any) {
-    let defaultUser = {
-      id:null,
+    const defaultUser = {
+      id: null,
       name: {},
       tags: [],
       email: {
@@ -238,20 +244,25 @@ export class User {
       reminder: {
         weekdays: []
       },
-      likes:[],
+      likes: [],
       roles: [],
       shops: [],
       phoneNumbers: [{
         number: '',
         what: 'mobile'
       }],
-      addresses:[],
-      payments:[],
-      logistic: {postalCode:[]}
-    }
-    Object.assign(this, defaultUser,json||{});          
-    this.payments=this.payments.map(payment=>new UserCard(payment));
-    this.addresses=this.addresses.map(add=>new UserAddress(
+      addresses: [],
+      payments: [],
+      logistic: {postalCode: []},
+      orders: {
+        avg: 0,
+        last1Month: 0,
+        last6Month: 0
+      }
+    };
+    Object.assign(this, defaultUser, json || {});
+    this.payments = this.payments.map(payment => new UserCard(payment));
+    this.addresses = this.addresses.map(add => new UserAddress(
       add.name,
       add.streetAdress,
       add.floor,
@@ -285,8 +296,8 @@ export class User {
 
   isOwner(shopname) {
 
-    //if (this.isAdmin())return true;
-    for (var i in this.shops) {
+    // if (this.isAdmin())return true;
+    for (let i in this.shops) {
       if (this.shops[i].name === shopname) {
         return true;
       }
@@ -295,17 +306,47 @@ export class User {
   }
 
   isOwnerOrAdmin(shopname) {
-    if (this.isAdmin())
+    if (this.isAdmin()) {
       return true;
+    }
     return this.isOwner(shopname);
   }
 
-  isAuthenticated():boolean {
-    return this.id>0||this.id!==null;
+  isAuthenticated(): boolean {
+    return this.id > 0 || this.id !== null;
   }
 
   isAdmin() {
     return this.hasRole('admin');
+  }
+
+  isPremium() {
+    const shared = {
+      new : config.shared.order.new || {},
+      recurrent: config.shared.order.recurrent || {}
+    };
+
+    const newclient = {
+      avg: shared.new.avg || 180,
+      last6Month: shared.new.last6Month || 1
+    };
+
+    const recurrent = {
+      last1Month: shared.recurrent.last1Month || 3,
+      last6Month: shared.recurrent.last6Month || 5,
+      avg: shared.recurrent.avg || 70
+    };
+
+    if (this.orders.avg > newclient.avg && this.orders.last6Month >= newclient.last6Month) {
+      return true;
+    }
+
+
+    if (this.orders.last1Month >= recurrent.last1Month || this.orders.last6Month >= recurrent.last6Month){
+      return (this.orders.avg > recurrent.avg);
+    }
+
+    return false;
   }
 
   isReady() {
@@ -313,7 +354,7 @@ export class User {
   }
 
   hasRole(role) {
-    return (this.roles.indexOf(role)!=-1);
+    return (this.roles.indexOf(role) != -1);
   }
 
   hasLike(product) {
@@ -323,38 +364,41 @@ export class User {
     return (this.likes.indexOf(product.sku) != -1);
   }
 
-  hasPrimaryAddress():boolean|UserAddress {
-    if (this.addresses && this.addresses.length == 1) return this.addresses[0];
-    //this.addresses.some(add=>add.primary)
-    for (var i in this.addresses) {
-      if (this.addresses[i].primary === true)
+  hasPrimaryAddress(): boolean|UserAddress {
+    if (this.addresses && this.addresses.length == 1) { return this.addresses[0]; }
+    // this.addresses.some(add=>add.primary)
+    for (let i in this.addresses) {
+      if (this.addresses[i].primary === true) {
         return this.addresses[i];
+      }
     }
     return false;
   }
 
 
-  getEmailStatus():boolean|Date {
-    if (!this.email || !this.email.status)
+  getEmailStatus(): boolean|Date {
+    if (!this.email || !this.email.status) {
       return false;
+    }
 
-    if (this.email.status === true)
+    if (this.email.status === true) {
       return true;
+    }
 
     return new Date(this.email.status);
-    //return moment(this.email.status).format('ddd DD MMM YYYY');
+    // return moment(this.email.status).format('ddd DD MMM YYYY');
 
   }
 
-  getDefaultAddress(){
-    let add=(this.addresses||[]).find(add=>add.primary);
-    if(add){
+  getDefaultAddress() {
+    const add = (this.addresses || []).find(add => add.primary);
+    if (add) {
       return add;
     }
-    
+
     //
     // check with first address
-    if(this.addresses && this.addresses.length){
+    if (this.addresses && this.addresses.length) {
       return this.addresses[0];
     }
 
@@ -372,21 +416,21 @@ export class User {
   }
 
   getBVR() {
-    var self = this;
+    let self = this;
   }
 
 
   //
   // init user
   init() {
-    var self = this;
+    let self = this;
 
     // set context for error
 
     if (!self.addresses) {
       return;
     }
-    //check address
+    // check address
     self.populateAdresseName();
 
     // TODO get geo
@@ -397,7 +441,7 @@ export class User {
         return;
       }
       //
-      //TODO setup marker
+      // TODO setup marker
       // self.geo.addMarker(i,{
       //   lat:address.geo.lat,
       //   lng:address.geo.lng,
@@ -411,7 +455,7 @@ export class User {
 
 class Cache {
     list: User[];
-    map: Map<number, User>
+    map: Map<number, User>;
     constructor() {
         this.list = [];
         this.map = new Map();
@@ -421,10 +465,34 @@ class Cache {
 @Injectable()
 export class UserService {
 
+  constructor(
+    @Inject('KNG2_OPTIONS') private customConfig:any,
+    public http: HttpClient
+  ) {
+    //
+    // Use dynamic server settings
+    if(!customConfig.API_SERVER){
+      customConfig.API_SERVER=('//api.'+window.location.hostname);
+    }
+    // FIXME remove this hugly config propagation    
+    Object.assign(config,customConfig);
+    this.config = config;
+    this.headers = new HttpHeaders();
+    this.headers.append('Content-Type', 'application/json');
+    this.user$ = new ReplaySubject<User>(1);
+  }
+;
+;
+;
+
   // TODO make observable content !!
   config: any;
   currentUser: User = new User();
   private cache = new Cache();
+
+
+  private headers: HttpHeaders;
+  public  user$: ReplaySubject<User>;
 
   private updateCache(user: User) {
     if(!this.cache.map.get(user.id)){
@@ -444,27 +512,6 @@ export class UserService {
           this.cache.map.delete(user.id);
       }
       return incache;
-  }
-
-
-  private headers: HttpHeaders;
-  public  user$: ReplaySubject<User>;
-
-  constructor(
-    @Inject('KNG2_OPTIONS') private customConfig:any,
-    public http: HttpClient
-  ) {
-    //
-    // Use dynamic server settings
-    if(!customConfig.API_SERVER){
-      customConfig.API_SERVER=('//api.'+window.location.hostname);
-    }
-    // FIXME remove this hugly config propagation    
-    Object.assign(config,customConfig);
-    this.config = config;
-    this.headers = new HttpHeaders();
-    this.headers.append('Content-Type', 'application/json');
-    this.user$ = new ReplaySubject<User>(1);
   }
 
   // token
@@ -604,16 +651,14 @@ export class UserService {
       tap(user=>this.user$.next(user))
     );
       
-  };
-
+  }
   // app.post('/v1/users/:id/password',users.ensureMe, users.password);
   newpassword(id:number, change): Observable<User> {
     return this.http.post<User>(this.config.API_SERVER + '/v1/users/' + id + '/password', change, {
       headers: this.headers,
       withCredentials: true
     });
-  };
-
+  }
   // TODO voir lignes commentées (updateGeoCode etc.) + Broadcast
   // app.post('/login', queued(auth.login_post));
   login(data): Observable<User> {
@@ -624,8 +669,7 @@ export class UserService {
       map(user => this.updateCache(user)),
       tap(user=>this.user$.next(user))
     );
-  };
-
+  }
 
   // app.put('/v1/users/:id', auth.ensureAdmin, auth.checkPassword, users.remove);
   remove(id, password): Observable<any> {
