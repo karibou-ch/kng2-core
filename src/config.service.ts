@@ -65,14 +65,17 @@ export class ConfigService {
   }
 
 
-  get(): Observable<Config> {
+  get(hub?: string): Observable<Config> {
     const lang = this.locale;
-    this.config = this.http.get<any>(ConfigService.defaultConfig.API_SERVER + '/v1/config?lang='+lang, {
+    const params: any = { lang: this.locale };
+    hub && (params.hub = hub);
+    this.config = this.http.get<any>(ConfigService.defaultConfig.API_SERVER + '/v1/config', {
       headers: this.headers,
       withCredentials: true,
+      params: (params)
     }).pipe(
       map((shared: any) => {
-        Object.assign(config,ConfigService.defaultConfig)
+        Object.assign(config, ConfigService.defaultConfig)
         Object.assign(config.shared, shared);
 
         //
@@ -102,9 +105,20 @@ export class ConfigService {
             deposit.active,
             deposit.fees
           ));
+
+          //
+          // welcome, about, howto, footer
+          Object.assign(config.shared.tagLine, config.shared.hub.tagLine);
+          Object.assign(config.shared.about, config.shared.hub.about);
+          Object.assign(config.shared.footer, config.shared.hub.footer);
+
         } else {
           config.shared.hub = {};
         }
+        return config;
+      }),
+      tap(config => {
+        if (hub) {this.config$.next(config); }
         return config;
       })
     )
@@ -157,6 +171,13 @@ export class ConfigService {
             deposit.active,
             deposit.fees
           ));
+
+          //
+          // welcome, about, howto, footer
+          Object.assign(config.shared.tagLine, config.shared.hub.tagLine);
+          Object.assign(config.shared.about, config.shared.hub.about);
+          Object.assign(config.shared.footer, config.shared.hub.footer);
+
         } else {
           config.shared.hub = {};
         }
