@@ -9,7 +9,7 @@ import { CategoryService } from './category.service';
 import { DocumentService } from './document.service';
 import { ProductService } from './product.service';
 import { ConfigService } from './config.service';
-import { LoaderService, 
+import { LoaderService,
          LoaderResolve } from './loader.service';
 import { OrderService } from './order/order.service';
 import { UserService } from './user.service';
@@ -61,13 +61,13 @@ export class Kng2CoreModule {
     // }catch(e){
     //   console.log('--- localStorage',e);
     // }
-    
+
     return {
       ngModule: Kng2CoreModule,
       providers: [
         {
           provide:"KNG2_OPTIONS",
-          useValue:options||{}
+          useValue: options || {}
         },
         CartService,
         CategoryService,
