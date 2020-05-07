@@ -248,7 +248,7 @@ export class User {
       orders: {
         avg: 0,
         last1Month: 0,
-        last6Month: 0
+        last6Month: 0,
       }
     };
     Object.assign(this, defaultUser, json || {});
