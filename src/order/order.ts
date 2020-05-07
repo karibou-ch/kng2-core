@@ -16,7 +16,7 @@ import { Utils } from '../util';
 // get global configuration
 import { config, Config } from '../config';
 
-import { UserAddress } from '../user.service';
+import { UserAddress, User } from '../user.service';
 
 
 //
@@ -97,31 +97,36 @@ export class Order {
   //
   // the current shipping day is short date for the placed orders
   static currentShippingDay() {
-    return (new Date()).dayToDates(config.shared.order.weekdays)[0];
+    return (new Date()).dayToDates(config.shared.hub.weekdays)[0];
   }
 
   //
   // the next shipping day
-  static nextShippingDay() {
+  static nextShippingDay(user?: User) {
     const potential = config.potentialShippingDay();
     const next = potential.dayToDates(
-      config.shared.order.weekdays
+      config.shared.hub.weekdays
     );
 
     //
-    // remove complete shipping days
-    // its a weak remove
-    const currentRanks = config.shared.order.currentRanks || {};
-    const currentLimit = config.shared.order.currentLimit || 1000;
-    for (let i = next.length - 1; i >= 0; i--) {
-      if (currentRanks[next[i].getDay()] >= currentLimit) {
-        next.splice(i, 1);
+    // remove complete shipping days for the current HUB
+    // its a weak constraint
+    const currentHub   = config.shared.hub.slug;
+    if (currentHub) {
+      const currentRanks = config.shared.currentRanks[currentHub] || {};
+      const premiumLimit = (user && user.isPremium()) ? (config.shared.order.premiumLimit || 0) : 0;
+      const currentLimit = (config.shared.hub.currentLimit || 1000) + premiumLimit;
+
+      for (let i = next.length - 1; i >= 0; i--) {
+        if (currentRanks[next[i].getDay()] >= currentLimit) {
+          next.splice(i, 1);
+        }
       }
     }
 
     //
     // no closed date
-    if (!config.shared.noshipping || !config.shared.noshipping.length) {
+    if (!config.shared.hub.noshipping || !config.shared.hub.noshipping.length) {
       return next[0];
     }
 
@@ -129,8 +134,8 @@ export class Order {
     // next contains the potentials shipping days,
     // we must return the first date available for shipping
     for (var j = 0; j < next.length; j++) {
-      for (var i = 0; i < config.shared.noshipping.length; i++) {
-        const noshipping = config.shared.noshipping[i];
+      for (var i = 0; i < config.shared.hub.noshipping.length; i++) {
+        const noshipping = config.shared.hub.noshipping[i];
         if (!next[j].in(noshipping.from, noshipping.to)) return next[j];
       }
     }
@@ -144,7 +149,9 @@ export class Order {
   // a full week of available shipping days
   // limit to nb days (default is <7)
   static fullWeekShippingDays(limit?) {
-    var next = config.potentialShippingWeek(), lst:any[] = [], find = false, today = new Date();
+    let next = config.potentialShippingWeek(),
+        lst:any[] = [],
+        today = new Date();
 
     //
     // default date limit is defined by
@@ -162,14 +169,14 @@ export class Order {
       // limit lenght of a week
       return lst.filter(function (date) {
         return (!limit || date < limit);
-      })
+      });
 
     }
 
 
     //
     // no closed date
-    if (!config.shared.noshipping || !config.shared.noshipping.length) {
+    if (!config.shared.hub.noshipping || !config.shared.hub.noshipping.length) {
       return format(next);
     }
 
@@ -177,7 +184,7 @@ export class Order {
     // next contains the potentials shipping days,
     // we must return the first date available for shipping
     next.forEach(function (shippingday) {
-      let find = config.shared.noshipping.find(noshipping => shippingday.in(noshipping.from, noshipping.to))
+      let find = config.shared.hub.noshipping.find(noshipping => shippingday.in(noshipping.from, noshipping.to))
       if (!find) lst.push(shippingday)
     });
 
@@ -195,10 +202,10 @@ export class Order {
     // jump one week past
     next = new Date(next.getTime() - 86400000 * 7);
 
-    config.shared.order.weekdays.forEach(function (day) {
+    config.shared.hub.weekdays.forEach(function (day) {
       nextDay = (day >= next.getDay()) ? (day - next.getDay()) : (7 - next.getDay() + day);
       nextDate = new Date(nextDay * 86400000 + next.getTime());
-      if (config.shared.order.weekdays.indexOf(nextDate.getDay()) !== -1)
+      if (config.shared.hub.weekdays.indexOf(nextDate.getDay()) !== -1)
       { all.push(nextDate); }
 
     });

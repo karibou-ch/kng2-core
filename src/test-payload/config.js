@@ -257,6 +257,23 @@ exports.shared = {
       "Zurich"
     ]
   },
+  "hub": {
+    "timeoutAndNotPaid": 60,
+    "timelimit": 20,
+    "uncapturedTimeLimit": 6,
+    "timelimitH": 10,
+    "shippingmode": [
+      "grouped",
+      "none"
+    ],
+    "weekdays": [
+      2,
+      5
+    ],
+    "shippingtimes": {
+      "16": "16:00 à 19:00"
+    }
+  },
   "order": {
     "financialstatus": [
       "pending",
@@ -319,21 +336,6 @@ exports.shared = {
       }
     ],
     "openInvoice": 0,
-    "timeoutAndNotPaid": 60,
-    "timelimit": 20,
-    "uncapturedTimeLimit": 6,
-    "timelimitH": 10,
-    "shippingmode": [
-      "grouped",
-      "none"
-    ],
-    "weekdays": [
-      2,
-      5
-    ],
-    "shippingtimes": {
-      "16": "16:00 à 19:00"
-    }
   },
   "noshipping":[],
   "keys": {

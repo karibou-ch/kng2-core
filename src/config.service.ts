@@ -76,28 +76,35 @@ export class ConfigService {
         Object.assign(config.shared, shared);
 
         //
-        // fill dates 
+        // fill dates
         config.shared.shippingweek = (shared.shippingweek || []).map(date => new Date(date));
-        config.shared.noshipping = config.shared.noshipping || [];
-        config.shared.noshipping.forEach(noshipping => {
-          noshipping.from = new Date(noshipping.from);
-          noshipping.to = new Date(noshipping.to);
-        });
 
         //
-        // deposit
-        config.shared.deposits = (config.shared.deposits || []).map(deposit=>new DepositAddress(
-          deposit.name,
-          deposit.streetAddress || deposit.streetAdress,
-          deposit.floor,
-          deposit.region,
-          deposit.postalCode,
-          deposit.note,
-          deposit.geo,
-          deposit.weight,
-          deposit.active,
-          deposit.fees
-        ));
+        // HUB extension
+        if (config.shared.hub) {
+          config.shared.hub.noshipping = config.shared.hub.noshipping || [];
+          config.shared.hub.noshipping.forEach(noshipping => {
+            noshipping.from = new Date(noshipping.from);
+            noshipping.to = new Date(noshipping.to);
+          });
+
+          //
+          // deposit
+          config.shared.hub.deposits = (config.shared.hub.deposits || []).map(deposit=>new DepositAddress(
+            deposit.name,
+            deposit.streetAddress || deposit.streetAdress,
+            deposit.floor,
+            deposit.region,
+            deposit.postalCode,
+            deposit.note,
+            deposit.geo,
+            deposit.weight,
+            deposit.active,
+            deposit.fees
+          ));
+        } else {
+          config.shared.hub = {};
+        }
         return config;
       })
     )
@@ -126,31 +133,36 @@ export class ConfigService {
         //
         // dates 
         config.shared.shippingweek=(shared.shippingweek || []).map(date => new Date(date));
-        config.shared.noshipping = config.shared.noshipping || [];
-        config.shared.noshipping.forEach(noshipping => {
-          noshipping.from = new Date(noshipping.from);
-          noshipping.to = new Date(noshipping.to);
-        });
-
 
         //
-        // deposit
-        config.shared.deposits=(config.shared.deposits || []).map(deposit => new DepositAddress(
-          deposit.name,
-          deposit.streetAddress||deposit.streetAdress,
-          deposit.floor,
-          deposit.region,
-          deposit.postalCode,
-          deposit.note,
-          deposit.geo,
-          deposit.weight,
-          deposit.active,
-          deposit.fees
-        ));
+        // HUB extension
+        if (config.shared.hub){
+          config.shared.hub.noshipping = config.shared.hub.noshipping || [];
+          config.shared.hub.noshipping.forEach(noshipping => {
+            noshipping.from = new Date(noshipping.from);
+            noshipping.to = new Date(noshipping.to);
+          });
 
+          //
+          // deposit
+          config.shared.hub.deposits = (config.shared.hub.deposits || []).map(deposit => new DepositAddress(
+            deposit.name,
+            deposit.streetAddress || deposit.streetAdress,
+            deposit.floor,
+            deposit.region,
+            deposit.postalCode,
+            deposit.note,
+            deposit.geo,
+            deposit.weight,
+            deposit.active,
+            deposit.fees
+          ));
+        } else {
+          config.shared.hub = {};
+        }
         return config;
       }),
-      tap(config=>this.config$.next(config))
+      tap(config => this.config$.next(config))
     );
   }
 
