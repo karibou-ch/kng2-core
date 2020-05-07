@@ -107,9 +107,8 @@ describe('CartService : localStorage', () => {
     cart.setContext(cfg, user);
     cart.getCurrentShippingDay();
     httpMock.expectOne(req => {
-      expect( req.urlWithParams).toContain('test/v1/cart?cart=');
-      expect( req.urlWithParams).toContain('items');
-      expect( req.urlWithParams).toContain('updated');
+      expect( req.urlWithParams).toContain('test/v1/cart');
+      expect( req.body.cart).toBeDefined()
       return true;
     }).flush(simpleResult);
 
@@ -152,9 +151,8 @@ describe('CartService : localStorage', () => {
     cart.setContext(cfg, user);
     cart.getCurrentShippingDay();
     httpMock.expectOne(req => {
-      expect( req.urlWithParams).toContain('test/v1/cart?cart=');
-      expect( req.urlWithParams).toContain('items');
-      expect( req.urlWithParams).toContain('updated');
+      expect( req.urlWithParams).toContain('test/v1/cart');
+      expect( req.body.cart).toBeDefined()
       return true;
     }).flush(simpleResult);
   }));
@@ -172,9 +170,8 @@ describe('CartService : localStorage', () => {
     cart.setContext(cfg, user);
     cart.getCurrentShippingDay();
     httpMock.expectOne(req => {
-      expect( req.urlWithParams).toContain('test/v1/cart?cart=');
-      expect( req.urlWithParams).toContain('items');
-      expect( req.urlWithParams).toContain('updated');
+      expect( req.urlWithParams).toContain('test/v1/cart');
+      expect( req.body.cart).toBeDefined()
       return true;
     }).flush(Object.assign({}, simpleResult, {items: [items[1]]}));
   }));
@@ -205,9 +202,8 @@ describe('CartService : localStorage', () => {
     cart.setContext(cfg, user);
     cart.getCurrentShippingDay();
     httpMock.expectOne(req => {
-      expect( req.urlWithParams).toContain('test/v1/cart?cart=');
-      expect( req.urlWithParams).toContain('items');
-      expect( req.urlWithParams).toContain('updated');
+      expect( req.urlWithParams).toContain('test/v1/cart');
+      expect( req.body.cart).toBeDefined()
       return true;
     }).flush(Object.assign({}, simpleResult, {items: [items[1]]}));
 
@@ -235,9 +231,8 @@ describe('CartService : localStorage', () => {
     cart.setContext(cfg, user);
     cart.getCurrentShippingDay();
     httpMock.expectOne(req => {
-      expect( req.urlWithParams).toContain('test/v1/cart?cart=');
-      expect( req.urlWithParams).toContain('items');
-      expect( req.urlWithParams).toContain('updated');
+      expect( req.urlWithParams).toContain('test/v1/cart');
+      expect( req.body.cart).toBeTruthy()
       return true;
     }).error(new Error('Oups'));
 

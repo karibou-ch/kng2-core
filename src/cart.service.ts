@@ -63,6 +63,7 @@ export class CartItem {
   timestamp: Date;
   displayName?: string;
   email?: string;
+  hub: string;
   title: string;
   sku: number;
   variant: string;
@@ -286,6 +287,7 @@ export class CartService {
   private isReady: boolean;
   private headers: HttpHeaders;
 
+  private currentHub: string;
   private currentUser: User;
   private currentShops: Shop[] = [];
 
@@ -344,6 +346,11 @@ export class CartService {
     const items = this.cache.items;
     const item = (product instanceof CartItem) ? product : CartItem.fromProduct(product, variant);
 
+    //
+    // update HUB
+    item.hub = this.currentHub;
+
+    // console.log('--- ADD ITEM',item.sku,item.hub);
 
     for (let i = 0; i < items.length; i++) {
       if (items[i].equalItem(item, variant)) {
@@ -391,6 +398,11 @@ export class CartService {
     items.push(item);
     // TODO warn update
     this.computeVendorDiscount(product.vendor);
+
+    if (quiet) {
+      return;
+    }
+
     return this.save({ item, action: CartAction.ITEM_ADD });
   }
 
@@ -469,7 +481,7 @@ export class CartService {
     //
     // testing deposit address
     // FIXME issue with streetAdress vs. streetAddress
-    const deposit = this.defaultConfig.shared.deposits.find(add => {
+    const deposit = this.defaultConfig.shared.hub.deposits.find(add => {
       return add.isEqual(address) &&
         add.fees >= 0;
     });
@@ -504,6 +516,8 @@ export class CartService {
     this.cache.payment = new UserCard();
     this.cache.address = new UserAddress();
     this.cartConfig.gateway = this.DEFAULT_GATEWAY;
+    //
+    // remove all items for this HUB
     this.cache.items = [];
     this.cache.discount = {};
     this.save({ action: CartAction.CART_CLEARED });
@@ -516,7 +530,8 @@ export class CartService {
   }
 
   findBySku(sku: number): CartItem {
-    return this.cache.items.find(item => item.sku == sku);
+    // TODO shall we filter items by hub ? && item.hub === this.currentHub
+    return this.cache.items.find(item => item.sku === sku && (!item.hub || item.hub === this.currentHub));
   }
 
   getCurrentGateway(): { fees: number, label: string } {
@@ -536,7 +551,7 @@ export class CartService {
 
   getItems() {
     this.checkIfReady();
-    return this.cache.items;
+    return this.cache.items.filter(item => (!item.hub || item.hub === this.currentHub));
   }
 
   getCurrentShippingAddress(): UserAddress {
@@ -570,7 +585,7 @@ export class CartService {
   }
 
   hasError(): boolean {
-    return this.cache.items.some(item => item.error != undefined);
+    return this.getItems().some(item => item.error != undefined);
   }
 
   hasShippingReduction(): boolean {
@@ -598,7 +613,7 @@ export class CartService {
   loadCache() {
     //
     // IFF next shipping day is Null (eg. hollidays)=> currentShippingDay
-    const nextShippingDay = Order.nextShippingDay();
+    const nextShippingDay = Order.nextShippingDay(this.currentUser);
     const currentShippingDay = config.potentialShippingWeek()[0];
     this.cache.currentShippingDay = new Date(nextShippingDay || currentShippingDay);
     this.cache.updated = new Date('1990-12-01T00:00:00');
@@ -669,7 +684,7 @@ export class CartService {
         //
         // check existance on the current user (example when you switch account, cart should be sync )
         if (!this.currentUser.addresses.some(address => address.isEqual(this.cache.address)) &&
-          !this.defaultConfig.shared.deposits.some(address => address.isEqual(this.cache.address))) {
+          !this.defaultConfig.shared.hub.deposits.some(address => address.isEqual(this.cache.address))) {
           this.cache.address = new UserAddress();
         }
       }
@@ -691,7 +706,14 @@ export class CartService {
         updated: this.cache.updated
     };
 
-    this.$http.post<CartModel>(ConfigService.defaultConfig.API_SERVER + '/v1/cart/get', {cart: syncCart}, {
+    //
+    // FIXME assert currentHub existance
+    const params = {
+      cart: syncCart,
+      hub: this.currentHub
+    };
+
+    this.$http.post<CartModel>(ConfigService.defaultConfig.API_SERVER + '/v1/cart/get', params, {
       headers: this.headers,
       withCredentials: true
     }).pipe(
@@ -758,7 +780,7 @@ export class CartService {
   removeAll(product: Product | CartItem, variant?: string) {
     this.checkIfReady();
     // init
-    const items = this.cache.items;
+    const items = this.getItems();
     const item = (product instanceof CartItem) ? product : CartItem.fromProduct(product);
 
     //
@@ -780,7 +802,7 @@ export class CartService {
   remove(product: Product | CartItem, variant?: string) {
     this.checkIfReady();
     // init
-    const items = this.cache.items;
+    const items = this.getItems();
     const item = (product instanceof CartItem) ? Object.assign({}, product) : CartItem.fromProduct(product, variant);
 
     // propagate server : remove one
@@ -851,7 +873,7 @@ export class CartService {
     const model: CartModel = new CartModel();
     const params: any = {};
     model.cid = this.cache.cid;
-    model.items = this.cache.items;
+    model.items = this.getItems();
     if (!this.currentUser.isAuthenticated()) {
       return throwError('Unauthorized');
     }
@@ -862,8 +884,12 @@ export class CartService {
     // case of add/remove item
     if (state.item && [CartAction.ITEM_ADD, CartAction.ITEM_REMOVE].indexOf(state.action) > -1) {
       model.items = [state.item];
-      params.action = CartAction[state.action];
+      params.action = CartAction[state.action];      
     }
+
+    //
+    // FIXME assert currentHub existance
+    params.hub = this.currentHub;
 
     //
     // FIXME implement the case of Clear!
@@ -916,6 +942,7 @@ export class CartService {
   setContext(config: Config, user: User, shops?: Shop[]) {
     Object.assign(this.defaultConfig, config);
     Object.assign(this.currentUser, user);
+    this.currentHub = this.defaultConfig.shared.hub.slug;
     this.currentShops = shops || this.currentShops || [];
 
     this.cartConfig.shipping = this.defaultConfig.shared.shipping;
@@ -923,7 +950,8 @@ export class CartService {
     //
     // set default shipping address
     this.cache.address = user.getDefaultAddress();
-    this.cache.currentShippingDay = Order.nextShippingDay();
+    this.cache.currentShippingDay = Order.nextShippingDay(user);
+    // FIXME default shipping time should not be hardcoded
     this.cache.currentShippingTime = 16;
 
     //
@@ -960,12 +988,12 @@ export class CartService {
 
 
   subTotal(): number {
-    const items = this.cache.items;
+    const items = this.getItems();
     let total = 0;
     items.forEach((item) => {
       total += (item.price * item.quantity);
     });
-    const fees = (config.shared.order.serviceFees) * total;
+    const fees = (config.shared.hub.serviceFees) * total;
     return Utils.roundAmount(total + fees);
   }
 
@@ -981,7 +1009,7 @@ export class CartService {
 
 
   quantity(): number {
-    const items = this.cache.items;
+    const items = this.getItems();
     let quantity = 0;
     items.forEach((item) => {
       quantity += item.quantity;
@@ -1006,7 +1034,8 @@ export class CartService {
   }
 
   //
-  // FIXME, that should be based on the list of all vendors Shop[] (in fact, vendor discount could change )
+  // FIXME, that should be based on the list of all vendors Shop[] (item.vendor.discount could change )
+  // NOTE, discount is based on items that bellongs to the current HUB
   totalDiscount(): number {
     let amount = 0;
     for (const slug in this.cache.discount) {
@@ -1017,13 +1046,13 @@ export class CartService {
   }
 
   totalFees(): number {
-    const items = this.cache.items;
+    const items = this.getItems();
     let total = 0;
     items.forEach((item) => {
       total += (item.price * item.quantity);
     });
 
-    const fees = (config.shared.order.serviceFees) * total;
+    const fees = (config.shared.hub.serviceFees) * total;
     return Utils.roundAmount(fees);
   }
 
@@ -1048,8 +1077,6 @@ export class CartService {
       return false;
     });
   }
-
-
 
 
 
