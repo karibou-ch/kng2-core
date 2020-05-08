@@ -1,4 +1,409 @@
-exports.shared = {
+//
+// without HUB
+export const sharedRoot = {
+  "i18n": {
+    "locales": [
+      "en",
+      "fr"
+    ],
+    "defaultLocale": "fr"
+  },
+  "TVA": [
+    0,
+    0.025,
+    0.077
+  ],
+  "shopsLimit": 1,
+  "generalFees": 0.2,
+  "system": {
+    "password": {
+      "len": 6
+    },
+    "post": {
+      "limitMS": 500
+    }
+  },
+  "document": {
+    "types": [
+      "recipe",
+      "post",
+      "bundle",
+      "selection",
+      "page"
+    ]
+  },
+  "category": {
+    "types": [
+      "Category",
+      "Catalog"
+    ]
+  },
+  "shipping": {
+    "average": 115,
+    "discountA": 145,
+    "discountB": 180,
+    "price": {
+      "hypercenter": 11.9,
+      "periphery": 14.9,
+      "other": 19.9,
+      "collect": 3.9
+    },
+    "priceA": 0,
+    "priceB": 0,
+    "periphery": [
+      "1212",
+      "1213",
+      "1218",
+      "1219",
+      "1223",
+      "1224",
+      "1225",
+      "1226",
+      "1228",
+      "1231",
+      "1232",
+      "1233",
+      "1234",
+      "1253",
+      "1255",
+      "1256",
+      "1257",
+      "1258"
+    ],
+    "other": [],
+    "collect": []
+  },
+  "issue": {
+    "ttl": 365,
+    "code": [
+      "issue_no_issue",
+      "issue_logistic",
+      "issue_missing_client_id",
+      "issue_missing_product",
+      "issue_wrong_product_quality"
+    ]
+  },
+  "marketplace": {
+    "list": [
+      {
+        "name": "Marché de Plainpalais le mardi",
+        "lat": 46.19838,
+        "lng": 6.14083,
+        "d": 2
+      },
+      {
+        "name": "Marché de Plainpalais le vendredi",
+        "lat": 46.19838,
+        "lng": 6.14083,
+        "d": 5
+      },
+      {
+        "name": "Marché de Plainpalais le dimanche",
+        "lat": 46.19838,
+        "lng": 6.14083,
+        "d": 0
+      },
+      {
+        "name": "Marché de Rive le jeudi",
+        "lat": 46.20195,
+        "lng": 6.15491,
+        "d": 4
+      },
+      {
+        "name": "Marché de Rive le samedi",
+        "lat": 46.20195,
+        "lng": 6.15491,
+        "d": 6
+      },
+      {
+        "name": "Halle de Rive",
+        "lat": 46.202077,
+        "lng": 6.15477
+      }
+    ]
+  },
+  "user": {
+    "location": {
+      "list": [
+        "1201",
+        "1202",
+        "1203",
+        "1204",
+        "1205",
+        "1206",
+        "1207",
+        "1208",
+        "1209",
+        "1212",
+        "1213",
+        "1218",
+        "1219",
+        "1223",
+        "1224",
+        "1225",
+        "1226",
+        "1227",
+        "1228",
+        "1231",
+        "1232",
+        "1233",
+        "1234",
+        "1253",
+        "1255",
+        "1256",
+        "1257",
+        "1258"
+      ]
+    },
+    "region": {
+      "list": [
+        "Genève",
+        "Carouge,GE"
+      ]
+    },
+    "addresses": [
+      "Chemin du 23-Août, 4",
+      "Chemin du 23-Août, 5",
+      "Chemin du 23-Août, 6",
+      "Chemin du 23-Août, 7",
+      "Chemin du 23-Août, 8",
+      "Chemin du 23-Août, 9",
+      "Chemin du 23-Août, 10",
+      "Chemin du 23-Août, 11",
+      "Chemin du 23-Août, 12",
+      "Chemin du 23-Août, 13",
+      "Chemin du 23-Août, 14",
+      "Chemin du 23-Août, 16",
+      "Chemin du 23-Août, 17",
+      "Chemin du 23-Août, 18"
+    ]
+  },
+  "region": {
+    "list": [
+      "Aire-la-Ville,GE",
+      "Anières,GE",
+      "Avully,GE",
+      "Avusy,GE",
+      "Bardonnex,GE",
+      "Bellevue,GE",
+      "Bernex,GE",
+      "Carouge,GE",
+      "Cartigny,GE",
+      "Céligny,GE",
+      "Chancy,GE",
+      "Chêne-Bougeries,GE",
+      "Chêne-Bourg,GE",
+      "Choulex,GE",
+      "Collex-Bossy,GE",
+      "Collonge-Bellerive,GE",
+      "Cologny,GE",
+      "Confignon,GE",
+      "Corsier,GE",
+      "Dardagny,GE",
+      "Genève",
+      "Genthod,GE",
+      "Grand-Saconnex,GE",
+      "Gy,GE",
+      "Hermance,GE",
+      "Jussy,GE",
+      "Laconnex,GE",
+      "Lancy,GE",
+      "Meinier,GE",
+      "Meyrin,GE",
+      "Onex,GE",
+      "Perly-Certoux,GE",
+      "Plan-les-Ouates,GE",
+      "Pregny-Chambésy,GE",
+      "Presinge,GE",
+      "Puplinge,GE",
+      "Russin,GE",
+      "Satigny,GE",
+      "Soral,GE",
+      "Thônex,GE",
+      "Troinex,GE",
+      "Vandoeuvres,GE",
+      "Vernier,GE",
+      "Versoix,GE",
+      "Veyrier,GE",
+      "Tannay,VD",
+      "Reignier, France"
+    ]
+  },
+  "product": {
+    "location": [
+      "Appenzell Rhodes-Extérieures",
+      "Appenzell Rhodes-Intérieures",
+      "Argovie",
+      "Bâle-Campagne",
+      "Bâle-Ville",
+      "Berne",
+      "Fribourg",
+      "Genève",
+      "Glaris",
+      "Grisons",
+      "Jura",
+      "Lucerne",
+      "Neuchâtel",
+      "Nidwald",
+      "Obwald",
+      "Saint-Gall",
+      "Schaffhouse",
+      "Schwyz",
+      "Soleure",
+      "Tessin",
+      "Thurgovie",
+      "Uri",
+      "Valais",
+      "Vaud",
+      "Zoug",
+      "Zurich"
+    ]
+  },
+  "about": {
+		"h": {
+			"fr": "Notre service de livraison est 100% écologique et équitable",
+			"en": "Our delivery service is 100% ecological and fair",
+			"de": null
+		},
+		"t": {
+			"fr": "Notre mission ? Changer de modèle de distribution alimentaire !",
+			"en": "Our mission ? Change the model of food distribution!",
+			"de": null
+		},
+		"p": {
+			"fr": "<div class=\"why\">\n  <div class=\"image\"><img height=\"140px\" src=\"https://ucarecdn.com/938f9c9b-49cf-42c2-a464-4de597076c21/-/scale_crop/200x200/center/martin.jpg\" class=\"image-radius\"/></div>\n  <h3>Parce que ce que vous mangez ça compte! 🚀 </h3>\n  <p>\nChez Karibou.ch il n'y a pas de grossiste, derrière chaque produit il y a une personne pour préparer ou sélectionner les meilleurs produits !</p>\n</div>\n<div class=\"why\">\n  <div class=\"image\"><img height=\"140px\" src=\"https://ucarecdn.com/8903825c-3362-4d88-a461-51a636bdca5f/-/scale_crop/200x200/center/legume.jpg\" class=\"image-radius\"/></div>\n  <h3>Nous fédérons artisans, producteurs et épiciers de Genève</h3>\n<p>\nSur Karibou.ch, chaque boutique est autonome et fixe le juste prix. Grâce à notre service de vente en ligne, vous recevez les produits des artisans à votre porte. </p>\n</div>\n\n",
+			"en": "<div class=\"why\">\n  <div class=\"image\"><img height=\"140px\" src=\"https://ucarecdn.com/938f9c9b-49cf-42c2-a464-4de597076c21/-/scale_crop/200x200/center/martin.jpg\" class=\"image-radius\"/></div>\n  <h3>Because what you eat counts! 🚀 </h3>\n  <p>\nOn Karibou.ch there is no wholesaler, behind each product there is a person to prepare or select the best products!</p>\n</div>\n<div class=\"why\">\n  <div class=\"image\"><img height=\"140px\" src=\"https://ucarecdn.com/8903825c-3362-4d88-a461-51a636bdca5f/-/scale_crop/200x200/center/legume.jpg\" class=\"image-radius\"/></div>\n  <h3>Artisans, producers and small merchants in one place</h3>\n<p>\nOn Karibou.ch, each vendor is independant and sets the right price. With our online solution, you receive the products of artisans at your doorstep.</p>\n</div>\n\n"
+		},
+		"image": "https://ucarecdn.com/a9e145e1-d216-43e8-9684-28498716a1d8/"
+	},
+	"footer": {
+		"t": {
+			"fr": "<b>Karibou.ch</b> un marché en ligne",
+			"en": "<b>Karibou.ch</b> a food marketplace",
+			"de": null
+		},
+		"h": {
+			"fr": "Livraison à vélo tous les mardi et vendredi de <b>16h00 à 19h00</b><br> ",
+			"en": "Bicycle delivery every Tuesday and Friday from <b> 16h00 to 19h00 </ b> <br>"
+		},
+		"p": {
+			"fr": "",
+			"en": null,
+			"de": null
+		}
+	},
+	"tagLine": {
+		"t": {
+			"fr": "Derrière chaque produit il y a une personne",
+			"en": "Every product is proposed by a unique person",
+			"de": null
+		},
+		"h": {
+			"fr": "Vous êtes sur le marché des artisans de Genève",
+			"en": "Welcome on the online Geneva food market"
+		},
+		"p": {
+			"fr": "<div class=\"text-center small\">\n<h2>Notre mission, c’est de permettre aux artisans qui ont des traditions et des liens forts avec leurs produits d’être disponibles pour vous.</h2>\n<br/>\n<a href=\"/store/geneva/me/login?referrer=/store/geneva/home\" class=\"text-center enter primary-bg \"\n>Ok, c'est parti!</a>\n</div>\n",
+			"en": "<div class=\"text-center small\">\n<h2>Our mission is to allow foodmakers and vendors who have strong traditions and passion for their products to be available for you</h2>\n<br/>\n<a href=\"/store/geneva/me/login?referrer=/store/geneva/home\" class=\"text-center enter primary-bg \"\n>Ok, let's go!</a>\n</div>\n"
+		},
+		"image": "https://ucarecdn.com/2cf84b90-088c-43d9-bffe-56a6c61b97fb/"
+	},
+  "order": {
+    "financialstatus": [
+      "pending",
+      "authorized",
+      "partially_paid",
+      "invoice",
+      "paid",
+      "partially_refunded",
+      "manually_refunded",
+      "refunded",
+      "voided"
+    ],
+    "cancelreason": [
+      "customer",
+      "fraud",
+      "inventory",
+      "system",
+      "timeout",
+      "other"
+    ],
+    "status": [
+      "failure",
+      "created",
+      "reserved",
+      "partial",
+      "fulfilled"
+    ],
+    "gateway": [
+      {
+        "label": "postfinance card",
+        "fees": 0
+      },
+      {
+        "label": "american express",
+        "fees": 0.03
+      },
+      {
+        "label": "visa",
+        "fees": 0.03
+      },
+      {
+        "label": "mastercard",
+        "fees": 0.3
+      },
+      {
+        "label": "wallet",
+        "fees": 0
+      },
+      {
+        "label": "invoice",
+        "fees": 0.001
+      },
+      {
+        "label": "paypal",
+        "fees": 0.034
+      },
+      {
+        "label": "bitcoin",
+        "fees": 0
+      }
+    ],
+    "openInvoice": 0,
+  },
+  "currentRanks": {
+		"artamis": {
+			"0": 0,
+			"1": 0,
+			"2": 0,
+			"3": 0,
+			"4": 0,
+			"5": 0,
+			"6": 0
+		},
+		"halle-de-rive": {
+			"0": 0,
+			"1": 0,
+			"2": 0,
+			"3": 0,
+			"4": 0,
+			"5": 0,
+			"6": 0
+		}
+	},
+  "noshipping":[],
+  "keys": {
+    "pubUpcare": "f878",
+    "pubDisqus": "",
+    "pubMap": "AIza",
+    "pubStripe": "pk_test"
+  }
+}
+
+
+//
+// with HUB
+export const sharedWithHUB = {
   "i18n": {
     "locales": [
       "en",

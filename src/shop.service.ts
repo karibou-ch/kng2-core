@@ -6,7 +6,7 @@ import { User } from './user.service';
 import { ConfigService } from './config.service';
 import { Utils } from './util';
 
-import { ReplaySubject ,  Observable } from 'rxjs';
+import { ReplaySubject ,  Observable, BehaviorSubject } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
 
 export class Shop {
@@ -210,7 +210,7 @@ export class ShopService {
   // common multicast to update UX when one shop on the list is modified
 
   public  shop$: ReplaySubject<Shop>;
-  public  shops$: ReplaySubject<Shop[]>;
+  public  shops$: BehaviorSubject<Shop[]>;
 
   private config: any;
   private headers: HttpHeaders;
@@ -230,7 +230,7 @@ export class ShopService {
     //
     // 1 means to keep the last value
     this.shop$ = new ReplaySubject(1);
-    this.shops$ = new ReplaySubject<Shop[]>(1);
+    this.shops$ = new BehaviorSubject<Shop[]>(null);
     this.cache = {
       list: [],
       map: new Map()
