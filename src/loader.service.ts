@@ -69,7 +69,7 @@ export class LoaderService {
 
     // let me$=merge(this.$user.me(),this.$user.user$);
     const loaders: any[] = [
-      of(config),
+      this.$config.config$,
       me$,  // howto merge this.$user.user$,
       // this.$user.me(),
     ];

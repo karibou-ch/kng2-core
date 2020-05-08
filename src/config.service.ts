@@ -118,7 +118,7 @@ export class ConfigService {
         return config;
       }),
       tap(config => {
-        if (hub) {this.config$.next(config); }
+        this.config$.next(config);
         return config;
       })
     )
@@ -141,12 +141,12 @@ export class ConfigService {
       withCredentials: true
     }).pipe(
       map((shared: any) => {
-        Object.assign(config,ConfigService.defaultConfig)
+        Object.assign(config, ConfigService.defaultConfig);
         Object.assign(config.shared, shared);
 
         //
-        // dates 
-        config.shared.shippingweek=(shared.shippingweek || []).map(date => new Date(date));
+        // dates
+        config.shared.shippingweek = (shared.shippingweek || []).map(date => new Date(date));
 
         //
         // HUB extension

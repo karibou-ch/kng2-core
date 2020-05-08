@@ -7,7 +7,6 @@ import { config, Config } from './config';
 import { Product } from './product.service';
 import { Utils } from './util';
 
-import { OrderService } from './order/order.service';
 import { Order, OrderItem } from './order/order';
 import { Shop } from './shop.service';
 import { User, UserAddress, UserCard, DepositAddress } from './user.service';
