@@ -6,7 +6,7 @@ import { ConfigService } from './config.service';
 import { Utils } from './util';
 
 import { Observable ,  ReplaySubject ,  of ,  throwError as _throw } from 'rxjs';
-import { map,tap } from 'rxjs/operators';
+import { map,tap, retryWhen, delay, take } from 'rxjs/operators';
 
 
 @Injectable()
@@ -185,8 +185,9 @@ export class ProductService {
             headers: this.headers,
             withCredentials: true
         }).pipe(
+            retryWhen(errors => errors.pipe(delay(1000), take(3))),
             map(product => this.updateCache(product)),
-            tap(this.product$.next.bind(this.product$))  
+            tap(this.product$.next.bind(this.product$))
         );
     };
 
