@@ -5,58 +5,60 @@ import { Config, config, ConfigKeyStoreEnum } from './config';
 import { UserAddress, DepositAddress } from './user.service';
 
 
-//import { _throw } from 'rxjs/observable/throw';
+// import { _throw } from 'rxjs/observable/throw';
 import { Observable } from 'rxjs';
-//import { of } from 'rxjs/observable/of';
+// import { of } from 'rxjs/observable/of';
 import { ReplaySubject } from 'rxjs';
-import { map, tap } from 'rxjs/operators';
+import { map, tap, retryWhen, delay, take } from 'rxjs/operators';
 
 
 @Injectable()
 export class ConfigService {
 
-  public static defaultConfig={
-    isAvailable:true,
-    API_SERVER:'http://localhost:4000',
+  public static defaultConfig = {
+    isAvailable: true,
+    API_SERVER: 'http://localhost:4000',
 
-    API_VERSION:'/v1',
+    API_VERSION: '/v1',
 
-    LOG_LEVEL:'debug',
+    LOG_LEVEL: 'debug',
 
-    AUTH_SUCCESS_REDIRECT_URL:'/',
-    AUTH_ERROR_REDIRECT_URL:'/login',
+    AUTH_SUCCESS_REDIRECT_URL: '/',
+    AUTH_ERROR_REDIRECT_URL: '/login',
 
-    user:{
+    user: {
     },
 
-    shared:{
-      token:'Zz7YkTpPPp5YFQnCprtc7O9'
+    shared: {
+      token: 'Zz7YkTpPPp5YFQnCprtc7O9'
     },
-    loader:[],
-    loginPath:['/admin', '/account'],
-    readonlyPath:['/wallet/create'],
-    avoidShopUIIn:['/admin', '/login', '/signup', '/content']
+    loader: [],
+    loginPath: ['/admin', '/account'],
+    readonlyPath: ['/wallet/create'],
+    avoidShopUIIn: ['/admin', '/login', '/signup', '/content']
 
   };
 
   private headers: HttpHeaders;
-  public config:Observable<Config>;
+  public config: Observable<Config>;
   public config$: ReplaySubject<Config>;
 
   constructor(
-    @Inject('KNG2_OPTIONS') private customConfig:any,
+    @Inject('KNG2_OPTIONS') private customConfig: any,
     private http: HttpClient
   ) {
-    
+
     //
     // Use dynamic server settings
-    if(!customConfig.API_SERVER){
-      customConfig.API_SERVER=('//api.'+window.location.hostname);
+    if (!customConfig.API_SERVER) {
+      // customConfig.API_SERVER = ('//api.' + window.location.hostname);
+      customConfig.API_SERVER = ('//' + window.location.hostname + '/api');
     }
 
-    Object.assign(ConfigService.defaultConfig,customConfig||{});
+
+    Object.assign(ConfigService.defaultConfig, customConfig || {});
     // FIXME, remove this hugly config propagation
-    Object.assign(config,customConfig||{});
+    Object.assign(config, customConfig || {});
 
 
     this.headers = new HttpHeaders();
@@ -66,7 +68,6 @@ export class ConfigService {
 
 
   get(hub?: string): Observable<Config> {
-    const lang = this.locale;
     const params: any = { lang: this.locale };
     hub && (params.hub = hub);
     this.config = this.http.get<any>(ConfigService.defaultConfig.API_SERVER + '/v1/config', {
@@ -74,8 +75,9 @@ export class ConfigService {
       withCredentials: true,
       params: (params)
     }).pipe(
+      retryWhen(errors => errors.pipe(delay(1000), take(3))),
       map((shared: any) => {
-        Object.assign(config, ConfigService.defaultConfig)
+        Object.assign(config, ConfigService.defaultConfig);
         Object.assign(config.shared, shared);
 
         //
@@ -93,7 +95,7 @@ export class ConfigService {
 
           //
           // deposit
-          config.shared.hub.deposits = (config.shared.hub.deposits || []).map(deposit=>new DepositAddress(
+          config.shared.hub.deposits = (config.shared.hub.deposits || []).map(deposit => new DepositAddress(
             deposit.name,
             deposit.streetAddress || deposit.streetAdress,
             deposit.floor,
@@ -121,18 +123,18 @@ export class ConfigService {
         this.config$.next(config);
         return config;
       })
-    )
+    );
     return this.config;
   }
 
 
   setServer(url: string) {
     if (!url) {
-      throw new Error("set server url is Null");
+      throw new Error('set server url is Null');
     }
-    ConfigService.defaultConfig.API_SERVER=url;
+    ConfigService.defaultConfig.API_SERVER = url;
     //
-    //TODO save url to the localStorage AND use it on load
+    // TODO save url to the localStorage AND use it on load
   }
 
   save(config: Config, cid?: string): Observable<any> {
@@ -150,7 +152,7 @@ export class ConfigService {
 
         //
         // HUB extension
-        if (config.shared.hub){
+        if (config.shared.hub) {
           config.shared.hub.noshipping = config.shared.hub.noshipping || [];
           config.shared.hub.noshipping.forEach(noshipping => {
             noshipping.from = new Date(noshipping.from);
@@ -195,18 +197,18 @@ export class ConfigService {
   // - https://angular.io/guide/i18n (for static translation AOT compatible!)
   // - https://medium.com/@feloy/deploying-an-i18n-angular-app-with-angular-cli-fc788f17e358 (build locale targets)
   //   +--> https://github.com/ngx-translate/core/issues/495 (plan to integrate runtime lang switch and keep AOT compliant)
-  set locale(lang:string){
-    try{
+  set locale(lang: string) {
+    try {
       localStorage.setItem('kng2-locale', lang);
-    }catch(e){}
-    this.http.get(config.API_SERVER+'/v1/config?lang='+lang);    
+    } catch (e) {}
+    this.http.get(config.API_SERVER + '/v1/config?lang=' + lang);
   }
 
-  get locale(){
+  get locale() {
     // FIXME default locale should not be hardcoded!
-    try{
-      return localStorage.getItem('kng2-locale')||navigator.language || navigator['userLanguage']||'fr'; 
-    }catch(e){}
+    try {
+      return localStorage.getItem('kng2-locale') || navigator.language || navigator['userLanguage'] || 'fr';
+    } catch (e) {}
     return 'fr';
   }
 
@@ -217,6 +219,6 @@ export class ConfigService {
   //   onNext, onThrow?: ((exception: any) => void)|null,
   //   onReturn?: (() => void)|null) {
   //     return this.config$.subscribe({next: onNext, error: onThrow, complete: onReturn});
-  // }  
+  // }
 
 }
