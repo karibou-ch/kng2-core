@@ -21,11 +21,11 @@ import { UserAddress, User } from '../user.service';
 
 //
 // Define order shipping
-export class OrderShipping extends UserAddress{
-  when:Date;
-  hours:number;
+export class OrderShipping extends UserAddress {
+  when: Date;
+  hours: number;
 
-  constructor(address:UserAddress,when:Date,hours:number){
+  constructor(address: UserAddress, when: Date, hours: number) {
     super(
       address.name,
       address.streetAdress,
@@ -36,8 +36,8 @@ export class OrderShipping extends UserAddress{
       address.primary,
       address.geo
     );
-    this.when=new Date(when);
-    this.hours=hours;
+    this.when = new Date(when);
+    this.hours = hours;
   }
 
 }
@@ -79,10 +79,10 @@ export interface OrderItem {
   /* where is the product now? */
   fulfillment: {
     refunded?: boolean;
-    request: string;//string|EnumOrderIssue;
-    issue: string;//string|EnumOrderIssue;
-    status: string;//string|EnumFulfillments;
-    shipping: string;//string|EnumShippingMode;
+    request: string; // string|EnumOrderIssue;
+    issue: string; // string|EnumOrderIssue;
+    status: string; // string|EnumFulfillments;
+    shipping: string; // string|EnumShippingMode;
     note?: string;
     //
     // date/time for the first activity is saved
@@ -93,6 +93,133 @@ export interface OrderItem {
 
 
 export class Order {
+
+  /* default values */
+  private defaultOrder = {
+    customer: {},
+    payment: {},
+    fulfillments: {},
+    cancel: {},
+    items: [],
+    vendors: [],
+    shipping: {}
+  };
+
+  /** HUB identifier */
+  hub: string;
+
+  /** order identifier */
+  oid: number;
+
+  /* compute a rank for the set of orders to be shipped together */
+  rank: number;
+
+  /* customer email */
+  email: string;
+  created: Date;
+  closed?: Date;
+
+  /* customer evaluation */
+  score: number;
+
+  /* full customer details */
+  customer: any;
+
+  /* order canceled reason and dates */
+  cancel?: {
+    reason: string; // string|EnumCancelReason;
+    when: Date;
+  };
+
+  /* discount_code:{type: String}, */
+  /* cart_token:{type: String}, */
+
+  payment: {
+    alias: string;
+    number: string;
+    expiry: string;
+    issuer: string;
+    status: string; // string|EnumFinancialStatus;
+    handle?: string;
+    provider?: string;
+    logs: string[],
+    fees: {
+      charge: number;
+      shipping: number;
+    },
+
+    /* for security reason transaction data are encrypted */
+    transaction?: string;
+  };
+
+
+  fulfillments: {
+    status: string; // string|EnumFulfillments;
+  };
+
+  items: OrderItem[];
+
+  vendors: [{
+    //
+    // only displayed for owner and admin
+    fees?: number,
+    slug: string,
+    name: string,
+    fullName: string;
+    address: string,
+    address2: string,
+    geo: {
+      lat: number,
+      lng: number
+    },
+    collected: boolean,
+    collected_timestamp: Date,
+    //
+    // you can see values only when uid is order.owner, shop.owner, or admin
+    // amount & threshold & finalAmount & are saved for security reason
+    discount: {
+      amount: number,
+      threshold: number,
+      finalAmount: number
+    }
+  }];
+
+  shipping: {
+    when: Date,
+    hours: number,
+    name: string,
+    note?: string,
+    streetAdress: string,
+    floor: string,
+    postalCode: string,
+    region: string,
+    geo?: { // geo is not mandatory
+      lat: number,
+      lng: number
+    },
+    shipped?: boolean,
+    shopper?: string,
+    shopper_time?: string,
+    priority?: number,
+    position?: number,
+    bags?: number,
+    estimated?: number
+  };
+
+  errors?: any[];
+
+  constructor(json?: any) {
+    Object.assign(this, this.defaultOrder, json || {});
+
+    this.shipping.when = new Date(this.shipping.when);
+    this.created = new Date(this.created);
+    this.closed = new Date(this.closed);
+
+    //
+    // default order position
+    this.shipping.position = this.shipping.position || parseInt(this.shipping.postalCode) * 10;
+  }
+
 
   //
   // the current shipping day is short date for the placed orders
@@ -215,128 +342,6 @@ export class Order {
     return all;
   }
 
-  /* default values */  
-  private defaultOrder = {
-    customer: {},
-    payment: {},
-    fulfillments: {},
-    cancel: {},
-    items: [],
-    vendors: [],
-    shipping: {}
-  };
-
-  /** order identifier */
-  oid: number;
-
-  /* compute a rank for the set of orders to be shipped together */
-  rank: number;
-
-  /* customer email */
-  email: string;
-  created: Date;
-  closed?: Date;
-
-  /* customer evaluation */
-  score:number;
-
-  /* full customer details */
-  customer: any;
-
-  /* order canceled reason and dates */
-  cancel?: {
-    reason: string;//string|EnumCancelReason;
-    when: Date;
-  };
-
-  /* discount_code:{type: String}, */
-  /* cart_token:{type: String}, */
-
-  payment: {
-    alias: string;
-    number: string;
-    expiry: string;
-    issuer: string;
-    status: string;//string|EnumFinancialStatus;
-    handle?: string;
-    provider?: string;
-    logs: string[],
-    fees: {
-      charge: number;
-      shipping: number;
-    },
-
-    /* for security reason transaction data are encrypted */
-    transaction?: string;
-  };
-
-
-  fulfillments: {
-    status: string;//string|EnumFulfillments;
-  };
-
-  items: OrderItem[];
-
-  vendors: [{
-    //
-    // only displayed for owner and admin
-    fees?: number,
-    slug: string,
-    name: string,
-    fullName: string;
-    address: string,
-    address2: string,
-    geo: {
-      lat: number,
-      lng: number
-    },
-    collected: boolean,
-    collected_timestamp: Date,
-    //
-    // you can see values only when uid is order.owner, shop.owner, or admin
-    // amount & threshold & finalAmount & are saved for security reason
-    discount: {
-      amount: number,
-      threshold: number,
-      finalAmount: number
-    }
-  }];
-
-  shipping: {
-    when: Date,
-    hours: number,
-    name: string,
-    note?: string,
-    streetAdress: string,
-    floor: string,
-    postalCode: string,
-    region: string,
-    geo?: { // geo is not mandatory
-      lat: number,
-      lng: number
-    },
-    shipped?: boolean,
-    shopper?: string,
-    priority?: number,
-    position?: number,
-    bags?: number,
-    estimated?: number
-  }
-
-  errors?:any[];
-
-  constructor(json?: any) {
-    Object.assign(this, this.defaultOrder,json||{});
-    
-    this.shipping.when=new Date(this.shipping.when);
-    this.created=new Date(this.created);
-    this.closed=new Date(this.closed);
-
-    //
-    // default order position
-    this.shipping.position = this.shipping.position || parseInt(this.shipping.postalCode) * 10;
-  }
-
   //
   // return the next shipping day available for customers
   findNextShippingDay() {
@@ -352,18 +357,18 @@ export class Order {
   //
   // get amount after (shipping+fees) deductions
   getExtraDiscount() {
-    var total = this.getTotalPrice();
-    var subtotal = this.getSubTotal();
+    let total = this.getTotalPrice();
+    let subtotal = this.getSubTotal();
     return subtotal - total;
   }
 
   //
   // get amount of discount for this order
   getTotalDiscount() {
-    var amount = 0;
+    let amount = 0;
 
 
-    this.vendors.forEach(function (vendor) {
+    this.vendors.forEach(function(vendor) {
       amount += (vendor.discount && vendor.discount.finalAmount || 0);
     });
 
@@ -371,12 +376,13 @@ export class Order {
   }
 
   getFees(amount) {
-    var order = this;
+    let order = this;
     return parseFloat((this.payment.fees.charge * amount).toFixed(2));
   }
 
 
-  getSubTotal() {
+  getSubTotal(options?) {
+    options = options || {};
     let total = 0.0;
     if (this.items) {
       this.items.forEach((item) => {
@@ -390,7 +396,9 @@ export class Order {
 
     //
     // add karibou fees
-    total += this.payment.fees.charge * total;
+    if (!options.withoutCharge) {
+      total += this.payment.fees.charge * total;
+    }
 
     return Utils.roundAmount(total);
   }
@@ -427,8 +435,8 @@ export class Order {
 
     //
     // this should be always true, if fulfillment exist then shipping is stored
-    //assert(!this.fulfillment)
-    throw new Error("Not implemented");
+    // assert(!this.fulfillment)
+    throw new Error('Not implemented');
     // return cart.shipping();
 
   }
@@ -459,9 +467,9 @@ export class Order {
 
 
   getPriceDistance(item) {
-    var original = 0.0, validated = 0.0;
+    let original = 0.0, validated = 0.0;
     if (!item && this.items) {
-      this.items.forEach(function (item) {
+      this.items.forEach(function(item) {
         //
         // item should not be failure (fulfillment)
         if (item.fulfillment.status !== EnumFulfillments[EnumFulfillments.failure]) {
@@ -479,7 +487,7 @@ export class Order {
 
 
   getShippingLabels() {
-    throw new Error("Not implemented");
+    throw new Error('Not implemented');
     //  var when=new Date(this.shipping.when);
     //  var time=cart.shippingTimeLabel(this.shipping.hours);
     //  var date=moment(when).format('dddd DD MMM YYYY', 'fr');
@@ -490,8 +498,8 @@ export class Order {
   getProgress() {
     //
     // end == 100%
-    var end = this.items.length;
-    var progress = 0;
+    let end = this.items.length;
+    let progress = 0;
     //
     // failure, create, partial, fulfilled
     if ([EnumFulfillments[EnumFulfillments.fulfilled], EnumFulfillments[EnumFulfillments.failure]].indexOf(this.fulfillments.status) !== -1) {
@@ -505,7 +513,7 @@ export class Order {
     }
     //
     // progress order items
-    for (var i in this.items) {
+    for (let i in this.items) {
       if ([EnumFulfillments[EnumFulfillments.fulfilled], EnumFulfillments[EnumFulfillments.failure]].indexOf(this.items[i].fulfillment.status) !== -1) {
         progress++;
       }
@@ -513,20 +521,20 @@ export class Order {
     return (progress / end * 100.00);
   }
 
-  getFulfilledIssue(){
-    let issue=[];
-    this.items.forEach((item:OrderItem)=>{
-      if(item.fulfillment.issue&&
-        item.fulfillment.issue!==EnumOrderIssue[EnumOrderIssue.issue_no_issue]){
+  getFulfilledIssue() {
+    const issue = [];
+    this.items.forEach((item: OrderItem) => {
+      if (item.fulfillment.issue &&
+        item.fulfillment.issue !== EnumOrderIssue[EnumOrderIssue.issue_no_issue]) {
           issue.push(item);
       }
     });
     return issue;
   }
 
-  getFulfilledFailure(){
-    var failure = 0;
-    for (var i in this.items) {
+  getFulfilledFailure() {
+    let failure = 0;
+    for (let i in this.items) {
       if ([EnumFulfillments[EnumFulfillments.failure]].indexOf(this.items[i].fulfillment.status) !== -1) {
         failure++;
       }
@@ -536,15 +544,15 @@ export class Order {
   }
 
   getFulfilledStats() {
-    var failure = this.getFulfilledStats();
+    let failure = this.getFulfilledStats();
     // count failure on initial order
     return failure + '/' + (this.items.length);
 
   }
   getFulfilledProgress() {
-    var progress = 0;
-    for (var i in this.items) {
-      if ([EnumFulfillments[EnumFulfillments.failure],EnumFulfillments[EnumFulfillments.fulfilled]].indexOf(this.items[i].fulfillment.status) !== -1) {
+    let progress = 0;
+    for (let i in this.items) {
+      if ([EnumFulfillments[EnumFulfillments.failure], EnumFulfillments[EnumFulfillments.fulfilled]].indexOf(this.items[i].fulfillment.status) !== -1) {
         progress++;
       }
     }
