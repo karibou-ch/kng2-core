@@ -6,10 +6,12 @@ import { User } from './user.service';
 import { ConfigService } from './config.service';
 import { Utils } from './util';
 
-import { ReplaySubject ,  Observable, BehaviorSubject } from 'rxjs';
-import { map, tap } from 'rxjs/operators';
+import { ReplaySubject ,  Observable, BehaviorSubject, from } from 'rxjs';
+import { map, tap, catchError } from 'rxjs/operators';
 
 export class Shop {
+  // tslint:disable-next-line: variable-name
+  _id: string;
   deleted: boolean;
   urlpath: string;
   name: string;
@@ -210,7 +212,7 @@ export class ShopService {
   // common multicast to update UX when one shop on the list is modified
 
   public  shop$: ReplaySubject<Shop>;
-  public  shops$: BehaviorSubject<Shop[]>;
+  public  shops$: BehaviorSubject<Shop[]> | ReplaySubject<Shop[]>;
 
   private config: any;
   private headers: HttpHeaders;
@@ -272,6 +274,7 @@ export class ShopService {
       withCredentials: true,
       params: filter,
     }).pipe(
+      catchError(err => from([])),
       map(shops => shops.map(this.updateCache.bind(this)) as Shop[]),
       tap(shops => {
         this.shops$.next(shops);

@@ -58,7 +58,7 @@ export class CategoryService {
   // common multicast to update UX when one shop on the list is modified
   // use it for singleton usage of category
   public  category$: ReplaySubject<Category>;
-  public  categories$: BehaviorSubject<Category[]>;
+  public  categories$: BehaviorSubject<Category[]> | ReplaySubject<Category[]>;
 
   config: any;
 

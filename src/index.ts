@@ -23,7 +23,8 @@ export { Document,
 export { IsAuthenticated, IsAdmin } from './is-authenticated.service';
 
 export { LoaderService,
-         LoaderResolve } from './loader.service';
+         LoaderResolve,
+         UserResolve } from './loader.service';
 
 export { Order,
          OrderShipping,

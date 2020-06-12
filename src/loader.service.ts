@@ -5,10 +5,10 @@ import { Config } from './config';
 import { ConfigService } from './config.service';
 
 import { User, UserService } from './user.service';
-import { CategoryService } from './category.service';
+import { CategoryService, Category } from './category.service';
 import { Shop, ShopService } from './shop.service';
 
-import { Observable, of, merge, combineLatest, throwError as _throw } from 'rxjs';
+import { Observable, of, merge, combineLatest, throwError as _throw, ReplaySubject } from 'rxjs';
 
 import { catchError, flatMap, map, publishReplay, refCount, tap, filter } from 'rxjs/operators';
 import { CartService, CartState } from './cart.service';
@@ -18,6 +18,8 @@ import { CartService, CartState } from './cart.service';
 // manage the first requests needed when bootstrapping the application. Used by the components.
 @Injectable()
 export class LoaderService {
+
+  config$: Observable<Config>;
 
   // a BehaviorSubject can cache the last emited value so clients subscribing later can access the previously emitted data
   // private loader: BehaviorSubject<[Config, User]> = new BehaviorSubject<[Config, User]>([null,null]);
@@ -52,7 +54,11 @@ export class LoaderService {
       shops: (ConfigService.defaultConfig.loader.indexOf('shops') > -1)
     };
 
-    this.loader = this.$config.get().pipe(
+    //
+    // install config obs
+    this.config$ = this.$config.get();
+
+    this.loader = this.config$.pipe(
       flatMap(this.preloader.bind(this)),
       //
       // transform observable to ConnectableObservable (multicasting)
@@ -62,6 +68,7 @@ export class LoaderService {
       refCount(),
       catchError(err => {
         this.error = err;
+        console.log('--- LOAD ERR', err);
         return _throw(err);
       })
     );
@@ -74,6 +81,21 @@ export class LoaderService {
   private preloader(config: Config) {
     const me$ = this.$user.me();
 
+    //
+    // preload cats
+    if (this.preload.categories) {
+      this.$category.select().subscribe();
+      this.$category.categories$ = new ReplaySubject<Category[]>();
+    }
+
+    //
+    // in case of preload shops, shops$ should block
+    if (this.preload.shops) {
+      this.$shop.query().subscribe();
+      this.$shop.shops$ = new ReplaySubject<Shop[]>();
+    }
+
+
     // let me$=merge(this.$user.me(),this.$user.user$);
     const loaders: any[] = [
       this.$config.config$,
@@ -83,24 +105,17 @@ export class LoaderService {
     ];
 
     //
-    // preload cats
-    if (this.preload.categories) {
-      this.$category.select().subscribe();
-    }
-
-    //
-    // preload shops
-    if (this.preload.shops) {
-      this.$shop.query().subscribe();
-    }
-    //
     // combineLatest to get array with last item of each when one emits an item
     // Config, User, Category[], Shop[]
     return combineLatest(loaders);
   }
 
+  readyWithUser() {
+    return combineLatest(this.$config.config$, this.$user.user$);
+  }
+
   ready() {
-    return this.loader;//.pipe(tap(console.log));
+    return this.loader;
   }
 
   readyWithStore() {
@@ -109,7 +124,8 @@ export class LoaderService {
         try {
           // 0 => cfg,
           // 1 => user
-          // 2 => cat || shops
+          // 2 => cats
+          // 3 => shops
           const cfg = loader[0];
           const shops = loader[3];
           return !!cfg.shared.hub && !!shops;
@@ -139,9 +155,23 @@ export class LoaderService {
 export class LoaderResolve implements Resolve<Promise<any>> {
   constructor(private $loader: LoaderService) { }
   resolve(route: ActivatedRouteSnapshot) {
-    return new Promise(resolve =>{
+    return new Promise(resolve => {
       this.$loader.ready().subscribe((loader) => {
         resolve(loader);
+      });
+    });
+  }
+}
+
+//
+// activate route only when loader is ready!
+@Injectable()
+export class UserResolve implements Resolve<Promise<any>> {
+  constructor(private $loader: LoaderService) { }
+  resolve(route: ActivatedRouteSnapshot) {
+    return new Promise(resolve =>{
+      this.$loader.readyWithUser().subscribe(([config, user]) => {
+        resolve([config, user]);
       });
     });
   }

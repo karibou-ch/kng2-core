@@ -10,7 +10,8 @@ import { DocumentService } from './document.service';
 import { ProductService } from './product.service';
 import { ConfigService } from './config.service';
 import { LoaderService,
-         LoaderResolve } from './loader.service';
+         LoaderResolve, 
+         UserResolve} from './loader.service';
 import { OrderService } from './order/order.service';
 import { UserService } from './user.service';
 import { ShopService } from './shop.service';
@@ -48,7 +49,7 @@ import { ReportingService } from './reporting.service';
     ConfirmDeleteDirective, 
     MarkdownDirective,
     OrderPortionPipe, 
-    OrderBasepricePipe
+    OrderBasepricePipe,
   ]
 })
 export class Kng2CoreModule {
@@ -82,7 +83,8 @@ export class Kng2CoreModule {
         ProductService,
         ShopService,
         ReportingService,
-        UserService
+        UserService,
+        UserResolve
       ]
     };
   }  
