@@ -530,7 +530,7 @@ export class CartService {
 
   findBySku(sku: number): CartItem {
     // TODO shall we filter items by hub ? && item.hub === this.currentHub
-    return this.cache.items.find(item => item.sku === sku && (!item.hub || item.hub === this.currentHub));
+    return this.getItems().find(item => item.sku === sku);
   }
 
   getCurrentGateway(): { fees: number, label: string } {
@@ -584,7 +584,7 @@ export class CartService {
   }
 
   hasError(): boolean {
-    return this.getItems().some(item => item.error != undefined);
+    return this.getItems().some(item => item.error);
   }
 
   hasShippingReduction(): boolean {
@@ -615,6 +615,7 @@ export class CartService {
     const nextShippingDay = Order.nextShippingDay(this.currentUser);
     const currentShippingDay = config.potentialShippingWeek()[0];
     this.cache.currentShippingDay = new Date(nextShippingDay || currentShippingDay);
+
     this.cache.updated = new Date('1990-12-01T00:00:00');
     this.cache.discount = {};
 
@@ -781,6 +782,9 @@ export class CartService {
     // init
     const items = this.getItems();
     const item = (product instanceof CartItem) ? product : CartItem.fromProduct(product);
+    //
+    // update HUB
+    item.hub = this.currentHub;
 
     //
     for (let i = 0; i < items.length; i++) {
@@ -788,7 +792,8 @@ export class CartService {
         //
         // sure to send remove quantity to the server
         item.quantity = items[i].quantity;
-        items.splice(i, 1);
+        const indexInCache = this.cache.items.findIndex(itm => itm.sku === items[i].sku && itm.hub === this.currentHub);
+        this.cache.items.splice(indexInCache, 1);
         break;
       }
     }
@@ -802,10 +807,13 @@ export class CartService {
     this.checkIfReady();
     // init
     const items = this.getItems();
-    const item = (product instanceof CartItem) ? Object.assign({}, product) : CartItem.fromProduct(product, variant);
-
+    const item = (product instanceof CartItem) ? Object.assign({}, product) : CartItem.fromProduct(product, variant);    
     // propagate server : remove one
     item.quantity = 1;
+
+    //
+    // update HUB
+    item.hub = this.currentHub;
 
     //
     for (let i = 0; i < items.length; i++) {
@@ -818,7 +826,8 @@ export class CartService {
         items[i].finalprice = items[i].price * items[i].quantity;
 
         if (items[i].quantity <= 0) {
-          items.splice(i, 1);
+          const indexInCache = this.cache.items.findIndex(itm => itm.sku === items[i].sku && itm.hub === this.currentHub);
+          this.cache.items.splice(indexInCache, 1);
         }
         break;
       }
@@ -873,6 +882,8 @@ export class CartService {
     const params: any = {};
     model.cid = this.cache.cid;
     model.items = this.getItems();
+    const errors = model.items.filter(item => item.error);
+
     if (!this.currentUser.isAuthenticated()) {
       return throwError('Unauthorized');
     }
@@ -883,12 +894,13 @@ export class CartService {
     // case of add/remove item
     if (state.item && [CartAction.ITEM_ADD, CartAction.ITEM_REMOVE].indexOf(state.action) > -1) {
       model.items = [state.item];
-      params.action = CartAction[state.action];      
+      params.action = CartAction[state.action];
     }
 
     //
     // FIXME assert currentHub existance
     params.hub = this.currentHub;
+    params.device = Utils.deviceID();
 
     //
     // FIXME implement the case of Clear!
@@ -902,6 +914,16 @@ export class CartService {
       this.cache.cid = model.cid;
       this.cache.items = model.items.map(item => new CartItem(item));
       this.cache.updated = new Date(model.updated);
+
+      //
+      // restore errors
+      const hubItems = this.getItems();
+      //hubItems.filter(item => errors.some(elem => elem[item.sku]))
+      errors.forEach(item => {
+        const restored = (hubItems.find(i => i.sku === item.sku));
+        restored && (restored.error = item.error);
+      });
+
       //
       // sync with server is done!
       return state;
@@ -963,7 +985,7 @@ export class CartService {
     let sku, item;
     for (let i = 0; i < errors.length; i++) {
       sku = Object.keys(errors[i])[0];
-      item = this.findBySku(sku);
+      item = this.findBySku(+sku);
       if (item) { item.error = errors[i][sku]; }
     }
   }
