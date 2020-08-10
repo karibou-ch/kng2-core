@@ -211,13 +211,23 @@ export class Order {
   constructor(json?: any) {
     Object.assign(this, this.defaultOrder, json || {});
 
+    //
+    // case of Order errors
+    if (this.errors) {
+      return;
+    }
+
     this.shipping.when = new Date(this.shipping.when);
     this.created = new Date(this.created);
     this.closed = new Date(this.closed);
 
     //
+    // Normalized HUB
+    this.hub = this.hub['_id'] || this.hub;
+
+    //
     // default order position
-    this.shipping.position = this.shipping.position || parseInt(this.shipping.postalCode) * 10;
+    this.shipping.position = this.shipping.position || parseInt(this.shipping.postalCode, 10) * 10;
   }
 
 
