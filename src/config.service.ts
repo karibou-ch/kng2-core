@@ -1,8 +1,8 @@
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Injectable, Inject } from '@angular/core';
 
-import { Config, config, ConfigKeyStoreEnum } from './config';
-import { UserAddress, DepositAddress } from './user.service';
+import { Config, config } from './config';
+import { DepositAddress } from './user.service';
 
 
 // import { _throw } from 'rxjs/observable/throw';
@@ -77,6 +77,17 @@ export class ConfigService {
     }).pipe(
       retryWhen(errors => errors.pipe(delay(1000), take(3))),
       map((shared: any) => {
+        //
+        // based on server timestamp, previous config is more recent
+        // console.log('--DEBUG cfg local', config.shared.timestamp, config.shared.hub);
+        // console.log('--DEBUG cfg serve', shared.timestamp, shared.hub);
+        // if (config.shared.timestamp > shared.timestamp) {
+        const sharedHasHUB = shared.hub && shared.hub.name;
+        const localHasHub = config.shared.hub && config.shared.hub.slug;
+        if (localHasHub &&
+           !sharedHasHUB) {
+            return config;
+        }
         Object.assign(config, ConfigService.defaultConfig);
         Object.assign(config.shared, shared);
 
@@ -107,16 +118,8 @@ export class ConfigService {
             deposit.active,
             deposit.fees
           ));
-
-          //
-          // welcome, about, howto, footer
-          Object.assign(config.shared.tagLine, config.shared.hub.tagLine);
-          Object.assign(config.shared.about, config.shared.hub.about);
-          Object.assign(config.shared.footer, config.shared.hub.footer);
-
-        } else {
-          config.shared.hub = {};
         }
+
         return config;
       }),
       tap(config => {
@@ -138,6 +141,8 @@ export class ConfigService {
   }
 
   save(config: Config, cid?: string): Observable<any> {
+    const hub = config.shared.hub;
+    delete config.shared.hub;
     return this.http.post<any>(ConfigService.defaultConfig.API_SERVER + '/v1/config', config.shared, {
       headers: this.headers,
       withCredentials: true
@@ -173,16 +178,13 @@ export class ConfigService {
             deposit.active,
             deposit.fees
           ));
-
-          //
-          // welcome, about, howto, footer
-          Object.assign(config.shared.tagLine, config.shared.hub.tagLine);
-          Object.assign(config.shared.about, config.shared.hub.about);
-          Object.assign(config.shared.footer, config.shared.hub.footer);
-
-        } else {
-          config.shared.hub = {};
         }
+        //
+        // restore HUB associated before the save
+        else {
+          config.shared.hub = hub;
+        }
+
         return config;
       }),
       tap(config => this.config$.next(config))
