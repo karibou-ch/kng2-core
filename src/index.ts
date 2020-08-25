@@ -40,6 +40,9 @@ export { Product,
 export { Shop,
          ShopService } from './shop.service';
 
+export { Hub,
+         HubService } from './hub.service';
+
 export { ReportOrders,
          ReportCustomer,
          ReportingService } from './reporting.service';

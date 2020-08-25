@@ -23,9 +23,10 @@ import { PhotoService } from './photo.service';
 // directives & pipes
 import { bgSrcDirective } from './util.bg-src.directive';
 import { ConfirmDeleteDirective } from './util.confirm-delete.directive';
-import { OrderPortionPipe, OrderBasepricePipe } from './order/order.pipe.portion';
+import { OrderPortionPipe, OrderBasepricePipe, OrderBasepricePipeEx } from './order/order.pipe.portion';
 import { MarkdownDirective } from './util.markdown.directive';
 import { ReportingService } from './reporting.service';
+import { HubService } from './hub.service';
 
 //
 // dynamic injection of module configuration
@@ -42,6 +43,7 @@ import { ReportingService } from './reporting.service';
     ConfirmDeleteDirective, 
     MarkdownDirective,
     OrderPortionPipe, 
+    OrderBasepricePipeEx,
     OrderBasepricePipe
   ],
   exports: [
@@ -49,6 +51,7 @@ import { ReportingService } from './reporting.service';
     ConfirmDeleteDirective, 
     MarkdownDirective,
     OrderPortionPipe, 
+    OrderBasepricePipeEx,
     OrderBasepricePipe,
   ]
 })
@@ -76,6 +79,7 @@ export class Kng2CoreModule {
         DocumentService,
         IsAuthenticated,
         IsAdmin,
+        HubService,
         LoaderService,
         LoaderResolve,
         OrderService,

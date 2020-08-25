@@ -2,8 +2,8 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { ConfigService } from '../config.service';
 
-import { Observable ,  of, ReplaySubject } from 'rxjs';
-import { map, tap, retryWhen, delay, take } from 'rxjs/operators';
+import { Observable ,  of, ReplaySubject, throwError } from 'rxjs';
+import { map, tap, retryWhen, delay, take, concatMap } from 'rxjs/operators';
 
 import {
   EnumCancelReason,
@@ -204,7 +204,8 @@ export class OrderService {
       headers: this.headers,
       withCredentials: true
     }).pipe(
-      retryWhen(errors => errors.pipe(delay(1000), take(3))),
+      // FIXME retryWhen dont throw Error after the 3 
+      // retryWhen(errors => errors.pipe(delay(1000), take(3), concatMap(err => throwError(err)))),
       map(order => this.updateCache(order)),
       tap(order => this.order$.next(order))
     );
@@ -304,7 +305,7 @@ export class OrderService {
       position,
     };
     // return this.chain(backend.$order.save({ action: oid, id: 'shipping' }, { amount: status }).$promise);
-    return this.http.post<Order>(this.config.API_SERVER + '/v1/orders/' + order.oid + '/shopper', params, {
+    return this.http.post<Order>(this.config.API_SERVER + '/v1/orders/' + order.oid + '/priority', params, {
       headers: this.headers,
       withCredentials: true
     }).pipe(

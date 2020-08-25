@@ -14,6 +14,7 @@ import { catchError, map, tap } from 'rxjs/operators';
 //
 import { config } from './config';
 import { Shop } from './shop.service';
+import { Utils } from './util';
 
 export class UserAddress {
 
@@ -203,6 +204,10 @@ export class User {
   //   alias:{type:String,unique:true,required:true}
   // }],
 
+  // tslint:disable-next-line: variable-name
+  connect_id?: string;
+  connect_state: boolean;
+
   merchant: boolean;
 
   reminder: {
@@ -214,7 +219,12 @@ export class User {
   orders: {
     avg: number;
     last1Month: number;
+    last3Month: number;
     last6Month: number;
+    after6Month: number;
+    errors: number;
+    refunds: number;
+    updated: Date;
   };
 
   hubs?: string[];
@@ -312,7 +322,8 @@ export class User {
     return this.hasRole('admin');
   }
 
-  isPremium() {
+  isPremium(json?) {
+    const orders = (json && json.last1Month) ? json : this.orders;
     const shared = {
       new : config.shared.order.new || {},
       recurrent: config.shared.order.recurrent || {}
@@ -329,13 +340,13 @@ export class User {
       avg: shared.recurrent.avg || 70
     };
 
-    if (this.orders.avg > newclient.avg && this.orders.last6Month >= newclient.last6Month) {
+    if (orders.avg > newclient.avg && orders.last6Month >= newclient.last6Month) {
       return true;
     }
 
 
-    if (this.orders.last1Month >= recurrent.last1Month || this.orders.last6Month >= recurrent.last6Month) {
-      return (this.orders.avg > recurrent.avg);
+    if (orders.last1Month >= recurrent.last1Month || orders.last6Month >= recurrent.last6Month) {
+      return (orders.avg > recurrent.avg);
     }
 
     return false;
@@ -533,8 +544,27 @@ export class UserService {
 
   //
   // ============================= REST api wrapper
-  // TODO
 
+  // Stripe connect
+  // app.get('/v1/users/connect?code&state', auth.ensureAuthenticated, users.connect);
+  connect(id, state, code) {
+    if (!this.config.API_SERVER) {
+      throw new Error('Issue with uninitialized server context');
+    }
+    const params: any = {
+      state,
+      code
+    };
+
+    return this.http.get<User>(this.config.API_SERVER + '/v1/users/' + id + '/connect', {
+      params: (params),
+      headers: this.headers,
+      withCredentials: true
+    }).pipe(
+      map(user => this.updateCache(user)),
+      tap(user => this.user$.next(user))
+    );
+  }
 
   // app.get('/v1/users/me', auth.ensureAuthenticated, users.me);
   me(): Observable<User> {
@@ -542,6 +572,7 @@ export class UserService {
       throw new Error('Issue with uninitialized server context');
     }
     return this.http.get<User>(this.config.API_SERVER + '/v1/users/me', {
+      params: {device: Utils.deviceID()},
       headers: this.headers,
       withCredentials: true
     }).pipe(
@@ -667,7 +698,7 @@ export class UserService {
 
   // app.put('/v1/users/:id', auth.ensureAdmin, auth.checkPassword, users.remove);
   remove(id, password): Observable<any> {
-    return this.http.put<User>(this.config.API_SERVER + '/v1/users/', { password }, {
+    return this.http.put<User>(this.config.API_SERVER + '/v1/users/' + id, { password }, {
       headers: this.headers,
       withCredentials: true
     }).pipe(
@@ -715,12 +746,17 @@ export class UserService {
   }
 
   // app.post('/v1/users/:id/payment', users.ensureMeOrAdmin,users.addPayment);
-  addPaymentMethod(payment: UserCard, uid): Observable<User> {
+  addPaymentMethod(payment: UserCard, uid, replace?: boolean): Observable<User> {
     if (!payment.id) {
       return _throw(new Error('addPaymentMethod missing payment id'));
     }
+    const params: any = {};
+    if (replace) {
+      params.force_replace = false;
+    }
 
     return this.http.post<User>(this.config.API_SERVER + '/v1/users/' + uid + '/payment', payment, {
+      params,
       headers: this.headers,
       withCredentials: true
     }).pipe(

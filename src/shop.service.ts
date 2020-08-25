@@ -269,6 +269,8 @@ export class ShopService {
   //
 
   query(filter?: any): Observable<Shop[]> {
+    filter = filter || {};
+    filter.rnd = Date.now();
     return this.http.get<Shop[]>(this.config.API_SERVER + '/v1/shops', {
       headers: this.headers,
       withCredentials: true,
@@ -329,6 +331,7 @@ export class ShopService {
     }
 
   save(shop: Shop): Observable<Shop> {
+    delete shop['__v'];
     return this.http.post<Shop>(this.config.API_SERVER + '/v1/shops/' + shop.urlpath, shop, {
       headers: this.headers,
       withCredentials: true
