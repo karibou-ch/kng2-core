@@ -4,8 +4,8 @@ import { config } from './config';
 import { Utils } from './util';
 
 
-import { ReplaySubject ,  Observable ,  throwError as _throw ,  of } from 'rxjs';
-import { map, catchError } from 'rxjs/operators';
+import { ReplaySubject ,  Observable ,  throwError as _throw ,  of, BehaviorSubject } from 'rxjs';
+import { map, catchError, tap } from 'rxjs/operators';
 
 
 export class Category {
@@ -58,11 +58,12 @@ export class CategoryService {
   // common multicast to update UX when one shop on the list is modified
   // use it for singleton usage of category
   public  category$: ReplaySubject<Category>;
+  public  categories$: BehaviorSubject<Category[]> | ReplaySubject<Category[]>;
 
-  config:any;
+  config: any;
 
 
-  private cache:Cache=new Cache();
+  private cache: Cache = new Cache();
   private headers: HttpHeaders;
 
   constructor(
@@ -71,18 +72,21 @@ export class CategoryService {
     this.headers = new HttpHeaders();
     this.headers.append('Content-Type', 'application/json');
     this.config = config;
+
+    // this.category$ = new ReplaySubject(1);
+    this.categories$ = new BehaviorSubject<Category[]>(null);
   }
 
-  private deleteCache(slug: string) {
-      let incache=this.cache.map.get(slug);
+  private deleteCache(slug: string): Category {
+      const incache = this.cache.map.get(slug);
       if (incache) {
-          incache.deleted=true;
+          incache.deleted = true;
           this.cache.map.delete(slug);
       }
       return incache;
   }
 
-  private updateCache(category: Category) {
+  private updateCache(category: Category): Category {
     if(!this.cache.map.get(category.slug)){
         this.cache.map.set(category.slug,new Category(category))
         return this.cache.map.get(category.slug);
@@ -123,7 +127,11 @@ export class CategoryService {
       headers: this.headers,
       withCredentials: true
     }).pipe(
-      map(categories => categories.map(this.updateCache.bind(this)))
+      map(categories => categories.map(this.updateCache.bind(this)) as Category[]),
+      tap(categories => {
+        this.categories$.next(categories);
+        return categories;
+      })
     );
   }
 

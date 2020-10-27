@@ -1,45 +1,61 @@
 import { Observable, ReplaySubject } from 'rxjs';
 
   // TODO test utility class
-export class Utils{
+export class Utils {
+
+  private static scripts: { [url: string]: ReplaySubject<any> } = {};
   static roundAmount(value) {
     return parseFloat((Math.round(value * 20) / 20).toFixed(2));
   }
 
+
+  static deviceID() {
+    const navigatorInfo = window.navigator;
+    const screenInfo = window.screen;
+    let uid = navigatorInfo.mimeTypes.length  + '';
+    uid += navigatorInfo.userAgent.replace(/\D+/g, '') + '';
+    uid += navigatorInfo.plugins.length;
+    uid += screenInfo.height || '';
+    uid += screenInfo.width || '';
+    uid += screenInfo.pixelDepth || '';
+    return uid;
+  }
+
   static encodeQuery(params) {
-    let elems = [];
-    for (let d in params)
+    const elems = [];
+    for (const d in params) {
       elems.push(encodeURIComponent(d) + '=' + encodeURIComponent(params[d]));
+    }
     return elems.join('&');
-  }  
-  
+  }
+
   static isObject(item) {
     return (item && typeof item === 'object' && !Array.isArray(item) && item !== null);
   }
 
   static merge(target, ...sources) {
-    if (!sources.length) return target;
+    if (!sources.length) { return target; }
     const source = sources.shift();
-  
+
     if (Utils.isObject(target) && Utils.isObject(source)) {
-      for (var key in source) {
+      for (let key in source) {
         if (Utils.isObject(source[key])) {
-          if (!target[key]) Object.assign(target, { [key]: {} });
+          if (!target[key]) { Object.assign(target, { [key]: {} }); }
           Utils.merge(target[key], source[key]);
         } else {
           Object.assign(target, { [key]: source[key] });
         }
       }
     }
-  
+
     return Utils.merge(target, ...sources);
-  }  
+  }
 
 
   //
-  //https://github.com/ded/script.js/blob/master/dist/script.js
-  //https://netbasal.com/loading-external-libraries-on-demand-in-angular-9dad45701801
-  static script(url:string,key:string):Observable<string>{
+  // https://github.com/ded/script.js/blob/master/dist/script.js
+  // https://netbasal.com/loading-external-libraries-on-demand-in-angular-9dad45701801
+  static script(url: string, key: string): Observable<string> {
     if (Utils.scripts[url]) {
       return Utils.scripts[url].asObservable();
     }
@@ -50,23 +66,21 @@ export class Utils{
     script.type = 'text/javascript';
     script.src = url;
     script.onload = () => {
-      let inst=(key&&window[key])||window;      
+      const inst = (key && window[key]) || window;
       Utils.scripts[url].next(inst);
       Utils.scripts[url].complete();
     };
 
     document.body.appendChild(script);
 
-    return Utils.scripts[url].asObservable();  
+    return Utils.scripts[url].asObservable();
   }
-
-  private static scripts:{ [url: string]: ReplaySubject<any> } = {};
 }
 
 //
 // useful simple crypto
-export class XorCipher{
-  constructor(){
+export class XorCipher {
+  constructor() {
   }
 
   // static encode(key, data:string) {
@@ -93,7 +107,7 @@ export class XorCipher{
   //   return data.split('').map((c, i)=>{
   //     return String.fromCharCode( c ^ this.keyCharAt(key, i) );
   //   }).join("");
-  // }    
-} 
+  // }
+}
 
 

@@ -16,16 +16,16 @@ import { Utils } from '../util';
 // get global configuration
 import { config, Config } from '../config';
 
-import { UserAddress } from '../user.service';
+import { UserAddress, User } from '../user.service';
 
 
 //
 // Define order shipping
-export class OrderShipping extends UserAddress{
-  when:Date;
-  hours:number;
+export class OrderShipping extends UserAddress {
+  when: Date;
+  hours: number;
 
-  constructor(address:UserAddress,when:Date,hours:number){
+  constructor(address: UserAddress, when: Date, hours: number) {
     super(
       address.name,
       address.streetAdress,
@@ -36,8 +36,8 @@ export class OrderShipping extends UserAddress{
       address.primary,
       address.geo
     );
-    this.when=new Date(when);
-    this.hours=hours;
+    this.when = new Date(when);
+    this.hours = hours;
   }
 
 }
@@ -79,10 +79,10 @@ export interface OrderItem {
   /* where is the product now? */
   fulfillment: {
     refunded?: boolean;
-    request: string;//string|EnumOrderIssue;
-    issue: string;//string|EnumOrderIssue;
-    status: string;//string|EnumFulfillments;
-    shipping: string;//string|EnumShippingMode;
+    request: string; // string|EnumOrderIssue;
+    issue: string; // string|EnumOrderIssue;
+    status: string; // string|EnumFulfillments;
+    shipping: string; // string|EnumShippingMode;
     note?: string;
     //
     // date/time for the first activity is saved
@@ -94,121 +94,7 @@ export interface OrderItem {
 
 export class Order {
 
-  //
-  // the current shipping day is short date for the placed orders
-  static currentShippingDay() {
-    return (new Date()).dayToDates(config.shared.order.weekdays)[0];
-  }
-
-  //
-  // the next shipping day
-  static nextShippingDay() {
-    const potential = config.potentialShippingDay();
-    const next = potential.dayToDates(
-      config.shared.order.weekdays
-    );
-
-    //
-    // remove complete shipping days
-    // its a weak remove
-    const currentRanks = config.shared.order.currentRanks || {};
-    const currentLimit = config.shared.order.currentLimit || 1000;
-    for (let i = next.length - 1; i >= 0; i--) {
-      if (currentRanks[next[i].getDay()] >= currentLimit) {
-        next.splice(i, 1);
-      }
-    }
-
-    //
-    // no closed date
-    if (!config.shared.noshipping || !config.shared.noshipping.length) {
-      return next[0];
-    }
-
-    // there is cloased dates
-    // next contains the potentials shipping days,
-    // we must return the first date available for shipping
-    for (var j = 0; j < next.length; j++) {
-      for (var i = 0; i < config.shared.noshipping.length; i++) {
-        const noshipping = config.shared.noshipping[i];
-        if (!next[j].in(noshipping.from, noshipping.to)) return next[j];
-      }
-    }
-
-    // else
-    // after 7 days we cant order anyway!
-    return;
-  }
-
-  //
-  // a full week of available shipping days
-  // limit to nb days (default is <7)
-  static fullWeekShippingDays(limit?) {
-    var next = config.potentialShippingWeek(), lst:any[] = [], find = false, today = new Date();
-
-    //
-    // default date limit is defined by
-    limit = limit || config.shared.order.uncapturedTimeLimit;
-    limit = limit && today.plusDays(limit + 0);
-
-    function format(lst) {
-      //
-      // sorting dates
-      lst = lst.sort(function (a, b) {
-        return a.getTime() - b.getTime();
-      });
-
-      //
-      // limit lenght of a week
-      return lst.filter(function (date) {
-        return (!limit || date < limit);
-      })
-
-    }
-
-
-    //
-    // no closed date
-    if (!config.shared.noshipping || !config.shared.noshipping.length) {
-      return format(next);
-    }
-
-    // there is cloased dates
-    // next contains the potentials shipping days,
-    // we must return the first date available for shipping
-    next.forEach(function (shippingday) {
-      let find = config.shared.noshipping.find(noshipping => shippingday.in(noshipping.from, noshipping.to))
-      if (!find) lst.push(shippingday)
-    });
-
-
-
-
-    return format(lst);
-  }
-
-
-  static findPastWeekOfShippingDay(when) {
-    // init the date at begin of the week
-    var next = new Date(when.getTime() - (when.getDay() * 86400000)), all:any[] = [], nextDate, nextDay;
-
-    // jump one week past
-    next = new Date(next.getTime() - 86400000 * 7);
-
-    config.shared.order.weekdays.forEach(function (day) {
-      nextDay = (day >= next.getDay()) ? (day - next.getDay()) : (7 - next.getDay() + day);
-      nextDate = new Date(nextDay * 86400000 + next.getTime());
-      if (config.shared.order.weekdays.indexOf(nextDate.getDay()) !== -1)
-      { all.push(nextDate); }
-
-    });
-
-    // sorting dates
-    all = all.sort((a, b) => b.getTime() - a.getTime());
-    return all;
-  }
-
-  /* default values */  
+  /* default values */
   private defaultOrder = {
     customer: {},
     payment: {},
@@ -218,6 +104,9 @@ export class Order {
     vendors: [],
     shipping: {}
   };
+
+  /** HUB identifier */
+  hub: string;
 
   /** order identifier */
   oid: number;
@@ -231,14 +120,14 @@ export class Order {
   closed?: Date;
 
   /* customer evaluation */
-  score:number;
+  score: number;
 
   /* full customer details */
   customer: any;
 
   /* order canceled reason and dates */
   cancel?: {
-    reason: string;//string|EnumCancelReason;
+    reason: string; // string|EnumCancelReason;
     when: Date;
   };
 
@@ -250,7 +139,7 @@ export class Order {
     number: string;
     expiry: string;
     issuer: string;
-    status: string;//string|EnumFinancialStatus;
+    status: string; // string|EnumFinancialStatus;
     handle?: string;
     provider?: string;
     logs: string[],
@@ -265,7 +154,7 @@ export class Order {
 
 
   fulfillments: {
-    status: string;//string|EnumFulfillments;
+    status: string; // string|EnumFulfillments;
   };
 
   items: OrderItem[];
@@ -310,24 +199,157 @@ export class Order {
     },
     shipped?: boolean,
     shopper?: string,
+    shopper_time?: string,
     priority?: number,
     position?: number,
     bags?: number,
     estimated?: number
-  }
+  };
 
-  errors?:any[];
+  errors?: any[];
 
   constructor(json?: any) {
-    Object.assign(this, this.defaultOrder,json||{});
-    
-    this.shipping.when=new Date(this.shipping.when);
-    this.created=new Date(this.created);
-    this.closed=new Date(this.closed);
+    Object.assign(this, this.defaultOrder, json || {});
+
+    //
+    // case of Order errors
+    if (this.errors) {
+      return;
+    }
+
+    this.shipping.when = new Date(this.shipping.when);
+    this.created = new Date(this.created);
+    this.closed = new Date(this.closed);
+
+    //
+    // Normalized HUB
+    this.hub = this.hub['_id'] || this.hub;
 
     //
     // default order position
-    this.shipping.position = this.shipping.position || parseInt(this.shipping.postalCode) * 10;
+    this.shipping.position = this.shipping.position || parseInt(this.shipping.postalCode, 10) * 10;
+  }
+
+
+  //
+  // the current shipping day is short date for the placed orders
+  static currentShippingDay() {
+    return (new Date()).dayToDates(config.shared.hub.weekdays)[0];
+  }
+
+  //
+  // the next shipping day
+  static nextShippingDay(user?: User) {
+    const potential = config.potentialShippingDay();
+    const next = potential.dayToDates(
+      config.shared.hub.weekdays
+    );
+
+    //
+    // remove complete shipping days for the current HUB
+    // its a weak constraint
+    const currentHub   = config.shared.hub.slug;
+    if (currentHub) {
+      const currentRanks = config.shared.currentRanks[currentHub] || {};
+      const premiumLimit = (user && user.isPremium()) ? (config.shared.order.premiumLimit || 0) : 0;
+      const currentLimit = (config.shared.hub.currentLimit || 1000) + premiumLimit;
+
+      for (let i = next.length - 1; i >= 0; i--) {
+        if (currentRanks[next[i].getDay()] >= currentLimit) {
+          next.splice(i, 1);
+        }
+      }
+    }
+
+    //
+    // no closed date
+    if (!config.shared.hub.noshipping || !config.shared.hub.noshipping.length) {
+      return next[0];
+    }
+
+    // there is cloased dates
+    // next contains the potentials shipping days,
+    // we must return the first date available for shipping
+    for (var j = 0; j < next.length; j++) {
+      for (var i = 0; i < config.shared.hub.noshipping.length; i++) {
+        const noshipping = config.shared.hub.noshipping[i];
+        if (!next[j].in(noshipping.from, noshipping.to)) return next[j];
+      }
+    }
+
+    // else
+    // after 7 days we cant order anyway!
+    return;
+  }
+
+  //
+  // a full week of available shipping days
+  // limit to nb days (default is <7)
+  static fullWeekShippingDays(limit?) {
+    let next = config.potentialShippingWeek(),
+        lst:any[] = [],
+        today = new Date();
+
+    //
+    // default date limit is defined by
+    limit = limit || config.shared.order.uncapturedTimeLimit;
+    limit = limit && today.plusDays(limit + 0);
+
+    function format(lst) {
+      //
+      // sorting dates
+      lst = lst.sort(function (a, b) {
+        return a.getTime() - b.getTime();
+      });
+
+      //
+      // limit lenght of a week
+      return lst.filter(function (date) {
+        return (!limit || date < limit);
+      });
+
+    }
+
+
+    //
+    // no closed date
+    if (!config.shared.hub.noshipping || !config.shared.hub.noshipping.length) {
+      return format(next);
+    }
+
+    // there is cloased dates
+    // next contains the potentials shipping days,
+    // we must return the first date available for shipping
+    next.forEach(function (shippingday) {
+      let find = config.shared.hub.noshipping.find(noshipping => shippingday.in(noshipping.from, noshipping.to))
+      if (!find) lst.push(shippingday)
+    });
+
+
+
+
+    return format(lst);
+  }
+
+
+  static findPastWeekOfShippingDay(when) {
+    // init the date at begin of the week
+    var next = new Date(when.getTime() - (when.getDay() * 86400000)), all:any[] = [], nextDate, nextDay;
+
+    // jump one week past
+    next = new Date(next.getTime() - 86400000 * 7);
+
+    config.shared.hub.weekdays.forEach(function (day) {
+      nextDay = (day >= next.getDay()) ? (day - next.getDay()) : (7 - next.getDay() + day);
+      nextDate = new Date(nextDay * 86400000 + next.getTime());
+      if (config.shared.hub.weekdays.indexOf(nextDate.getDay()) !== -1)
+      { all.push(nextDate); }
+
+    });
+
+    // sorting dates
+    all = all.sort((a, b) => b.getTime() - a.getTime());
+    return all;
   }
 
   //
@@ -345,18 +367,18 @@ export class Order {
   //
   // get amount after (shipping+fees) deductions
   getExtraDiscount() {
-    var total = this.getTotalPrice();
-    var subtotal = this.getSubTotal();
+    let total = this.getTotalPrice();
+    let subtotal = this.getSubTotal();
     return subtotal - total;
   }
 
   //
   // get amount of discount for this order
   getTotalDiscount() {
-    var amount = 0;
+    let amount = 0;
 
 
-    this.vendors.forEach(function (vendor) {
+    this.vendors.forEach(function(vendor) {
       amount += (vendor.discount && vendor.discount.finalAmount || 0);
     });
 
@@ -364,12 +386,13 @@ export class Order {
   }
 
   getFees(amount) {
-    var order = this;
+    let order = this;
     return parseFloat((this.payment.fees.charge * amount).toFixed(2));
   }
 
 
-  getSubTotal() {
+  getSubTotal(options?) {
+    options = options || {};
     let total = 0.0;
     if (this.items) {
       this.items.forEach((item) => {
@@ -383,7 +406,9 @@ export class Order {
 
     //
     // add karibou fees
-    total += this.payment.fees.charge * total;
+    if (!options.withoutCharge) {
+      total += this.payment.fees.charge * total;
+    }
 
     return Utils.roundAmount(total);
   }
@@ -420,8 +445,8 @@ export class Order {
 
     //
     // this should be always true, if fulfillment exist then shipping is stored
-    //assert(!this.fulfillment)
-    throw new Error("Not implemented");
+    // assert(!this.fulfillment)
+    throw new Error('Not implemented');
     // return cart.shipping();
 
   }
@@ -452,9 +477,9 @@ export class Order {
 
 
   getPriceDistance(item) {
-    var original = 0.0, validated = 0.0;
+    let original = 0.0, validated = 0.0;
     if (!item && this.items) {
-      this.items.forEach(function (item) {
+      this.items.forEach(function(item) {
         //
         // item should not be failure (fulfillment)
         if (item.fulfillment.status !== EnumFulfillments[EnumFulfillments.failure]) {
@@ -472,7 +497,7 @@ export class Order {
 
 
   getShippingLabels() {
-    throw new Error("Not implemented");
+    throw new Error('Not implemented');
     //  var when=new Date(this.shipping.when);
     //  var time=cart.shippingTimeLabel(this.shipping.hours);
     //  var date=moment(when).format('dddd DD MMM YYYY', 'fr');
@@ -483,8 +508,8 @@ export class Order {
   getProgress() {
     //
     // end == 100%
-    var end = this.items.length;
-    var progress = 0;
+    let end = this.items.length;
+    let progress = 0;
     //
     // failure, create, partial, fulfilled
     if ([EnumFulfillments[EnumFulfillments.fulfilled], EnumFulfillments[EnumFulfillments.failure]].indexOf(this.fulfillments.status) !== -1) {
@@ -498,7 +523,7 @@ export class Order {
     }
     //
     // progress order items
-    for (var i in this.items) {
+    for (let i in this.items) {
       if ([EnumFulfillments[EnumFulfillments.fulfilled], EnumFulfillments[EnumFulfillments.failure]].indexOf(this.items[i].fulfillment.status) !== -1) {
         progress++;
       }
@@ -506,20 +531,20 @@ export class Order {
     return (progress / end * 100.00);
   }
 
-  getFulfilledIssue(){
-    let issue=[];
-    this.items.forEach((item:OrderItem)=>{
-      if(item.fulfillment.issue&&
-        item.fulfillment.issue!==EnumOrderIssue[EnumOrderIssue.issue_no_issue]){
+  getFulfilledIssue() {
+    const issue = [];
+    this.items.forEach((item: OrderItem) => {
+      if (item.fulfillment.issue &&
+        item.fulfillment.issue !== EnumOrderIssue[EnumOrderIssue.issue_no_issue]) {
           issue.push(item);
       }
     });
     return issue;
   }
 
-  getFulfilledFailure(){
-    var failure = 0;
-    for (var i in this.items) {
+  getFulfilledFailure() {
+    let failure = 0;
+    for (let i in this.items) {
       if ([EnumFulfillments[EnumFulfillments.failure]].indexOf(this.items[i].fulfillment.status) !== -1) {
         failure++;
       }
@@ -529,15 +554,15 @@ export class Order {
   }
 
   getFulfilledStats() {
-    var failure = this.getFulfilledStats();
+    let failure = this.getFulfilledStats();
     // count failure on initial order
     return failure + '/' + (this.items.length);
 
   }
   getFulfilledProgress() {
-    var progress = 0;
-    for (var i in this.items) {
-      if ([EnumFulfillments[EnumFulfillments.failure],EnumFulfillments[EnumFulfillments.fulfilled]].indexOf(this.items[i].fulfillment.status) !== -1) {
+    let progress = 0;
+    for (let i in this.items) {
+      if ([EnumFulfillments[EnumFulfillments.failure], EnumFulfillments[EnumFulfillments.fulfilled]].indexOf(this.items[i].fulfillment.status) !== -1) {
         progress++;
       }
     }

@@ -1,4 +1,4 @@
-exports.items = [
+export const items = [
     {
       timestamp: Date.now(),
       title: "Tomate",

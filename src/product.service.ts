@@ -6,7 +6,7 @@ import { ConfigService } from './config.service';
 import { Utils } from './util';
 
 import { Observable ,  ReplaySubject ,  of ,  throwError as _throw } from 'rxjs';
-import { map,tap } from 'rxjs/operators';
+import { map,tap, retryWhen, delay, take } from 'rxjs/operators';
 
 
 @Injectable()
@@ -18,7 +18,6 @@ export class ProductService {
     private cache = new Cache();
 
     constructor(
-        private configSrv: ConfigService,
         private http: HttpClient
     ) {
         this.config = ConfigService.defaultConfig;
@@ -56,9 +55,11 @@ export class ProductService {
     // REST api wrapper
     //
 
-    search(text:string): Observable<Product[]> {
+    search(text: string, params?: any): Observable<Product[]> {
+        params = params || {};
+        params.q = text;
         return this.http.get<Product[]>(this.config.API_SERVER + '/v1/products/search', {
-            params: {q:text},
+            params,
             headers: this.headers,
             withCredentials: true
         }).pipe(
@@ -68,8 +69,10 @@ export class ProductService {
 
     select(params?: any): Observable<Product[]> {
         params = params || {};
+        params.device = Utils.deviceID();
+
         return this.http.get<Product[]>(this.config.API_SERVER + '/v1/products', {
-            params: params,
+            params,
             headers: this.headers,
             withCredentials: true
         }).pipe(
@@ -126,6 +129,7 @@ export class ProductService {
 
     findByCategory(category:string,params?:any): Observable<Product[]> {
         params = params || {};
+        params.device = Utils.deviceID();
         return this.http.get<Product[]>(this.config.API_SERVER + '/v1/products/category/' + category, {
             params:params,
             headers: this.headers,
@@ -181,12 +185,14 @@ export class ProductService {
     };
 
     save(prod: Product): Observable<Product> {
+        delete prod['__v'];
         return this.http.post<Product>(this.config.API_SERVER + '/v1/products/' + prod.sku, prod, {
             headers: this.headers,
             withCredentials: true
         }).pipe(
+            retryWhen(errors => errors.pipe(delay(1000), take(3))),
             map(product => this.updateCache(product)),
-            tap(this.product$.next.bind(this.product$))  
+            tap(this.product$.next.bind(this.product$))
         );
     };
 

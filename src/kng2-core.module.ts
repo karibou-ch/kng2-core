@@ -9,8 +9,9 @@ import { CategoryService } from './category.service';
 import { DocumentService } from './document.service';
 import { ProductService } from './product.service';
 import { ConfigService } from './config.service';
-import { LoaderService, 
-         LoaderResolve } from './loader.service';
+import { LoaderService,
+         LoaderResolve, 
+         UserResolve} from './loader.service';
 import { OrderService } from './order/order.service';
 import { UserService } from './user.service';
 import { ShopService } from './shop.service';
@@ -22,9 +23,10 @@ import { PhotoService } from './photo.service';
 // directives & pipes
 import { bgSrcDirective } from './util.bg-src.directive';
 import { ConfirmDeleteDirective } from './util.confirm-delete.directive';
-import { OrderPortionPipe, OrderBasepricePipe } from './order/order.pipe.portion';
+import { OrderPortionPipe, OrderBasepricePipe, OrderBasepricePipeEx } from './order/order.pipe.portion';
 import { MarkdownDirective } from './util.markdown.directive';
 import { ReportingService } from './reporting.service';
+import { HubService } from './hub.service';
 
 //
 // dynamic injection of module configuration
@@ -41,6 +43,7 @@ import { ReportingService } from './reporting.service';
     ConfirmDeleteDirective, 
     MarkdownDirective,
     OrderPortionPipe, 
+    OrderBasepricePipeEx,
     OrderBasepricePipe
   ],
   exports: [
@@ -48,7 +51,8 @@ import { ReportingService } from './reporting.service';
     ConfirmDeleteDirective, 
     MarkdownDirective,
     OrderPortionPipe, 
-    OrderBasepricePipe
+    OrderBasepricePipeEx,
+    OrderBasepricePipe,
   ]
 })
 export class Kng2CoreModule {
@@ -61,13 +65,13 @@ export class Kng2CoreModule {
     // }catch(e){
     //   console.log('--- localStorage',e);
     // }
-    
+
     return {
       ngModule: Kng2CoreModule,
       providers: [
         {
           provide:"KNG2_OPTIONS",
-          useValue:options||{}
+          useValue: options || {}
         },
         CartService,
         CategoryService,
@@ -75,6 +79,7 @@ export class Kng2CoreModule {
         DocumentService,
         IsAuthenticated,
         IsAdmin,
+        HubService,
         LoaderService,
         LoaderResolve,
         OrderService,
@@ -82,7 +87,8 @@ export class Kng2CoreModule {
         ProductService,
         ShopService,
         ReportingService,
-        UserService
+        UserService,
+        UserResolve
       ]
     };
   }  

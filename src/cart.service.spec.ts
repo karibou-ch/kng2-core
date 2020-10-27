@@ -6,7 +6,7 @@ import { CartService, CartItem } from './cart.service';
 import { OrderService } from './order/order.service';
 import { ConfigService } from './config.service';
 
-import { shared } from './test-payload/config';
+import { sharedRoot } from './test-payload/config';
 import { items } from './test-payload/items';
 import { User } from './user.service';
 
@@ -67,7 +67,7 @@ describe('CartService : localStorage', () => {
   });
 
   afterEach(async(() => {
-    setTimeout(() => { }, 1000);
+    setTimeout(() => { }, 100);
   }));
 
   xit('load config shared', inject([ConfigService, HttpTestingController], (config: ConfigService, httpMock) => {
@@ -77,7 +77,7 @@ describe('CartService : localStorage', () => {
     });
     const req = httpMock.expectOne('test/v1/config?lang=en-US');
     expect(req.request.method).toBe('GET');
-    req.flush(shared);
+    req.flush(sharedRoot);
   }));
 
 //

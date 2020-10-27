@@ -14,6 +14,7 @@ import { catchError, map, tap } from 'rxjs/operators';
 //
 import { config } from './config';
 import { Shop } from './shop.service';
+import { Utils } from './util';
 
 export class UserAddress {
 
@@ -87,7 +88,7 @@ export class UserCard {
   constructor(json?: any) {
     Object.assign(this, json || {});
     if (!this.expiry) {
-      this.error ='Unvalid instance';
+      this.error = 'Unvalid instance';
       this.expiry = new Date(1970, 0, 0).toISOString();
     }
     this.updated = new Date(this.updated);
@@ -203,6 +204,10 @@ export class User {
   //   alias:{type:String,unique:true,required:true}
   // }],
 
+  // tslint:disable-next-line: variable-name
+  connect_id?: string;
+  connect_state: boolean;
+
   merchant: boolean;
 
   reminder: {
@@ -214,9 +219,15 @@ export class User {
   orders: {
     avg: number;
     last1Month: number;
+    last3Month: number;
     last6Month: number;
+    after6Month: number;
+    errors: number;
+    refunds: number;
+    updated: Date;
   };
 
+  hubs?: string[];
 
   status: boolean;
   created: Date;
@@ -248,7 +259,7 @@ export class User {
       orders: {
         avg: 0,
         last1Month: 0,
-        last6Month: 0
+        last6Month: 0,
       }
     };
     Object.assign(this, defaultUser, json || {});
@@ -288,7 +299,7 @@ export class User {
   isOwner(shopname) {
 
     // if (this.isAdmin())return true;
-    for (let i in this.shops) {
+    for (const i in this.shops) {
       if (this.shops[i].name === shopname) {
         return true;
       }
@@ -311,7 +322,8 @@ export class User {
     return this.hasRole('admin');
   }
 
-  isPremium() {
+  isPremium(json?) {
+    const orders = (json && json.last1Month) ? json : this.orders;
     const shared = {
       new : config.shared.order.new || {},
       recurrent: config.shared.order.recurrent || {}
@@ -328,13 +340,13 @@ export class User {
       avg: shared.recurrent.avg || 70
     };
 
-    if (this.orders.avg > newclient.avg && this.orders.last6Month >= newclient.last6Month) {
+    if (orders.avg > newclient.avg && orders.last6Month >= newclient.last6Month) {
       return true;
     }
 
 
-    if (this.orders.last1Month >= recurrent.last1Month || this.orders.last6Month >= recurrent.last6Month){
-      return (this.orders.avg > recurrent.avg);
+    if (orders.last1Month >= recurrent.last1Month || orders.last6Month >= recurrent.last6Month) {
+      return (orders.avg > recurrent.avg);
     }
 
     return false;
@@ -358,7 +370,7 @@ export class User {
   hasPrimaryAddress(): boolean|UserAddress {
     if (this.addresses && this.addresses.length == 1) { return this.addresses[0]; }
     // this.addresses.some(add=>add.primary)
-    for (let i in this.addresses) {
+    for (const i in this.addresses) {
       if (this.addresses[i].primary === true) {
         return this.addresses[i];
       }
@@ -407,14 +419,14 @@ export class User {
   }
 
   getBVR() {
-    let self = this;
+    const self = this;
   }
 
 
   //
   // init user
   init() {
-    let self = this;
+    const self = this;
 
     // set context for error
 
@@ -457,24 +469,25 @@ class Cache {
 export class UserService {
 
   constructor(
-    @Inject('KNG2_OPTIONS') private customConfig:any,
+    @Inject('KNG2_OPTIONS') private customConfig: any,
     public http: HttpClient
   ) {
     //
     // Use dynamic server settings
-    if(!customConfig.API_SERVER){
-      customConfig.API_SERVER=('//api.'+window.location.hostname);
+    if (!customConfig.API_SERVER) {
+      // customConfig.API_SERVER = ('//api.' + window.location.hostname);
+      customConfig.API_SERVER = ('//' + window.location.hostname + '/api');
     }
-    // FIXME remove this hugly config propagation    
-    Object.assign(config,customConfig);
+    // FIXME remove this hugly config propagation
+    Object.assign(config, customConfig);
     this.config = config;
     this.headers = new HttpHeaders();
     this.headers.append('Content-Type', 'application/json');
     this.user$ = new ReplaySubject<User>(1);
   }
-;
-;
-;
+
+
+
 
   // TODO make observable content !!
   config: any;
@@ -486,20 +499,20 @@ export class UserService {
   public  user$: ReplaySubject<User>;
 
   private updateCache(user: User) {
-    if(!this.cache.map.get(user.id)){
+    if (!this.cache.map.get(user.id)) {
       // TODO unit test of payments/address Class existances after updates
-      Object.assign(this.currentUser, new User(user));      
-      this.cache.map.set(user.id,this.currentUser)
+      Object.assign(this.currentUser, new User(user));
+      this.cache.map.set(user.id, this.currentUser);
       return this.cache.map.get(user.id);
     }
-    //Object.assign(this.currentUser, new User(user));      
+    // Object.assign(this.currentUser, new User(user));
     return Object.assign(this.cache.map.get(user.id), new User(user));
   }
 
   private deleteCache(user: User) {
-      let incache=this.cache.map.get(user.id);
+      const incache = this.cache.map.get(user.id);
       if (incache) {
-          incache.deleted=true;
+          incache.deleted = true;
           this.cache.map.delete(user.id);
       }
       return incache;
@@ -512,7 +525,7 @@ export class UserService {
   // How to build Angular apps using Observable Data Services
   // http://blog.angular-university.io/how-to-build-angular2-apps-using-rxjs-observable-data-services-pitfalls-to-avoid/
 
-  //get user data by his id
+  // get user data by his id
   get(id: number): Observable<User> {
 
     if (this.cache.map[id]) {
@@ -530,16 +543,36 @@ export class UserService {
   }
 
   //
-  //============================= REST api wrapper
-  // TODO
+  // ============================= REST api wrapper
 
+  // Stripe connect
+  // app.get('/v1/users/connect?code&state', auth.ensureAuthenticated, users.connect);
+  connect(id, state, code) {
+    if (!this.config.API_SERVER) {
+      throw new Error('Issue with uninitialized server context');
+    }
+    const params: any = {
+      state,
+      code
+    };
+
+    return this.http.get<User>(this.config.API_SERVER + '/v1/users/' + id + '/connect', {
+      params: (params),
+      headers: this.headers,
+      withCredentials: true
+    }).pipe(
+      map(user => this.updateCache(user)),
+      tap(user => this.user$.next(user))
+    );
+  }
 
   // app.get('/v1/users/me', auth.ensureAuthenticated, users.me);
   me(): Observable<User> {
-    if(!this.config.API_SERVER){
-      throw new Error("Issue with uninitialized server context");
+    if (!this.config.API_SERVER) {
+      throw new Error('Issue with uninitialized server context');
     }
     return this.http.get<User>(this.config.API_SERVER + '/v1/users/me', {
+      params: {device: Utils.deviceID()},
       headers: this.headers,
       withCredentials: true
     }).pipe(
@@ -547,7 +580,8 @@ export class UserService {
         this.updateCache(user);
         return this.currentUser;
       }),
-      catchError(err => of(new User()))
+      catchError(err => of(new User())),
+      tap(user => this.user$.next(user))
     );
   }
 
@@ -560,17 +594,17 @@ export class UserService {
       headers: this.headers,
       withCredentials: true
     }).pipe(
-      map(users => users.map(user=>new User(user)))
+      map(users => users.map(user => new User(user)))
     );
   }
 
   // Reçoit un statut de requête http
   // app.get ('/v1/validate/:uid/:email', emails.validate);
   validate(id, email): Observable<any> {
-    if (!id||!email) {
-      return _throw(new Error("validate, missing parameter id or email"));
+    if (!id || !email) {
+      return _throw(new Error('validate, missing parameter id or email'));
     }
-    
+
     return this.http.get(this.config.API_SERVER + '/v1/validate/' + id + '/' + email, {
       headers: this.headers,
       withCredentials: true
@@ -579,16 +613,16 @@ export class UserService {
   }
 
   // app.post('/v1/validate/create',auth.ensureAuthenticated, emails.create);
-  validateEmail(params?:any): Observable<any> {
-    return this.http.post<{created:Date,email:string}>(this.config.API_SERVER + '/v1/validate/create',params||{}, {
+  validateEmail(params?: any): Observable<any> {
+    return this.http.post<{created: Date, email: string}>(this.config.API_SERVER + '/v1/validate/create', params || {}, {
       headers: this.headers,
       withCredentials: true
     }).pipe(
       map(result => {
-        this.currentUser.email.status=result.created;
+        this.currentUser.email.status = result.created;
         return this.currentUser;
       }),
-      tap(user=>this.user$.next(user))
+      tap(user => this.user$.next(user))
     );
   }
 
@@ -611,7 +645,7 @@ export class UserService {
       withCredentials: true
     }).pipe(
       map(user => this.updateCache(user)),
-      tap(user=>this.user$.next(user))
+      tap(user => this.user$.next(user))
     );
   }
 
@@ -622,29 +656,29 @@ export class UserService {
       withCredentials: true
     }).pipe(
       catchError(err => of(new User())),
-      map(user => Object.assign(this.currentUser,new User())),
-      tap(user=>{
-        console.log('user.logout()',user)
+      map(user => Object.assign(this.currentUser, new User())),
+      tap(user => {
+        console.log('user.logout()', user);
         return this.user$.next(user);
       })
-    )
+    );
   }
 
   // TODO voir lignes commentées (updateGeoCode etc.)
   // app.post('/register', queued(auth.register_post));
   register(user): Observable<User> {
-    //user.populateAdresseName();
+    // user.populateAdresseName();
     return this.http.post<User>(this.config.API_SERVER + '/register', user, {
       headers: this.headers,
       withCredentials: true
     }).pipe(
       map(user => this.updateCache(user)),
-      tap(user=>this.user$.next(user))
+      tap(user => this.user$.next(user))
     );
-      
+
   }
   // app.post('/v1/users/:id/password',users.ensureMe, users.password);
-  newpassword(id:number, change): Observable<User> {
+  newpassword(id: number, change): Observable<User> {
     return this.http.post<User>(this.config.API_SERVER + '/v1/users/' + id + '/password', change, {
       headers: this.headers,
       withCredentials: true
@@ -658,13 +692,13 @@ export class UserService {
       withCredentials: true
     }).pipe(
       map(user => this.updateCache(user)),
-      tap(user=>this.user$.next(user))
+      tap(user => this.user$.next(user))
     );
   }
 
   // app.put('/v1/users/:id', auth.ensureAdmin, auth.checkPassword, users.remove);
   remove(id, password): Observable<any> {
-    return this.http.put<User>(this.config.API_SERVER + '/v1/users/', { password: password }, {
+    return this.http.put<User>(this.config.API_SERVER + '/v1/users/' + id, { password }, {
       headers: this.headers,
       withCredentials: true
     }).pipe(
@@ -674,16 +708,16 @@ export class UserService {
 
   // app.post('/v1/users/:id/like/:sku', users.ensureMe, users.like);
   love(id, product): Observable<User> {
-    //var self=this, params={};
+    // var self=this, params={};
     return this.http.post<User>(this.config.API_SERVER + '/v1/users/' + id + '/like/' + product.sku, null, {
       headers: this.headers,
       withCredentials: true
     }).pipe(
       map(user => this.updateCache(user)),
-      tap(user=>this.user$.next(user))
+      tap(user => this.user$.next(user))
     );
   }
-  //================================================
+  // ================================================
 
 
   /**
@@ -691,20 +725,20 @@ export class UserService {
    */
   // app.post('/v1/users/:id/payment/:alias/check', users.ensureMeOrAdmin,users.checkPaymentMethod);
   checkPaymentMethod(user): Observable<User> {
-    if(!user.payments.length){
+    if (!user.payments.length) {
       return of(user);
     }
 
-    let allAlias = user.payments.map(payment => { return payment.alias; });
-    let alias = allAlias.pop();
-    
-    return this.http.post<any>(this.config.API_SERVER + '/v1/users/' + user.id + '/payment/' + alias + '/check', {alias:allAlias}, {
+    const allAlias = user.payments.map(payment => payment.alias);
+    const alias = allAlias.pop();
+
+    return this.http.post<any>(this.config.API_SERVER + '/v1/users/' + user.id + '/payment/' + alias + '/check', {alias: allAlias}, {
       headers: this.headers,
       withCredentials: true
     }).pipe(
       map(check => {
-        user.payments.forEach((payment,i)=>{
-          payment.error=check[payment.alias]&&check[payment.alias].error;
+        user.payments.forEach((payment, i) => {
+          payment.error = check[payment.alias] && check[payment.alias].error;
         });
         return this.updateCache(user);
       })
@@ -712,17 +746,22 @@ export class UserService {
   }
 
   // app.post('/v1/users/:id/payment', users.ensureMeOrAdmin,users.addPayment);
-  addPaymentMethod(payment:UserCard, uid): Observable<User> {
-    if(!payment.id){
-      return _throw(new Error("addPaymentMethod missing payment id"));
+  addPaymentMethod(payment: UserCard, uid, replace?: boolean): Observable<User> {
+    if (!payment.id) {
+      return _throw(new Error('addPaymentMethod missing payment id'));
+    }
+    const params: any = {};
+    if (replace) {
+      params.force_replace = false;
     }
 
     return this.http.post<User>(this.config.API_SERVER + '/v1/users/' + uid + '/payment', payment, {
+      params,
       headers: this.headers,
       withCredentials: true
     }).pipe(
       map(user => this.updateCache(user)),
-      tap(user=>this.user$.next(user))
+      tap(user => this.user$.next(user))
     );
     /*
     var self = this, params = {};
@@ -741,20 +780,20 @@ export class UserService {
 
   // app.post('/v1/users/:id/payment/:alias/delete', users.ensureMeOrAdmin,users.deletePayment);
   deletePaymentMethod(alias, uid): Observable<User> {
-    let updatePayment=(uid)=>{
-      let user=this.cache.map.get(uid);
-      user.payments=user.payments.filter(p=>p.alias!=alias);
+    const updatePayment = (uid) => {
+      const user = this.cache.map.get(uid);
+      user.payments = user.payments.filter(p => p.alias != alias);
       return user;
     };
-    if(!alias || !uid){
-      return _throw(new Error("deletePaymentMethod, missing params!"));
+    if (!alias || !uid) {
+      return _throw(new Error('deletePaymentMethod, missing params!'));
     }
     return this.http.post<User>(this.config.API_SERVER + '/v1/users/' + uid + '/payment/' + alias + '/delete', null, {
       headers: this.headers,
       withCredentials: true
     }).pipe(
       map(() => updatePayment(uid)),
-      tap(user=>this.user$.next(user))
+      tap(user => this.user$.next(user))
     );
     /*
     var self = this, params = {};
@@ -780,16 +819,16 @@ export class UserService {
    */
   // app.post('/v1/users/:id/status', auth.ensureAdmin,users.status);
   updateStatus(id, status): Observable<User> {
-    //var self = this, params = {};
-    return this.http.post<User>(this.config.API_SERVER + '/v1/users/' + id + '/status', { status: status }, {
+    // var self = this, params = {};
+    return this.http.post<User>(this.config.API_SERVER + '/v1/users/' + id + '/status', { status }, {
       headers: this.headers,
       withCredentials: true
     }).pipe(
       map(user => new User(user)),
-      tap(user=>this.user$.next(user))
+      tap(user => this.user$.next(user))
     );
   }
-  
+
 
   /**
    * Subscribe to the user stream.
@@ -798,6 +837,6 @@ export class UserService {
     onNext, onThrow?: ((exception: any) => void)|null,
     onReturn?: (() => void)|null): ISubscription {
       return this.user$.subscribe({next: onNext, error: onThrow, complete: onReturn});
-  }  
+  }
 
 }
