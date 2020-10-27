@@ -45,6 +45,8 @@ export { Hub,
 
 export { ReportOrders,
          ReportCustomer,
+         ReportIssues,
+         ReportOrderIssue,
          ReportingService } from './reporting.service';
 
 export { User,

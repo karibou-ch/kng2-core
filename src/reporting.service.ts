@@ -20,6 +20,33 @@ export class ReportCustomer {
   refunds?: number;
 }
 
+export interface ReportOrderIssue {
+  oid: number;
+  title: string;
+  sku: number;
+  quantity: number;
+  issue: string;
+  email: string;
+}
+
+export class ReportIssues {
+  amount: number;
+  // tslint:disable-next-line: variable-name
+  _id: {
+    vendor: string;
+    month: number;
+    year: number;
+  };
+
+  orders: {
+    total: number;
+    amount: number;
+  };
+  issues: ReportOrderIssue[];
+  ratio?: number;
+}
+
+
 export class ReportOrders {
 
   constructor(json: any) {
@@ -104,4 +131,14 @@ export class ReportingService {
   }
 
 
+  getIssues(year?, month?): Observable<ReportIssues[]> {
+    year = year || '';
+    month = month || '-';
+    return this.config = this.http.get<ReportIssues[]>(config.API_SERVER + '/v1/stats/orders/issues/'  + month + '/' + year, {
+      headers: this.headers,
+      withCredentials: true,
+    }).pipe(
+      map(json => json)
+    );
+  }
 }
