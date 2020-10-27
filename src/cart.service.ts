@@ -519,6 +519,9 @@ export class CartService {
     // remove all items for this HUB
     this.cache.items = [];
     this.cache.discount = {};
+    //
+    // FIXME dont use localstorage here
+    localStorage.setItem('kng2-cart', JSON.stringify(this.cache));
     this.save({ action: CartAction.CART_CLEARED });
     return new Observable((obs) => {
       this.cart$.subscribe(state => {
