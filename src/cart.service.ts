@@ -244,7 +244,7 @@ export class CartConfig {
 }
 
 export class CartModel {
-  cid: string[];
+  cid: string | [string];
   items: CartItem[];
   updated: Date;
   reset: Date;
@@ -267,6 +267,8 @@ class Cache extends CartModel {
   payment: UserCard;
   currentShippingDay: Date;
   currentShippingTime: number;
+  uuid?: string;
+  name?: string;
   constructor() {
     super();
     this.discount = {};
@@ -311,6 +313,8 @@ export class CartService {
   ) {
     this.headers = new HttpHeaders();
     this.headers.append('Content-Type', 'application/json');
+    this.headers.append('Cache-Control', 'no-cache');
+    this.headers.append('Pragma' , 'no-cache');
     this.cache = new Cache();
     this.currentUser = new User();
     this.DEFAULT_GATEWAY = this.cartConfig.gateway;
@@ -457,25 +461,12 @@ export class CartService {
     const total = this.subTotal();
     const postalCode = address.postalCode || '1234567';
 
-    let distance = this.SHIPPING_CENTER;
+    let district = config.getShippingDistrict(postalCode);
 
-
-    //
-    // get the base of price depending the shipping sector
-    if ((this.cartConfig.shipping.collect || []).indexOf(postalCode) > -1) {
-      distance = this.SHIPPING_COLLECT;
-    }
-
-    if (this.cartConfig.shipping.periphery.indexOf(postalCode) > -1) {
-      distance = this.SHIPPING_PERIPHERY;
-    }
-    if ((this.cartConfig.shipping.other || []).indexOf(postalCode) > -1) {
-      distance = this.SHIPPING_OTHER;
-    }
 
     //
     // get default price for this address
-    let price = this.cartConfig.shipping.price[distance];
+    let price = this.cartConfig.shipping.price[district];
 
     //
     // testing deposit address
@@ -556,6 +547,16 @@ export class CartService {
     return this.cache.items.filter(item => (!item.hub || item.hub === this.currentHub));
   }
 
+  getName(){
+    this.checkIfReady();
+    return this.cache.name;
+  }
+
+  getCID(){
+    this.checkIfReady();
+    return this.cache.cid;
+  }
+
   getCurrentShippingAddress(): UserAddress {
     this.checkIfReady();
     return this.cache.address;
@@ -612,7 +613,7 @@ export class CartService {
     return shop.available.weekdays.indexOf(weekday) > -1;
   }
 
-  loadCache() {
+  loadCache(shared?: string) {
     //
     // IFF next shipping day is Null (eg. hollidays)=> currentShippingDay
     const nextShippingDay = Order.nextShippingDay(this.currentUser);
@@ -621,11 +622,13 @@ export class CartService {
 
     this.cache.updated = new Date('1990-12-01T00:00:00');
     this.cache.discount = {};
+    this.cache.uuid = shared;
 
     try {
       const fromLocal = JSON.parse(localStorage.getItem('kng2-cart')) as Cache;
 
-      if (!fromLocal) {
+      // FIXME missing test for shared cart 
+      if (!fromLocal || shared) {
         return;
       }
       //
@@ -694,19 +697,21 @@ export class CartService {
 
     } catch(err) {
       // First time in karibou.ch localStorage is undefined
+      this.cache.items = []
+      this.cache.updated = new Date('1990-12-01T00:00:00');
     }
   }
 
-  load() {
+  load(shared?: string) {
     //
     // INIT local values
-    this.loadCache();
+    this.loadCache(shared);
     //
     // INIT cart items
     // check values
     const syncCart: any = {
         items: this.cache.items || [],
-        updated: this.cache.updated
+        updated: this.cache.updated 
     };
 
     //
@@ -716,7 +721,16 @@ export class CartService {
       hub: this.currentHub
     };
 
+    //
+    // use a shared cart ? 
+    const query: any = {};
+    if(shared) {
+      query.uuid = shared;
+    }
+
+
     this.$http.post<CartModel>(ConfigService.defaultConfig.API_SERVER + '/v1/cart/get', params, {
+      params: query,
       headers: this.headers,
       withCredentials: true
     }).pipe(
@@ -732,6 +746,8 @@ export class CartService {
         //
         // reset local cart ?
         this.resetLocalItems(cart);
+        this.cache.cid = cart.cid? cart.cid[0] : this.cache.cid ;
+        this.cache.name = cart.name ;
         this.cache.updated = new Date(cart.updated);
         this.cache.items = cart.items.map( item => new CartItem(item));
         this.clearErrors();
@@ -770,10 +786,13 @@ export class CartService {
     if (cart.reset) {
       const updated = new Date(cart.updated);
       const reset = new Date(cart.reset);
-      if (this.cache.updated < reset) {
-        this.cache.updated = updated;
-        this.cache.items = [];
+      const count = this.cache.items.length;
+      this.cache.items = this.cache.items.filter(item => !item.timestamp || (new Date(item.timestamp)) > reset)
+      if (this.cache.items.length !== count) {
+        this.cache.updated = reset;
         try {
+          //
+          // FIXME how to manage cart & HUB 
           localStorage.setItem('kng2-cart', JSON.stringify(this.cache));
         } catch (e) {}
       }
@@ -906,7 +925,15 @@ export class CartService {
     params.device = Utils.deviceID();
 
     //
+    // use a shared cart ? 
+    if(this.cache.uuid) {
+      params.uuid = this.cache.uuid;
+    }
+
+
+    //
     // FIXME implement the case of Clear!
+
 
     return this.$http.post<CartModel>(ConfigService.defaultConfig.API_SERVER + '/v1/cart', model, {
       params: (params),
