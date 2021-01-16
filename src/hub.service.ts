@@ -41,6 +41,12 @@ export class Hub {
     subject: string;
   };
 
+  colors: {
+    primary: string,
+    primaryText: string,
+    action: string,
+    actionText: string,
+  };
 
   //
   // HUB dedicated settings
