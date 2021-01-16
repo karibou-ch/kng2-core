@@ -1,4 +1,4 @@
-import { HttpClient,HttpHeaders } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { config } from './config';
 import { ConfigService } from './config.service';
@@ -6,7 +6,7 @@ import { ConfigService } from './config.service';
 import { Utils } from './util';
 
 import { Observable ,  ReplaySubject ,  of ,  throwError as _throw } from 'rxjs';
-import { map,tap, retryWhen, delay, take } from 'rxjs/operators';
+import { map, tap, retryWhen, delay, take } from 'rxjs/operators';
 
 
 @Injectable()
@@ -23,7 +23,7 @@ export class ProductService {
         this.config = ConfigService.defaultConfig;
         this.headers = new HttpHeaders();
         this.headers.append('Content-Type', 'application/json');
-        this.cache=new Cache();
+        this.cache = new Cache();
         //
         // 1 means to keep the last value
         this.product$ = new ReplaySubject(1);
@@ -42,9 +42,9 @@ export class ProductService {
     }
 
     private deleteCache(product: Product) {
-        let incache=this.cache.map.get(product.sku);
+        const incache = this.cache.map.get(product.sku);
         if (incache) {
-            incache.deleted=true;
+            incache.deleted = true;
             this.cache.map.delete(product.sku);
         }
         return incache;
@@ -65,7 +65,7 @@ export class ProductService {
         }).pipe(
             map(products => products)
         );
-    };
+    }
 
     select(params?: any): Observable<Product[]> {
         params = params || {};
@@ -78,7 +78,7 @@ export class ProductService {
         }).pipe(
             map(products => products.map(this.updateCache.bind(this)))
         );
-    };
+    }
 
     findByLocationCategoryAndDetail(category, detail): Observable<Product[]> {
         return this.http.get<Product[]>(this.config.API_SERVER + '/v1/products/location/' + location + '/category/' + category + '/details/' + detail, {
@@ -87,7 +87,7 @@ export class ProductService {
         }).pipe(
             map(products => products.map(this.updateCache.bind(this)))
         );
-    };
+    }
 
     findByCategoryAndDetail(category, detail): Observable<Product[]> {
         return this.http.get<Product[]>(this.config.API_SERVER + '/v1/products/category/' + category + '/details/' + detail, {
@@ -96,7 +96,7 @@ export class ProductService {
         }).pipe(
             map(products => products.map(this.updateCache.bind(this)))
         );
-    };
+    }
 
     findByLocationAndCategory(location, category): Observable<Product[]> {
         return this.http.get<Product[]>(this.config.API_SERVER + '/v1/products/location/' + location + '/category/' + category, {
@@ -105,18 +105,18 @@ export class ProductService {
         }).pipe(
             map(products => products.map(this.updateCache.bind(this)))
         );
-    };
+    }
 
-    findLove(params?:any): Observable<Product[]> {
+    findLove(params?: any): Observable<Product[]> {
         params = params || {};
         return this.http.get<Product[]>(this.config.API_SERVER + '/v1/products/love', {
-            params:params,
+            params,
             headers: this.headers,
             withCredentials: true
         }).pipe(
             map(products => products.map(this.updateCache.bind(this)))
         );
-    };
+    }
 
     findByLocation(location): Observable<Product[]> {
         return this.http.get<Product[]>(this.config.API_SERVER + '/v1/products/location/' + location, {
@@ -125,23 +125,23 @@ export class ProductService {
         }).pipe(
             map(products => products.map(this.updateCache.bind(this)))
         );
-    };
+    }
 
-    findByCategory(category:string,params?:any): Observable<Product[]> {
+    findByCategory(category: string, params?: any): Observable<Product[]> {
         params = params || {};
         params.device = Utils.deviceID();
         return this.http.get<Product[]>(this.config.API_SERVER + '/v1/products/category/' + category, {
-            params:params,
+            params,
             headers: this.headers,
             withCredentials: true
         }).pipe(
             map(products => products.map(this.updateCache.bind(this)))
         );
-    };
+    }
 
     findBySku(sku): Observable<Product> {
-        return this.get(sku)
-    };
+        return this.get(sku);
+    }
 
     //
     // get product based on its sku
@@ -157,32 +157,32 @@ export class ProductService {
             withCredentials: true
         }).pipe(
             map(product => this.updateCache(product)),
-            tap(this.product$.next.bind(this.product$))  
+            tap(this.product$.next.bind(this.product$))
         );
-    };
+    }
 
-    remove(sku:number,password:string):Observable<any>{
-      var passwordJson = {"password":password};
-      return this.http.put<Product>(this.config.API_SERVER + '/v1/products/'+sku, passwordJson, {
+    remove(sku: number, password: string): Observable<any> {
+      let passwordJson = {'password': password};
+      return this.http.put<Product>(this.config.API_SERVER + '/v1/products/' + sku, passwordJson, {
         headers: this.headers,
         withCredentials: true
       }).pipe(
         map(product => this.deleteCache(product)),
-        tap(this.product$.next.bind(this.product$))  
+        tap(this.product$.next.bind(this.product$))
       );
-    };
+    }
 
-    create(prod: Product, shopowner:string): Observable<Product> {
+    create(prod: Product, shopowner: string): Observable<Product> {
         //
         // FIXME creattion code is not correct
-        return this.http.post<Product>(this.config.API_SERVER + '/v1/shops/'+shopowner+'/products/', prod, {
+        return this.http.post<Product>(this.config.API_SERVER + '/v1/shops/' + shopowner + '/products/', prod, {
             headers: this.headers,
             withCredentials: true
         }).pipe(
             map(product => this.updateCache(product)),
-            tap(this.product$.next.bind(this.product$))  
+            tap(this.product$.next.bind(this.product$))
         );
-    };
+    }
 
     save(prod: Product): Observable<Product> {
         delete prod['__v'];
@@ -194,7 +194,7 @@ export class ProductService {
             map(product => this.updateCache(product)),
             tap(this.product$.next.bind(this.product$))
         );
-    };
+    }
 
     private handleError(error: Response | any) {
         //
@@ -208,12 +208,12 @@ export class ProductService {
             errMsg = error.message ? error.message : error.toString();
         }
         return _throw(errMsg);
-    };
+    }
 }
 
 class Cache {
     list: Product[];
-    map: Map<number, Product>
+    map: Map<number, Product>;
     constructor() {
         this.list = [];
         this.map = new Map();
@@ -224,43 +224,43 @@ class Cache {
 export class Product {
 
     constructor(json?: any) {
-        let defaultProduct={
-            attributes:{},
-            details:{},
-            photo:{},
-            pricing:{},
-            categories:{},
-            shelflife:{},
-            vendor:{},
-            quantity:{},
-            belong:{
-                weight:0
+        const defaultProduct = {
+            attributes: {},
+            details: {},
+            photo: {},
+            pricing: {},
+            categories: {},
+            shelflife: {},
+            vendor: {},
+            quantity: {},
+            belong: {
+                weight: 0
             },
-            stats:{
-                score:0,
-                issues:0,
-                sales:0
+            stats: {
+                score: 0,
+                issues: 0,
+                sales: 0
             }
-        }
+        };
 
-        Object.assign(this, defaultProduct,json||{});          
-            
-        if(this.updated){
-            this.updated=new Date(this.updated);
+        Object.assign(this, defaultProduct, json || {});
+
+        if (this.updated) {
+            this.updated = new Date(this.updated);
         }
-        if(this.created){
-            this.created=new Date(this.created);
+        if (this.created) {
+            this.created = new Date(this.created);
         }
-    };
-    deleted:boolean;
+    }
+    deleted: boolean;
     title: string;
-    variants:any[];
+    variants: any[];
     sku: number;
     slug: string;
     updated: Date;
     created: Date;
     categories: any;
-    vendor:any;
+    vendor: any;
     faq?: [{
         q: string;
         a: string;
@@ -268,9 +268,10 @@ export class Product {
     }];
     photo: {
         url: string;
+        colors: any[];
     };
     pricing: {
-        discount:number;
+        discount: number;
         price: number;
         part: string;
         tva: number;
@@ -278,11 +279,11 @@ export class Product {
     };
     shelflife: {
         display: boolean;
-        comment:string;
+        comment: string;
     };
     quantity: {
         display: boolean;
-        comment:string;
+        comment: string;
     };
     attributes: {
         discount: boolean;
@@ -290,7 +291,7 @@ export class Product {
         comment: boolean;
         available: boolean;
         home: boolean;
-        boost:boolean;
+        boost: boolean;
     };
     details: {
         keywords: string;
@@ -306,6 +307,8 @@ export class Product {
         local: boolean;
         natural: boolean;
         homemade: boolean;
+        handmade: boolean;
+        gastronomy: boolean;
         cold: boolean;
         gluten: boolean;
         lactose: boolean;
@@ -313,9 +316,9 @@ export class Product {
 
     //
     // child category
-    belong:{
-        name:string;
-        weight:number;
+    belong: {
+        name: string;
+        weight: number;
     };
 
     //
@@ -326,20 +329,20 @@ export class Product {
         issues: number;
     };
 
-    hasFixedPortion(){
-        var weight=this.pricing.part||'';
-        var m=weight.match(/~([0-9.]+) ?(.+)/);
-        return(!m||m.length<2);
+    hasFixedPortion() {
+        let weight = this.pricing.part || '';
+        let m = weight.match(/~([0-9.]+) ?(.+)/);
+        return(!m || m.length < 2);
     }
 
-    getPrice(){
-        if(this.attributes.discount && this.pricing.discount){
+    getPrice() {
+        if (this.attributes.discount && this.pricing.discount) {
         return this.pricing.discount;
         }
         return this.pricing.price;
     }
 
-    isDiscount(){
+    isDiscount() {
         return !!(this.attributes.discount && this.pricing.discount);
     }
 
