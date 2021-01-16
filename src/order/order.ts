@@ -206,7 +206,10 @@ export class Order {
     estimated?: number
   };
 
-  errors?: any[];
+  //
+  // errors[] => [] for items
+  // errors.missingIntent => for SCA
+  errors?: any[] | any;
 
   constructor(json?: any) {
     Object.assign(this, this.defaultOrder, json || {});

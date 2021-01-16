@@ -83,6 +83,7 @@ export class DepositAddress extends UserAddress {
   }
 }
 
+
 export class UserCard {
 
   constructor(json?: any) {
@@ -95,6 +96,7 @@ export class UserCard {
   }
 
   id?: string;
+  intent_id?: string;
   alias: string;
   expiry: string;
   issuer: string;
@@ -190,7 +192,7 @@ export class User {
   /* The available Shop for this user */
   shops: Shop[];
 
-  /* disqus sso */
+  /* disqus sso , payment intent, etc */
   context: any;
 
   /* payments methods */
@@ -211,6 +213,7 @@ export class User {
   merchant: boolean;
 
   reminder: {
+    defaultHub?: string;
     active: boolean;
     weekdays: number[];
     time: Date;
@@ -274,6 +277,8 @@ export class User {
       add.primary,
       add.geo
     ));
+    this.context = this.context || {};
+
   }
 
   //
@@ -483,6 +488,8 @@ export class UserService {
     this.config = config;
     this.headers = new HttpHeaders();
     this.headers.append('Content-Type', 'application/json');
+    this.headers.append('Cache-Control' , 'no-cache');
+    this.headers.append('Pragma' , 'no-cache');
     this.user$ = new ReplaySubject<User>(1);
   }
 
@@ -533,6 +540,7 @@ export class UserService {
     }
 
     return this.http.get<User>(this.config.API_SERVER + '/v1/users/' + id, {
+      params: { tls: Date.now() + ''},
       headers: this.headers,
       withCredentials: true
     }).pipe(
@@ -571,8 +579,9 @@ export class UserService {
     if (!this.config.API_SERVER) {
       throw new Error('Issue with uninitialized server context');
     }
+
     return this.http.get<User>(this.config.API_SERVER + '/v1/users/me', {
-      params: {device: Utils.deviceID()},
+      params: {device: Utils.deviceID(), tls: Date.now() + ''},
       headers: this.headers,
       withCredentials: true
     }).pipe(
@@ -604,6 +613,7 @@ export class UserService {
     if (!id || !email) {
       return _throw(new Error('validate, missing parameter id or email'));
     }
+
 
     return this.http.get(this.config.API_SERVER + '/v1/validate/' + id + '/' + email, {
       headers: this.headers,
@@ -724,19 +734,32 @@ export class UserService {
    * payment methods
    */
   // app.post('/v1/users/:id/payment/:alias/check', users.ensureMeOrAdmin,users.checkPaymentMethod);
-  checkPaymentMethod(user): Observable<User> {
-    if (!user.payments.length) {
+  checkPaymentMethod(user, askIntent?: string): Observable<User> {
+    //
+    // if payment list is empty, and also ask intent
+    if (!user.payments.length && !askIntent) {
       return of(user);
     }
 
     const allAlias = user.payments.map(payment => payment.alias);
-    const alias = allAlias.pop();
+    const alias = (allAlias.length) ? allAlias.pop() : '-';
+    const params: any = { };
+    if (askIntent) {
+      params.intent = askIntent;
+    }
 
     return this.http.post<any>(this.config.API_SERVER + '/v1/users/' + user.id + '/payment/' + alias + '/check', {alias: allAlias}, {
+      params,
       headers: this.headers,
       withCredentials: true
     }).pipe(
       map(check => {
+        //
+        // store payment intent
+        if (check.intent) {
+          user.context = user.context || {};
+          user.context.intent = check.intent;
+        }
         user.payments.forEach((payment, i) => {
           payment.error = check[payment.alias] && check[payment.alias].error;
         });
@@ -752,7 +775,7 @@ export class UserService {
     }
     const params: any = {};
     if (replace) {
-      params.force_replace = false;
+      params.force_replace = true;
     }
 
     return this.http.post<User>(this.config.API_SERVER + '/v1/users/' + uid + '/payment', payment, {
