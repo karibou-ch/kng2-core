@@ -499,6 +499,37 @@ export class CartService {
     return price;
   }
 
+  estimateShippingFees(address: UserAddress) {
+    this.checkIfReady();
+    const total = this.subTotal();
+    const postalCode = address.postalCode || '1234567';
+
+    let district = config.getShippingDistrict(postalCode);
+
+
+    //
+    // get default price for this address
+    let price = this.cartConfig.shipping.price[district];
+
+    //
+    // testing deposit address
+    // FIXME issue with streetAdress vs. streetAddress
+    const deposit = this.defaultConfig.shared.hub.deposits.find(add => {
+      return add.isEqual(address) &&
+        add.fees >= 0;
+    });
+    if (deposit) {
+      price = deposit.fees;
+      return price;
+    }
+
+    //
+    // TODO TESTING MERCHANT ACCOUNT
+
+
+    return price;
+  }
+
   //
   // TODO empty should manage recurent items
   empty() {
@@ -604,8 +635,20 @@ export class CartService {
         return true;
       }
 
-    return this.totalDiscount() > 0;
+    return false;
   }
+
+  hasShippingReductionB(): boolean {
+    const total = this.subTotal();
+
+    // implement 3) get free shipping!
+    if (this.cartConfig.shipping.discountB &&
+      total >= this.cartConfig.shipping.discountB) {
+      return true;
+    }
+    return false;
+  }
+
 
   isCurrentShippingDayAvailable(shop: Shop): boolean {
     this.checkIfReady();

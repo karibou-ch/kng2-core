@@ -78,6 +78,7 @@ export class Shop {
 
 
   available: {
+    categories: string[];
     active: boolean;
     from: Date,
     to: Date,

@@ -21,6 +21,7 @@ export class Hub {
   slug: string;
   updated: Date;
   logo: string;
+  defaultTags: string;
 
   address: {
     streetAdress: string;

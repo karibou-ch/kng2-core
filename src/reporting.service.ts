@@ -46,6 +46,38 @@ export class ReportIssues {
   ratio?: number;
 }
 
+export class ReportShopper {
+
+  constructor(json: any) {
+    Object.assign(this, json || {});
+    this.orders.forEach(order => {
+      order.when = new Date(order.when);
+    });
+    this.from = new Date(this.from);
+    this.to = new Date(this.to);
+  }
+
+  orders: {
+    when: Date;
+    who: string;
+    slot: string;
+    bags: number;
+    name: string;
+    postalCode: string;
+    streetAdress: string;
+    amount: number;  
+  }[];
+
+  shoppers: {
+    who : string;
+    ca: number;
+    extra: number;
+  }[];
+
+  from: Date;
+  to: Date;
+  who?:string;
+}
 
 export class ReportOrders {
 
@@ -120,6 +152,24 @@ export class ReportingService {
       map(json => new ReportOrders(json))
     );
   }
+
+  //
+  // config.API_SERVER+'/v1/orders/invoices/shopper/6/2018'
+  getReportShopper(year: number, month?: number|string, owner?: string): Observable<ReportShopper> {
+    month = month || '-';
+    const params: any = {};
+    if (owner) {
+      params.owner = owner;
+    }
+    return this.config = this.http.get<ReportOrders>(config.API_SERVER + '/v1/orders/invoices/shopper/' + month + '/' + year, {
+      params,
+      headers: this.headers,
+      withCredentials: true,
+    }).pipe(
+      map(json => new ReportShopper(json))
+    );
+  }  
+
 
   getCustomers(): Observable<ReportCustomer[]> {
     return this.config = this.http.get<ReportCustomer[]>(config.API_SERVER + '/v1/stats/customers', {

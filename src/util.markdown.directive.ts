@@ -103,18 +103,20 @@ export class MarkdownDirective implements AfterViewInit {
 
   process(markdown): Promise<string> {
     const removeRoot = (md) => {
-      // Change this to div.childNodes to support multiple top-level nodes
-      const match = md.trim().match(/<p>(.*?)<\/p>$/);
-      if (match && match.length > 1) {
-        return match[1];
+      const div = document.createElement('div');
+      let finalTxt = '';
+      div.innerHTML = md;
+      for (var i=0; i<div.children.length; ++i) {
+        if (div.children[i].tagName.toLowerCase() === 'p') {
+          finalTxt += div.children[i].innerHTML;
+        }
       }
-
-      return md;
+      return finalTxt;      
     };
     if (MarkdownDirective.converter) {
       return new Promise((resolve, reject) => {
         const md = MarkdownDirective.converter.makeHtml(markdown);
-        resolve(removeRoot(md));
+        resolve((md));
       });
     }
 
@@ -123,10 +125,14 @@ export class MarkdownDirective implements AfterViewInit {
     return Utils.script(CDNJS_SHOWDOWN, 'showdown')
          .toPromise().then((showdown: any) => {
       showdown.extension('extAttributes', this.sdExtAttr);
-      MarkdownDirective.converter = new showdown.Converter();
+      MarkdownDirective.converter = new showdown.Converter({
+        emoji: true,
+        parseImgDimensions: true,
+        simplifiedAutoLink: true
+      });
 
       const md = MarkdownDirective.converter.makeHtml(markdown);
-      return removeRoot(md);
+      return (md);
     });
   }
 

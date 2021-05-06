@@ -9,7 +9,7 @@ import { DepositAddress } from './user.service';
 import { Observable } from 'rxjs';
 // import { of } from 'rxjs/observable/of';
 import { ReplaySubject } from 'rxjs';
-import { map, tap, retryWhen, delay, take } from 'rxjs/operators';
+import { map, tap, retryWhen, delay, take, distinctUntilChanged } from 'rxjs/operators';
 
 
 @Injectable()
@@ -63,7 +63,26 @@ export class ConfigService {
 
     this.headers = new HttpHeaders();
     this.headers.append('Content-Type', 'application/json');
-    this.config$ = new ReplaySubject<Config>(1);
+    this.headers.append('Cache-Control' , 'no-cache');
+    this.headers.append('Pragma' , 'no-cache');
+    //
+    // ReplaySubject IFF disctinct config
+    this.config$ = new ReplaySubject<Config>(1);    
+    this.config$.pipe(distinctUntilChanged((prev, curr) => {
+      const ps = prev.shared;
+      const cs = curr.shared;
+      console.log(cs.timestamp,cs.hub && cs.hub.update)
+      if(ps.timestamp !== cs.timestamp){
+        return true;
+      }
+      if(cs.hub !== ps.hub) {
+        return true
+      }
+      if(cs.hub && ps.hub && cs.hub.updated !== ps.hub.updated){
+        return true;
+      }
+      return false;        
+    }));
   }
 
 
