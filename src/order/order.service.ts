@@ -2,8 +2,8 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { ConfigService } from '../config.service';
 
-import { Observable ,  of, ReplaySubject, throwError } from 'rxjs';
-import { map, tap, retryWhen, delay, take, concatMap } from 'rxjs/operators';
+import { Observable , of, ReplaySubject, throwError } from 'rxjs';
+import { map, tap, catchError } from 'rxjs/operators';
 
 import {
   EnumCancelReason,
@@ -22,6 +22,7 @@ import { CartItem } from '../cart.service';
 export class OrderService {
 
   public order$: ReplaySubject<Order>;
+  public orders$ : ReplaySubject<Order[]>;
 
 
   private defaultOrder = {
@@ -52,6 +53,7 @@ export class OrderService {
     };
 
     this.order$ = new ReplaySubject(1);
+    this.orders$ = new ReplaySubject<Order[]>();
 
   }
 
@@ -343,14 +345,24 @@ export class OrderService {
   // find all orders by user
   // role:user
   // app.get('/v1/orders/users/:id', users.ensureMeOrAdmin, orders.list);
-  findOrdersByUser(user, filter?): Observable<Order[]> {
+  findOrdersByUser(user, filter?, _catchError?): Observable<Order[]> {
     // return this.chainAll(backend.$order.query({id:user.id,action:'users'}).$promise);
     return this.http.get<Order[]>(this.config.API_SERVER + '/v1/orders/users/' + user.id, {
       params: filter || {},
       headers: this.headers,
       withCredentials: true
     }).pipe(
-      map(orders => orders.map(this.updateCache.bind(this)))
+      map(orders => orders.map(this.updateCache.bind(this)) as Order[]),
+      catchError(err => {
+        // FIXME, deprecated?s
+        if(_catchError){
+          return of([]);
+        }
+        return throwError(err)
+      }),
+      tap(orders => {
+        this.orders$.next(orders);
+      })
     );
   }
 
@@ -364,7 +376,10 @@ export class OrderService {
       headers: this.headers,
       withCredentials: true
     }).pipe(
-      map(orders => orders.map(this.updateCache.bind(this)))
+      map(orders => orders.map(this.updateCache.bind(this)) as Order[]),
+      tap(orders => {
+        this.orders$.next(orders);
+      })
     );
   }
 

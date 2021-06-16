@@ -8,10 +8,12 @@ import { User, UserService } from './user.service';
 import { CategoryService, Category } from './category.service';
 import { Shop, ShopService } from './shop.service';
 
-import { Observable, of, merge, combineLatest, throwError as _throw, ReplaySubject } from 'rxjs';
+import { Observable, merge, combineLatest, throwError as _throw, ReplaySubject } from 'rxjs';
 
-import { catchError, flatMap, map, publishReplay, refCount, tap, filter } from 'rxjs/operators';
+import { catchError, flatMap, map, publishReplay, refCount, filter, tap } from 'rxjs/operators';
 import { CartService, CartState } from './cart.service';
+import { OrderService } from './order/order.service';
+import { Order } from './order/order';
 
 
 //
@@ -40,7 +42,8 @@ export class LoaderService {
     private $user: UserService,
     private $category: CategoryService,
     private $cart: CartService,
-    private $shop: ShopService
+    private $shop: ShopService,
+    private $order: OrderService
   ) {
 
     //
@@ -95,13 +98,17 @@ export class LoaderService {
       this.$shop.shops$ = new ReplaySubject<Shop[]>();
     }
 
-
+    //
+    // get last orders
+    const catchError = true;
+    this.$order.findOrdersByUser({id:1},{limit:4},catchError).subscribe();
     // let me$=merge(this.$user.me(),this.$user.user$);
     const loaders: any[] = [
       this.$config.config$,
       me$,
       this.$category.categories$,
-      this.$shop.shops$
+      this.$shop.shops$,
+      this.$order.orders$
     ];
 
     //
@@ -136,12 +143,16 @@ export class LoaderService {
     );
   }
 
-  update(): Observable<{ config?: Config; user?: User; state?: CartState; shop?: Shop }> {
+  update(): Observable<{ config?: Config; user?: User; state?: CartState; shop?: Shop; orders?:Order[]; }> {
+    let firstTime = false;
     return merge(
       this.$config.config$.pipe(map(config => ({ config }))),
-      this.$user.user$.pipe(map(user => ({ user }))),
+      this.$user.user$.pipe(
+        map(user => ({ user }))
+      ),
       this.$cart.cart$.pipe(map(state => ({ state }))),
-      this.$shop.shop$.pipe(map(shop => ({ shop })))
+      this.$shop.shop$.pipe(map(shop => ({ shop }))),
+      this.$order.orders$.pipe(map(orders => ({ orders }))),
     )
   }
 
