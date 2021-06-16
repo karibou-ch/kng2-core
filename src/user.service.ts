@@ -56,6 +56,11 @@ export class UserAddress {
            this.postalCode == address.postalCode;
   }
 
+  static from(content: any) {
+    content = content || {};
+    const geo = content.geo;
+    return new UserAddress(content.name,content.streetAdress,content.floor,content.region,content.postalCode,content.note,false,geo);
+  }
 
 }
 
