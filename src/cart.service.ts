@@ -269,6 +269,7 @@ class Cache extends CartModel {
   currentShippingTime: number;
   uuid?: string;
   name?: string;
+  loaded: boolean;
   constructor() {
     super();
     this.discount = {};
@@ -291,6 +292,7 @@ export class CartService {
   private currentHub: string;
   private currentUser: User;
   private currentShops: Shop[] = [];
+  private currentPendingOrder: Order;
 
   private defaultConfig: Config = config;
 
@@ -457,28 +459,8 @@ export class CartService {
 
 
   computeShippingFees(address: UserAddress) {
-    this.checkIfReady();
-    const total = this.subTotal();
-    const postalCode = address.postalCode || '1234567';
-
-    let district = config.getShippingDistrict(postalCode);
-
-
-    //
-    // get default price for this address
-    let price = this.cartConfig.shipping.price[district];
-
-    //
-    // testing deposit address
-    // FIXME issue with streetAdress vs. streetAddress
-    const deposit = this.defaultConfig.shared.hub.deposits.find(add => {
-      return add.isEqual(address) &&
-        add.fees >= 0;
-    });
-    if (deposit) {
-      price = deposit.fees;
-      return price;
-    }
+    const total = this.subTotal()
+    let price = this.estimateShippingFees(address);
 
     //
     // TODO TESTING MERCHANT ACCOUNT
@@ -487,21 +469,29 @@ export class CartService {
     // }
 
 
+    //
     // implement 3) get free shipping!
     if (this.cartConfig.shipping.discountB &&
       total >= this.cartConfig.shipping.discountB) {
-      price = (price - this.cartConfig.shipping.priceB);
-    } else
-      if (this.cartConfig.shipping.discountA &&
-        total >= this.cartConfig.shipping.discountA) {
-        price = (price - this.cartConfig.shipping.priceA);
-      }
+      price = Math.max(price - this.cartConfig.shipping.priceB,0);
+    } else if (this.cartConfig.shipping.discountA &&
+      total >= this.cartConfig.shipping.discountA) {
+      price = Math.max(price - this.cartConfig.shipping.priceA,0);
+    }
+
     return price;
   }
 
   estimateShippingFees(address: UserAddress) {
     this.checkIfReady();
     const total = this.subTotal();
+
+    //
+    // check if there is a pending order for this address
+    if(this.hasShippingReductionMultipleOrder(address)) {
+      return 0;
+    }
+
     const postalCode = address.postalCode || '1234567';
 
     let district = config.getShippingDistrict(postalCode);
@@ -525,8 +515,6 @@ export class CartService {
 
     //
     // TODO TESTING MERCHANT ACCOUNT
-
-
     return price;
   }
 
@@ -541,6 +529,8 @@ export class CartService {
     // remove all items for this HUB
     this.cache.items = [];
     this.cache.discount = {};
+
+    //console.log('---DEBUG cart:clear',this.cache);
     //
     // FIXME dont use localstorage here
     localStorage.setItem('kng2-cart', JSON.stringify(this.cache));
@@ -622,8 +612,31 @@ export class CartService {
     return this.getItems().some(item => item.error);
   }
 
+  hasPendingOrder(): boolean {
+    return !!(this.currentPendingOrder && this.currentPendingOrder.shipping);
+  }
+
+  hasShippingReductionMultipleOrder(address?): boolean {
+    //
+    // check if there is a pending order for this address
+    if(this.currentPendingOrder && this.currentPendingOrder.shipping){
+      const pending = UserAddress.from(this.currentPendingOrder.shipping);
+      address = address || this.cache.address;
+      if(address.isEqual(pending)){
+        return true;
+      }
+    }
+    return false;
+  }
+
   hasShippingReduction(): boolean {
     const total = this.subTotal();
+
+    //
+    // FIXME shipping reduction for pending depends on dst address
+    if(this.hasPendingOrder()) {
+      return true;
+    }
 
     // implement 3) get free shipping!
     if (this.cartConfig.shipping.discountB &&
@@ -656,7 +669,12 @@ export class CartService {
     return shop.available.weekdays.indexOf(weekday) > -1;
   }
 
+
   loadCache(shared?: string) {
+
+    if(this.cache.loaded) {
+      return;
+    }
     //
     // IFF next shipping day is Null (eg. hollidays)=> currentShippingDay
     const nextShippingDay = Order.nextShippingDay(this.currentUser);
@@ -674,11 +692,19 @@ export class CartService {
       if (!fromLocal || shared) {
         return;
       }
+
+
       //
       // check shipping date or get the next one
       // FIXME default shipping time is hardcoded
       this.cache.currentShippingTime = fromLocal.currentShippingTime || 16;
       this.cache.currentShippingDay = new Date(fromLocal.currentShippingDay || nextShippingDay || currentShippingDay);
+
+      //
+      // get state from pending order
+      if(this.currentPendingOrder){
+        this.cache.currentShippingDay = new Date(this.currentPendingOrder.shipping.when);
+      }
 
       //
       // if selected shipping date is before the next one => reset the default date
@@ -710,6 +736,13 @@ export class CartService {
       }
 
       //
+      // get state from pending order
+      // FIXME set address equals to pending
+      if(this.currentPendingOrder){
+        this.cache.address = UserAddress.from(this.currentPendingOrder.shipping);          
+      }else
+
+      //
       // FIXME create function that return UserAddress DepositAddress
       // load address
       if (fromLocal.address) {
@@ -729,19 +762,22 @@ export class CartService {
           Object.assign(this.cache.address, fromLocal.address);
           this.cache.address.floor = '-';
         }
-
-        //
-        // check existance on the current user (example when you switch account, cart should be sync )
-        if (!this.currentUser.addresses.some(address => address.isEqual(this.cache.address)) &&
-          !this.defaultConfig.shared.hub.deposits.some(address => address.isEqual(this.cache.address))) {
-          this.cache.address = new UserAddress();
-        }
       }
 
+      //
+      // check existance on the current user (example when you switch account, cart should be sync )
+      if (!this.currentUser.addresses.some(address => address.isEqual(this.cache.address)) &&
+        !this.defaultConfig.shared.hub.deposits.some(address => address.isEqual(this.cache.address))) {
+        this.cache.address = new UserAddress();
+      }
+
+      //console.log('---DEBUG cart:load',this.cache.address);
+      this.cache.loaded = true;
     } catch(err) {
       // First time in karibou.ch localStorage is undefined
       this.cache.items = []
       this.cache.updated = new Date('1990-12-01T00:00:00');
+      this.cache.loaded = true;
     }
   }
 
@@ -777,7 +813,7 @@ export class CartService {
       headers: this.headers,
       withCredentials: true
     }).pipe(
-      debounceTime(500),
+      debounceTime(800),
       map(cart => {
         return cart;
       }),
@@ -933,6 +969,7 @@ export class CartService {
            !this.currentUser.isAuthenticated()) {
             this.cache.updated = new Date();
         }
+        //console.log('---DEBUG kng2-cart:saveLocal',this.cache.address);
         localStorage.setItem('kng2-cart', JSON.stringify(this.cache));
         observer.next(state);
       } catch (e) {
@@ -975,7 +1012,8 @@ export class CartService {
 
 
     //
-    // FIXME implement the case of Clear!
+    // FIXME Clear case is buggy!
+    // FIXME remove debounceTime()!
 
 
     return this.$http.post<CartModel>(ConfigService.defaultConfig.API_SERVER + '/v1/cart', model, {
@@ -983,6 +1021,7 @@ export class CartService {
       headers: this.headers,
       withCredentials: true
     }).pipe(
+      debounceTime(500),
       map(model => {
       this.cache.cid = model.cid;
       this.cache.items = model.items.map(item => new CartItem(item));
@@ -996,6 +1035,7 @@ export class CartService {
         const restored = (hubItems.find(i => i.sku === item.sku));
         restored && (restored.error = item.error);
       });
+      //console.log('---DEBUG kng2-cart:saveServer',this.cache.address);
 
       //
       // sync with server is done!
@@ -1010,6 +1050,12 @@ export class CartService {
   //
   // set default user address
   setShippingAddress(address: UserAddress) {
+    //
+    // check if address exist before to save it
+    if (!this.currentUser.addresses.some(address => address.isEqual(address))){
+      return;
+    }
+
     this.cache.address = address;
     this.save({ action: CartAction.CART_ADDRESS });
   }
@@ -1033,7 +1079,8 @@ export class CartService {
 
   //
   // init cart context => load & merge available cart, with current one
-  setContext(config: Config, user: User, shops?: Shop[]) {
+  // - user latest orders (helper for complement)
+  setContext(config: Config, user: User, shops?: Shop[], orders?:Order[]) {
     Object.assign(this.defaultConfig, config);
     Object.assign(this.currentUser, user);
     this.currentHub = this.defaultConfig.shared.hub.slug;
@@ -1047,6 +1094,18 @@ export class CartService {
     this.cache.currentShippingDay = Order.nextShippingDay(user);
     // FIXME default shipping time should not be hardcoded
     this.cache.currentShippingTime = 16;
+
+    //
+    // if there is an open order, 
+    // - set the default address
+    // - set the default date
+    orders = orders || [];
+    //
+    // EnumFinancialStatus[EnumFinancialStatus.authorized]
+    const opens = orders.filter(order => order.payment.status == 'authorized' && !order.shipping.parent); 
+    if(opens.length) {
+      this.currentPendingOrder = opens[0];
+    }
 
     //
     // mark cart ready
@@ -1070,11 +1129,10 @@ export class CartService {
     const total = this.subTotal();
     let price = this.computeShippingFees(this.cache.address);
 
-
     // Compute shipping and substract discount
     if (removeDiscount) {
       const fees = this.getCurrentGateway().fees * (total + price);
-      price -= Math.max(this.totalDiscount() - fees, 0);
+      price -= (this.totalDiscount() - fees);
     }
 
     return Utils.roundAmount(Math.max(price, 0));

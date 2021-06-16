@@ -185,6 +185,7 @@ export class Order {
   }];
 
   shipping: {
+    parent: number,
     when: Date,
     hours: number,
     name: string,
