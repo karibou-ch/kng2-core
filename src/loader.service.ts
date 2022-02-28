@@ -10,7 +10,7 @@ import { Shop, ShopService } from './shop.service';
 
 import { Observable, merge, combineLatest, throwError as _throw, ReplaySubject } from 'rxjs';
 
-import { catchError, flatMap, map, publishReplay, refCount, filter, tap } from 'rxjs/operators';
+import { catchError, flatMap, map, publishReplay, refCount, filter } from 'rxjs/operators';
 import { CartService, CartState } from './cart.service';
 import { OrderService } from './order/order.service';
 import { Order } from './order/order';

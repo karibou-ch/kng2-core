@@ -270,11 +270,14 @@ class Cache extends CartModel {
   uuid?: string;
   name?: string;
   loaded: boolean;
+  timestamp: number;
   constructor() {
     super();
     this.discount = {};
     this.address = new DepositAddress();
     this.payment = new UserCard();
+    // FIXME use rxjs to debounce call
+    this.timestamp = Date.now();
     // shipping dated depends on config...
     // see setContext(...)
     // this.currentShippingDay=Order.nextShippingDay();
@@ -302,6 +305,9 @@ export class CartService {
 
   private cache = new Cache();
 
+  private load$: ReplaySubject<string>;
+
+
   public SHIPPING_COLLECT = 'collect';
   public SHIPPING_CENTER = 'hypercenter';
   public SHIPPING_PERIPHERY = 'periphery';
@@ -323,10 +329,16 @@ export class CartService {
     //
     // 1 means to keep the last value
     this.cart$ = new ReplaySubject(1);
+    this.load$ = new ReplaySubject(1);
     this.isReady = false;
 
+    this.load$.asObservable().pipe(debounceTime(200)).subscribe((cached)=> {
+      this.internalLoad(cached);
+    })
+    
     // this.cart$.next({action:CartAction.CART_INIT});
   }
+
 
   //
   // API
@@ -458,7 +470,7 @@ export class CartService {
   }
 
 
-  computeShippingFees(address: UserAddress) {
+  computeShippingFees(address: UserAddress|DepositAddress) {
     const total = this.subTotal()
     let price = this.estimateShippingFees(address);
 
@@ -467,6 +479,13 @@ export class CartService {
     // if (user.merchant===true){
     // return Utils.roundAmount(price-this.cartConfig.shipping.priceB);
     // }
+
+    //
+    // find for deposit address
+    if(address['fees'] >= 0) {
+      return price = address['fees'];
+    }
+
 
 
     //
@@ -620,9 +639,11 @@ export class CartService {
     //
     // check if there is a pending order for this address
     if(this.currentPendingOrder && this.currentPendingOrder.shipping){
+      const whenDay = this.currentPendingOrder.shipping.when.getDate();
+      const nextDay = this.cache.currentShippingDay.getDate();
       const pending = UserAddress.from(this.currentPendingOrder.shipping);
       address = address || this.cache.address;
-      if(address.isEqual(pending)){
+      if(address.isEqual(pending) && whenDay == nextDay ){
         return true;
       }
     }
@@ -669,6 +690,9 @@ export class CartService {
     return shop.available.weekdays.indexOf(weekday) > -1;
   }
 
+  load(shared?:string) {
+    this.load$.next(shared);
+  }
 
   loadCache(shared?: string) {
 
@@ -781,7 +805,8 @@ export class CartService {
     }
   }
 
-  load(shared?: string) {
+  internalLoad(shared?: string) {
+    this.cache.timestamp = Date.now();
     //
     // INIT local values
     this.loadCache(shared);
@@ -813,7 +838,6 @@ export class CartService {
       headers: this.headers,
       withCredentials: true
     }).pipe(
-      debounceTime(800),
       map(cart => {
         return cart;
       }),
@@ -987,8 +1011,21 @@ export class CartService {
     const errors = model.items.filter(item => item.error);
 
     if (!this.currentUser.isAuthenticated()) {
+      // console.log('--- DBG cart.save unauthorized');
       return throwError('Unauthorized');
     }
+
+    //
+    // FIXME quick fix for debounceTime of ~500ms
+    if(this.cache.timestamp) {
+      const time = Date.now() - this.cache.timestamp;
+      if(time < 500){
+        // console.log('--- DBG cart.save time',time<500);
+        return throwError('debounce');
+      }
+      this.cache.timestamp = Date.now();
+    }
+
     if ([CartAction.ITEM_ADD, CartAction.ITEM_REMOVE, CartAction.ITEM_ALL, CartAction.CART_CLEARED].indexOf(state.action) === -1) {
       return of(state);
     }
@@ -1010,18 +1047,11 @@ export class CartService {
       params.uuid = this.cache.uuid;
     }
 
-
-    //
-    // FIXME Clear case is buggy!
-    // FIXME remove debounceTime()!
-
-
     return this.$http.post<CartModel>(ConfigService.defaultConfig.API_SERVER + '/v1/cart', model, {
       params: (params),
       headers: this.headers,
       withCredentials: true
     }).pipe(
-      debounceTime(500),
       map(model => {
       this.cache.cid = model.cid;
       this.cache.items = model.items.map(item => new CartItem(item));
@@ -1049,10 +1079,17 @@ export class CartService {
 
   //
   // set default user address
-  setShippingAddress(address: UserAddress) {
+  setShippingAddress(address: UserAddress|DepositAddress) {
+    //
+    // check if deposit
+    const deposit = this.defaultConfig.shared.hub.deposits.find(add => {
+      return add.isEqual(address) && add.fees >= 0;
+    });
+    
+    
     //
     // check if address exist before to save it
-    if (!this.currentUser.addresses.some(address => address.isEqual(address))){
+    if (!deposit && !this.currentUser.addresses.some(address => address.isEqual(address))){
       return;
     }
 
