@@ -57,7 +57,7 @@ import { HubService } from './hub.service';
 })
 export class Kng2CoreModule {
   //https://angular-2-training-book.rangle.io/handout/modules/feature-modules.html
-  public static forRoot(options:any): ModuleWithProviders {
+  public static forRoot(options:any): ModuleWithProviders<Kng2CoreModule> {
 
     // try{
     //   let server=localStorage.getItem(ConfigKeyStoreEnum[ConfigKeyStoreEnum.KIO2_SERVER]);
