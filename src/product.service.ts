@@ -228,6 +228,7 @@ export class Product {
             attributes: {},
             details: {},
             photo: {},
+            recipes: [],
             pricing: {},
             categories: {},
             shelflife: {},
@@ -266,6 +267,7 @@ export class Product {
         a: string;
         updated: Date;
     }];
+    recipes: string[];
     photo: {
         url: string;
         colors: any[];
