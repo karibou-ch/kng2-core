@@ -50,6 +50,24 @@ export class ProductService {
         return incache;
     }
 
+    dotNotation(product: Product) {
+        const notationObj = {};
+        function recurrent(obj, current?) {
+            for(var key in obj) {
+                var value = obj[key];
+                var newKey = (current ? current + "." + key : key); 
+                if(value && typeof value === "object") {
+                this.recurrent(value, newKey);  
+                } else {
+                    notationObj[newKey] = value;  
+                }
+            }
+            return notationObj;
+        }
+        return recurrent(notationObj);
+    }
+
+    
 
     //
     // REST api wrapper
@@ -190,7 +208,6 @@ export class ProductService {
             headers: this.headers,
             withCredentials: true
         }).pipe(
-            retryWhen(errors => errors.pipe(delay(1000), take(3))),
             map(product => this.updateCache(product)),
             tap(this.product$.next.bind(this.product$))
         );
