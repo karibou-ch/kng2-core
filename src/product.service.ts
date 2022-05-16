@@ -239,9 +239,10 @@ class Cache {
 
 
 export interface ProductPortion {
-  weight:number;
+  part:number;
   unit:string;
   offset:number;
+  isWeight:boolean;
 }
 
 
@@ -362,18 +363,21 @@ export class Product {
     }
 
     getPortionParts(delta?:number):ProductPortion {
-      const part = this.pricing.part||'';
-      delta = delta||0.15;
-      let m = (part).match(/~([0-9.]+) ?(.+)/);
-      if (!m || m.length < 2) {
-        return {weight:0,unit:'',offset:0}; 
+      delta = delta||0.15; //                 ~   --part--    --unit--
+      let m = (this.pricing.part||'').match(/(~)?([0-9.,]+) ?([a-zA-Z]+)/);
+      if(!m) {
+        return {part:0,unit:'',offset:0,isWeight:false}; 
       }
-      //
-      // 'portion entre ' + (weight - offset) + unit + ' et ' + (weight + offset) + '' + unit
-      const weight = parseFloat(m[1]); 
-      const unit = (m[2]).toLowerCase();
-      const offset = this.getRoundPrice(weight * delta);
-      return {weight, unit, offset};
+      // [0]
+      // [1] => variant ?
+      // [2] => part
+      // [3] => unit
+      const part = parseFloat(m[2]); 
+      const unit = (m[3]).toLowerCase();
+      const offset = (!m[1])? 0:this.getRoundPrice(part * delta);
+      const isWeight = ['g','gr','k','kg','kilo'].indexOf(unit)>-1;
+      // 'portion entre ' + (part - offset) + unit + ' et ' + (part + offset) + '' + unit
+      return {part, unit, offset, isWeight};
     }
 
     getRoundPrice(value: number, round?:number) {

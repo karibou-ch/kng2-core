@@ -35,6 +35,7 @@ export { Photo,
          PhotoService } from './photo.service';
 
 export { Product,
+         ProductPortion,
          ProductService } from './product.service';
 
 export { Shop,
