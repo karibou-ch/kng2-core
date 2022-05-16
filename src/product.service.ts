@@ -57,14 +57,14 @@ export class ProductService {
                 var value = obj[key];
                 var newKey = (current ? current + "." + key : key); 
                 if(value && typeof value === "object") {
-                this.recurrent(value, newKey);  
+                recurrent(value, newKey);  
                 } else {
                     notationObj[newKey] = value;  
                 }
             }
             return notationObj;
         }
-        return recurrent(notationObj);
+        return recurrent(product);
     }
 
     
@@ -353,6 +353,32 @@ export class Product {
         let m = weight.match(/~([0-9.]+) ?(.+)/);
         return(!m || m.length < 2);
     }
+
+    getPortionParts(part, delta?:number) {
+      delta = delta||0.15;
+      let m = (part||'').match(/~([0-9.]+) ?(.+)/);
+      if (!m || m.length < 2) {
+        return ''; 
+      }
+      //
+      // 'portion entre ' + (weight - offset) + unit + ' et ' + (weight + offset) + '' + unit
+      const weight = parseFloat(m[1]); 
+      const unit = (m[2]).toLowerCase();
+      const offset = this.getRoundPrice(weight * delta);
+      return {weight, unit, offset};
+    }
+
+    getRoundPrice(value: number, round?:number) {
+      round = round || 5; //centimes
+      if (value <= 5) {
+        return value.toFixed(1);
+      }
+      if (value <= 50) {
+        return Math.round(value);
+      }
+      return (Math.round(value / round) * round);      
+    }
+    
 
     getPrice() {
         if (this.attributes.discount && this.pricing.discount) {
