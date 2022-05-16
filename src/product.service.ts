@@ -238,6 +238,13 @@ class Cache {
 }
 
 
+export interface ProductPortion {
+  weight:number;
+  unit:string;
+  offset:number;
+}
+
+
 export class Product {
 
     constructor(json?: any) {
@@ -349,16 +356,17 @@ export class Product {
     };
 
     hasFixedPortion() {
-        let weight = this.pricing.part || '';
+        const weight = this.pricing.part || '';
         let m = weight.match(/~([0-9.]+) ?(.+)/);
         return(!m || m.length < 2);
     }
 
-    getPortionParts(part, delta?:number) {
+    getPortionParts(delta?:number):ProductPortion {
+      const part = this.pricing.part||'';
       delta = delta||0.15;
-      let m = (part||'').match(/~([0-9.]+) ?(.+)/);
+      let m = (part).match(/~([0-9.]+) ?(.+)/);
       if (!m || m.length < 2) {
-        return ''; 
+        return {weight:0,unit:'',offset:0}; 
       }
       //
       // 'portion entre ' + (weight - offset) + unit + ' et ' + (weight + offset) + '' + unit
@@ -371,7 +379,7 @@ export class Product {
     getRoundPrice(value: number, round?:number) {
       round = round || 5; //centimes
       if (value <= 5) {
-        return value.toFixed(1);
+        return parseFloat(value.toFixed(1));
       }
       if (value <= 50) {
         return Math.round(value);
