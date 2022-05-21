@@ -41,11 +41,11 @@ export class ProductService {
         return Object.assign(this.cache.map.get(product.sku), product);
     }
 
-    private deleteCache(product: Product) {
-        const incache = this.cache.map.get(product.sku);
+    private deleteCache(sku: number) {
+        const incache = this.cache.map.get(sku);
         if (incache) {
             incache.deleted = true;
-            this.cache.map.delete(product.sku);
+            this.cache.map.delete(sku);
         }
         return incache;
     }
@@ -185,7 +185,7 @@ export class ProductService {
         headers: this.headers,
         withCredentials: true
       }).pipe(
-        map(product => this.deleteCache(product)),
+        map(product => this.deleteCache(sku)),
         tap(this.product$.next.bind(this.product$))
       );
     }
