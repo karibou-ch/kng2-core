@@ -35,9 +35,8 @@ export class MetricsService {
   }
 
   push(metrics: Metrics) {    
-    return this.http.post<Metrics>(this.config.API_SERVER + '/v1/metrics' + hub.slug, hub, {
+    return this.http.post<Metrics>(this.config.API_SERVER + '/v1/metrics', metrics, {
       headers: this.headers,
-      params: (metrics as any),
       withCredentials: true
   });
   }
