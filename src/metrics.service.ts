@@ -5,40 +5,52 @@ import { Config } from './config';
 import { ConfigService } from './config.service';
 
 
-import { ReplaySubject } from 'rxjs';
+import { Subject } from 'rxjs';
+import { debounceTime, switchMap } from 'rxjs/operators';
 
 export interface Metrics {
-  when: string;
-  ip: string;
+  when?: string;
+  ip?: string;
+  hit?: number;
+  updated?: Date;
+  amount?: number;
   hub: string;
   action: string;
-  hit: number;
-  amount: number;
   source: string;
-  updated: Date;
 }
 
 @Injectable()
-export class MetricsService {
+export class AnalyticsService {
 
   private headers: HttpHeaders;
   public config: Config | any;
-  public metrics$: ReplaySubject<Metrics>;
+  public metrics$: Subject<Metrics>;
 
   constructor(
     private http: HttpClient
   ) {
     this.headers = new HttpHeaders();
     this.headers.append('Content-Type', 'application/json');
-    this.metrics$ = new ReplaySubject<Metrics>(1);
     this.config = ConfigService.defaultConfig;
+    this.metrics$ = new Subject<Metrics>();
+    this.metrics$.pipe(
+      debounceTime(2000),
+      switchMap(metrics => {
+      return this.http.post<Metrics>(this.config.API_SERVER + '/v1/metrics', metrics, {
+        headers: this.headers,
+        withCredentials: true
+      })
+    })).subscribe();
   }
 
   push(metrics: Metrics) {    
-    return this.http.post<Metrics>(this.config.API_SERVER + '/v1/metrics', metrics, {
-      headers: this.headers,
-      withCredentials: true
-  });
+    this.metrics$.next(metrics);
   }
 
+  get() {
+    return this.http.get<any>(this.config.API_SERVER + '/v1/metrics', {
+      headers: this.headers,
+      withCredentials: true
+    })
+  }
 }

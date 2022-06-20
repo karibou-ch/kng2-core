@@ -6,7 +6,7 @@ export { Kng2CoreModule } from './kng2-core.module';
 // services
 export { ConfigService } from './config.service';
 
-export { MetricsService, Metrics } from './metrics.service';
+export { AnalyticsService, Metrics } from './metrics.service';
 
 export { CartAction,
          CartConfig,

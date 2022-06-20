@@ -27,6 +27,7 @@ import { OrderPortionPipe, OrderBasepricePipe, OrderBasepricePipeEx } from './or
 import { MarkdownDirective } from './util.markdown.directive';
 import { ReportingService } from './reporting.service';
 import { HubService } from './hub.service';
+import { AnalyticsService } from './metrics.service';
 
 //
 // dynamic injection of module configuration
@@ -73,6 +74,7 @@ export class Kng2CoreModule {
           provide:"KNG2_OPTIONS",
           useValue: options || {}
         },
+        AnalyticsService,
         CartService,
         CategoryService,
         ConfigService,
