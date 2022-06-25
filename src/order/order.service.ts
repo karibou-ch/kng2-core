@@ -192,8 +192,7 @@ export class OrderService {
 
   //
   // update item for one order (shop preparation process)
-  // role:shop:admin
-  // app.post('/v1/orders/:oid/items', orders.ensureShopOwnerOrAdmin, queued(orders.updateItem));
+  // role:shop:operator:admin
   updateItem(order: Order, items, fulfillment: EnumFulfillments): Observable<Order> {
     const tosave = items.map(item => {
       const elem = Object.assign({}, item);
@@ -398,8 +397,7 @@ export class OrderService {
   }
 
   // find all repport
-  // role:admin|shop
-  // app.get('/v1/orders/invoices/shops/:month/:year?', orders.ensureHasShopOrAdmin, orders.invoicesByShops);
+  // role:admin:operator:shop
   findRepportForShop(filter): Observable<any> {
     const now = new Date();
     const month = now.getMonth() + 1;

@@ -27,6 +27,7 @@ export enum CartItemFrequency {
 // on cart action
 export enum CartAction {
   ITEM_ADD = 1,
+  ITEM_UPDATE = 13,
   ITEM_REMOVE = 2,
   ITEM_MAX = 3,
   ITEM_ALL = 12,
@@ -71,7 +72,8 @@ export class CartItem {
   finalprice: number;
   weight: number;
   error?: string;
-  note: string;
+  note?: string;
+  audio?: string;
   category: {
     slug: string;
     name: string;
@@ -89,6 +91,7 @@ export class CartItem {
   discount: boolean;
   part: string;
   quantity: number;
+  stockLimit?: number;
 
   static fromOrder(orderItem: OrderItem, vendor: Shop) {
     const variant = (orderItem.variant) ? orderItem.variant.title : null;
@@ -148,8 +151,8 @@ export class CartItem {
       weight: product.categories.weight,
       discount: product.isDiscount(),
       part: product.pricing.part,
-      quantity: (quantity || 1)
-    };
+      quantity: (quantity || 1),
+      stockLimit : product.pricing&&product.pricing.stock };
     //
     // init discount 
     // TODO howto manage discount link
@@ -270,14 +273,11 @@ class Cache extends CartModel {
   uuid?: string;
   name?: string;
   loaded: boolean;
-  timestamp: number;
   constructor() {
     super();
     this.discount = {};
     this.address = new DepositAddress();
     this.payment = new UserCard();
-    // FIXME use rxjs to debounce call
-    this.timestamp = Date.now();
     // shipping dated depends on config...
     // see setContext(...)
     // this.currentShippingDay=Order.nextShippingDay();
@@ -332,7 +332,7 @@ export class CartService {
     this.load$ = new ReplaySubject(1);
     this.isReady = false;
 
-    this.load$.asObservable().pipe(debounceTime(200)).subscribe((cached)=> {
+    this.load$.asObservable().pipe(debounceTime(300)).subscribe((cached)=> {
       this.internalLoad(cached);
     })
     
@@ -356,6 +356,20 @@ export class CartService {
   }
 
   //
+  // update note if item is available
+  addOrUpdateNote(item: CartItem, variant?: string){
+    const items = this.cache.items;
+    const index = items.findIndex(elem => elem.sku == item.sku);
+    if (index>-1){
+      items[index].note =  item.note || items[index].note;        
+      items[index].audio = item.audio || items[index].audio;
+      this.save({ item: items[index], action: CartAction.ITEM_UPDATE });
+      return;
+    }
+    this.add(item,variant);
+  }
+
+  //
   // add one item
   add(product: Product | CartItem, variant?: string, quiet?: boolean) {
     // if(window.fbq)fbq('track', 'AddToCart');
@@ -375,10 +389,7 @@ export class CartService {
         //
         // check availability
         // TODO products should be cached in Cart.cache.products[] to sync vendor/discount and quantity
-        if ((product instanceof Product) &&
-          product.pricing &&
-          product.pricing.stock <= items[i].quantity) {
-          // return api.info($rootScope,"La commande maximum pour ce produit à été atteintes.",4000);
+        if (item.stockLimit>0 && item.stockLimit <= items[i].quantity) {
           if (quiet) {
             return;
           }
@@ -388,17 +399,18 @@ export class CartService {
 
         //
         //  fast cart load
-        if (items[i].quantity > 10) {
-          items[i].quantity += 5;
-        } else if (items[i].quantity > 4) {
+        if (items[i].quantity > 6) {
           items[i].quantity += 2;
         } else {
           items[i].quantity++;
         }
+        console.log('--DBG add note',item.note,item.audio)
         //
         // update the finalprice and vendor
         items[i].finalprice = items[i].price * items[i].quantity;
         items[i].vendor = item.vendor;
+        items[i].note =  items[i].note || item.note;        
+        items[i].audio = items[i].audio || item.audio;        
 
         // TODO warn update
         this.computeVendorDiscount(product.vendor);
@@ -806,7 +818,6 @@ export class CartService {
   }
 
   internalLoad(shared?: string) {
-    this.cache.timestamp = Date.now();
     //
     // INIT local values
     this.loadCache(shared);
@@ -1013,17 +1024,6 @@ export class CartService {
     if (!this.currentUser.isAuthenticated()) {
       // console.log('--- DBG cart.save unauthorized');
       return throwError('Unauthorized');
-    }
-
-    //
-    // FIXME quick fix for debounceTime of ~500ms
-    if(this.cache.timestamp) {
-      const time = Date.now() - this.cache.timestamp;
-      if(time < 500){
-        // console.log('--- DBG cart.save time',time<500);
-        return throwError('debounce');
-      }
-      this.cache.timestamp = Date.now();
     }
 
     if ([CartAction.ITEM_ADD, CartAction.ITEM_REMOVE, CartAction.ITEM_ALL, CartAction.CART_CLEARED].indexOf(state.action) === -1) {
