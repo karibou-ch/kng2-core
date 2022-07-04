@@ -223,7 +223,7 @@ export class Order {
 
     this.shipping.when = new Date(this.shipping.when);
     this.created = new Date(this.created);
-    this.closed = new Date(this.closed);
+    this.closed = this.closed?new Date(this.closed):undefined;
 
     //
     // Normalized HUB
