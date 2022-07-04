@@ -47,6 +47,8 @@ export class Hub {
     primaryText: string,
     action: string,
     actionText: string,
+    appbar:string,
+    appbarText:string,
   };
 
   //
