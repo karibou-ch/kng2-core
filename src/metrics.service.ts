@@ -36,7 +36,7 @@ export class AnalyticsService {
     this.metrics$.pipe(
       debounceTime(2000),
       switchMap(metrics => {
-      return this.http.post<Metrics>(this.config.API_SERVER + '/v1/metrics', metrics, {
+      return this.http.post<Metrics>(this.config.API_SERVER + '/v1/matrix', metrics, {
         headers: this.headers,
         withCredentials: true
       })
