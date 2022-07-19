@@ -47,6 +47,7 @@ export class OrderShipping extends UserAddress {
 export interface OrderItem {
   sku: number;
   title: string;
+  hub: string;
   category: string;
 
   //
@@ -69,6 +70,7 @@ export interface OrderItem {
   //
   // customer note
   note?: string;
+  audio?: string;
 
   //
   // product variation is not yet implemented
