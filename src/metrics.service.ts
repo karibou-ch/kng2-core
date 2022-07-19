@@ -47,8 +47,10 @@ export class AnalyticsService {
     this.metrics$.next(metrics);
   }
 
-  get() {
+  get(params?) {
+
     return this.http.get<any>(this.config.API_SERVER + '/v1/metrics', {
+      params:params||{},
       headers: this.headers,
       withCredentials: true
     })
