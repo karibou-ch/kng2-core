@@ -162,6 +162,15 @@ export class ProductService {
     }
 
     //
+    // get product history based on its sku
+    history(sku): Observable<any> {
+        return this.http.get<Product>(this.config.API_SERVER + '/v1/products/history/' + sku, {
+            headers: this.headers,
+            withCredentials: true
+        });
+    }
+
+    //
     // get product based on its sku
     get(sku): Observable<Product> {
         let cached: Observable<Product>;
