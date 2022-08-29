@@ -23,9 +23,11 @@ import { UserAddress, User } from '../user.service';
 // Define order shipping
 export class OrderShipping extends UserAddress {
   when: Date;
-  hours: number;
+  //
+  // hours is used as key for the schedule Map, key can be a string
+  hours: number|string;
 
-  constructor(address: UserAddress, when: Date, hours: number) {
+  constructor(address: UserAddress, when: Date, hours: number|string) {
     super(
       address.name,
       address.streetAdress,
@@ -245,31 +247,30 @@ export class Order {
 
   //
   // the next shipping day
-  static nextShippingDay(user?: User) {
-    const potential = config.potentialShippingDay();
+  static nextShippingDay(user?: User, hub?:any) {
+    const potential = config.potentialShippingDay(hub);
+    const currentHub   = (hub)? hub:config.shared.hub;
     const next = potential.dayToDates(
-      config.shared.hub.weekdays
+      currentHub.weekdays
     );
 
     //
     // remove complete shipping days for the current HUB
     // its a weak constraint
-    const currentHub   = config.shared.hub.slug;
-    if (currentHub) {
-      const currentRanks = config.shared.currentRanks[currentHub] || {};
-      const premiumLimit = (user && user.isPremium()) ? (config.shared.order.premiumLimit || 0) : 0;
-      const currentLimit = (config.shared.hub.currentLimit || 1000) + premiumLimit;
+    const currentRanks = config.shared.currentRanks[currentHub.slug] || {};
+    const premiumLimit = (user && user.isPremium()) ? (config.shared.order.premiumLimit || 0) : 0;
+    const currentLimit = (config.shared.hub.currentLimit || 1000) + premiumLimit;
 
-      for (let i = next.length - 1; i >= 0; i--) {
-        if (currentRanks[next[i].getDay()] >= currentLimit) {
-          next.splice(i, 1);
-        }
+    for (let i = next.length - 1; i >= 0; i--) {
+      if (currentRanks[next[i].getDay()] >= currentLimit) {
+        next.splice(i, 1);
       }
     }
 
     //
     // no closed date
-    if (!config.shared.hub.noshipping || !config.shared.hub.noshipping.length) {
+    // FIXME remove main hub constraint
+    if (!currentHub.noshipping || !currentHub.noshipping.length) {
       return next[0];
     }
 
@@ -277,8 +278,8 @@ export class Order {
     // next contains the potentials shipping days,
     // we must return the first date available for shipping
     for (var j = 0; j < next.length; j++) {
-      for (var i = 0; i < config.shared.hub.noshipping.length; i++) {
-        const noshipping = config.shared.hub.noshipping[i];
+      for (var i = 0; i < currentHub.noshipping.length; i++) {
+        const noshipping = currentHub.noshipping[i];
         if (!next[j].in(noshipping.from, noshipping.to)) return next[j];
       }
     }
@@ -291,14 +292,16 @@ export class Order {
   //
   // a full week of available shipping days
   // limit to nb days (default is <7)
-  static fullWeekShippingDays(limit?) {
-    let next = config.potentialShippingWeek(),
+  static fullWeekShippingDays(hub?:any) {
+    const currentHub   = (hub)? hub:config.shared.hub;
+
+    let next = config.potentialShippingWeek(hub),
         lst:any[] = [],
         today = new Date();
 
     //
     // default date limit is defined by
-    limit = limit || config.shared.order.uncapturedTimeLimit;
+    let limit = config.shared.order.uncapturedTimeLimit;
     limit = limit && today.plusDays(limit + 0);
 
     function format(lst) {
@@ -319,7 +322,7 @@ export class Order {
 
     //
     // no closed date
-    if (!config.shared.hub.noshipping || !config.shared.hub.noshipping.length) {
+    if (!currentHub.noshipping || !currentHub.noshipping.length) {
       return format(next);
     }
 
@@ -327,7 +330,7 @@ export class Order {
     // next contains the potentials shipping days,
     // we must return the first date available for shipping
     next.forEach(function (shippingday) {
-      let find = config.shared.hub.noshipping.find(noshipping => shippingday.in(noshipping.from, noshipping.to))
+      let find = currentHub.noshipping.find(noshipping => shippingday.in(noshipping.from, noshipping.to))
       if (!find) lst.push(shippingday)
     });
 
@@ -338,45 +341,7 @@ export class Order {
   }
 
 
-  static findPastWeekOfShippingDay(when) {
-    // init the date at begin of the week
-    var next = new Date(when.getTime() - (when.getDay() * 86400000)), all:any[] = [], nextDate, nextDay;
 
-    // jump one week past
-    next = new Date(next.getTime() - 86400000 * 7);
-
-    config.shared.hub.weekdays.forEach(function (day) {
-      nextDay = (day >= next.getDay()) ? (day - next.getDay()) : (7 - next.getDay() + day);
-      nextDate = new Date(nextDay * 86400000 + next.getTime());
-      if (config.shared.hub.weekdays.indexOf(nextDate.getDay()) !== -1)
-      { all.push(nextDate); }
-
-    });
-
-    // sorting dates
-    all = all.sort((a, b) => b.getTime() - a.getTime());
-    return all;
-  }
-
-  //
-  // return the next shipping day available for customers
-  findNextShippingDay() {
-    return Order.nextShippingDay();
-  }
-
-  //
-  // return the next shipping day available for Logistic
-  findCurrentShippingDay() {
-    return Order.currentShippingDay();
-  }
-
-  //
-  // get amount after (shipping+fees) deductions
-  getExtraDiscount() {
-    let total = this.getTotalPrice();
-    let subtotal = this.getSubTotal();
-    return subtotal - total;
-  }
 
   //
   // get amount of discount for this order
