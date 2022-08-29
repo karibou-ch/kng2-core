@@ -228,6 +228,12 @@ export class HubService {
 
   }
 
+  list(): Observable<Hub[]> {
+    return this.http.get<Hub[]>(this.config.API_SERVER + '/v1/hubs', {
+      headers: this.headers,
+      withCredentials: true,
+    });
+  }
 
   get(hub: string): Observable<Hub> {
     const params = { hub };
@@ -254,10 +260,20 @@ export class HubService {
     return this.http.post<Hub>(this.config.API_SERVER + '/v1/hubs/' + hub.slug + '/manage', hub, {
       headers: this.headers,
       withCredentials: true
-  }).pipe(
-      // retryWhen(errors => errors.pipe(delay(1000), take(3))),
-      tap(hub => this.hub$.next.bind(hub))
-  );
+    }).pipe(
+        // retryWhen(errors => errors.pipe(delay(1000), take(3))),
+        tap(hub => this.hub$.next.bind(hub))
+    );
+  }
+
+  saveAdmin(hub: Hub) {
+    return this.http.post<Hub>(this.config.API_SERVER + '/v1/hubs/' + hub.slug + '/admin', hub, {
+      headers: this.headers,
+      withCredentials: true
+    }).pipe(
+        // retryWhen(errors => errors.pipe(delay(1000), take(3))),
+        tap(hub => this.hub$.next.bind(hub))
+    );
   }
 
 }
