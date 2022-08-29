@@ -1,6 +1,6 @@
 import { HttpHeaders, HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { ReplaySubject, SubscriptionLike as ISubscription, throwError as _throw, Observable, of, throwError, from } from 'rxjs';
+import { ReplaySubject, SubscriptionLike as ISubscription, throwError as _throw, Observable, of, throwError, from, Subject } from 'rxjs';
 
 import { config, Config } from './config';
 
@@ -45,8 +45,9 @@ export enum CartAction {
 // on cart change
 export class CartState {
   item?: CartItem;
+  order?: Order;
   action: CartAction;
-  //sync: boolean;
+  server?: CartItem[];
 }
 
 //
@@ -99,6 +100,7 @@ export class CartItem {
       timestamp: (new Date()),
       title: orderItem.title,
       sku: orderItem.sku,
+      hub: orderItem.hub,
       variant: (variant),
       thumb: orderItem.thumb,
       price: orderItem.price,
@@ -127,11 +129,12 @@ export class CartItem {
     }
     return new CartItem(item);
   }
-  static fromProduct(product: Product, variant?: string, quantity?: number) {
+  static fromProduct(product: Product, hub: string, variant?: string, quantity?: number) {
     const item = {
       timestamp: (new Date()),
       title: product.title,
       sku: product.sku,
+      hub: hub,
       variant: (variant),
       thumb: product.photo.url,
       price: product.getPrice(),
@@ -165,7 +168,7 @@ export class CartItem {
   }
 
   equalItem(other: CartItem, variant?: string) {
-    const bSku = this.sku == other.sku;
+    const bSku = this.sku == other.sku && this.hub == other.hub;
     if (!variant) {
       return bSku;
     }
@@ -185,6 +188,7 @@ export class CartItem {
       vendor: this.vendor.urlpath,
       quantity: this.quantity,
       price: this.price,
+      hub: this.hub,
       part: this.part,
       note: this.note,
       finalprice: this.finalprice
@@ -265,7 +269,6 @@ class Cache extends CartModel {
   //
   // vendors discounts
   // TODO vendors discount should feet actual vendors settings
-  discount: any;
   address: DepositAddress | UserAddress;
   payment: UserCard;
   currentShippingDay: Date;
@@ -275,7 +278,6 @@ class Cache extends CartModel {
   loaded: boolean;
   constructor() {
     super();
-    this.discount = {};
     this.address = new DepositAddress();
     this.payment = new UserCard();
     // shipping dated depends on config...
@@ -296,6 +298,9 @@ export class CartService {
   private currentUser: User;
   private currentShops: Shop[] = [];
   private currentPendingOrder: Order;
+  private vendorAmount: any;
+  private itemsQtyMap: any;
+
 
   private defaultConfig: Config = config;
 
@@ -305,7 +310,7 @@ export class CartService {
 
   private cache = new Cache();
 
-  private load$: ReplaySubject<string>;
+  private load$: Subject<string>;
 
 
   public SHIPPING_COLLECT = 'collect';
@@ -329,8 +334,10 @@ export class CartService {
     //
     // 1 means to keep the last value
     this.cart$ = new ReplaySubject(1);
-    this.load$ = new ReplaySubject(1);
+    this.load$ = new Subject();
     this.isReady = false;
+    this.vendorAmount = {};
+    this.itemsQtyMap = {};
 
     this.load$.asObservable().pipe(debounceTime(300)).subscribe((cached)=> {
       this.internalLoad(cached);
@@ -359,7 +366,7 @@ export class CartService {
   // update note if item is available
   addOrUpdateNote(item: CartItem, variant?: string){
     const items = this.cache.items;
-    const index = items.findIndex(elem => elem.sku == item.sku);
+    const index = items.findIndex(elem => elem.sku == item.sku && elem.hub == item.hub);
     if (index>-1){
       items[index].note =  item.note || items[index].note;        
       items[index].audio = item.audio || items[index].audio;
@@ -375,11 +382,7 @@ export class CartService {
     // if(window.fbq)fbq('track', 'AddToCart');
     this.checkIfReady();
     const items = this.cache.items;
-    const item = (product instanceof CartItem) ? product : CartItem.fromProduct(product, variant);
-
-    //
-    // update HUB
-    item.hub = this.currentHub;
+    const item = (product instanceof CartItem) ? product : CartItem.fromProduct(product, this.currentHub, variant);
 
     // console.log('--- ADD ITEM',item.sku,item.hub);
 
@@ -413,7 +416,8 @@ export class CartService {
         items[i].audio = items[i].audio || item.audio;        
 
         // TODO warn update
-        this.computeVendorDiscount(product.vendor);
+        this.computeVendorDiscount();
+        this.computeItemsQtyMap();
 
         if (quiet) {
           return;
@@ -426,7 +430,8 @@ export class CartService {
 
     items.push(item);
     // TODO warn update
-    this.computeVendorDiscount(product.vendor);
+    this.computeVendorDiscount();
+    this.computeItemsQtyMap();
 
     if (quiet) {
       return;
@@ -450,41 +455,55 @@ export class CartService {
   }
 
   //
+  computeItemsQtyMap(){
+    this.itemsQtyMap = {};
+    this.cache.items.forEach(item => {
+      const sku = item.sku + item.hub;      
+      this.itemsQtyMap[sku] = item.quantity;
+    });
+  }
+  //
   // compute discount by vendor
-  computeVendorDiscount(vendor: Shop) {
+  // FIXME must be private
+  computeVendorDiscount() {
     // init
-    const items = this.cache.items;
-    let amount = 0;
+    this.vendorAmount = {};
 
     //
-    // no discount
-    if (!vendor.discount || !vendor.discount.active) {
-      this.cache.discount[vendor.urlpath] = 0;
-      return 0;
-    }
-
-    //
-    // subtotal for the vendor
-    items.forEach((item) => {
-      if (item.vendor.urlpath === vendor.urlpath) {
-        amount += (item.price * item.quantity);
-      }
+    // sum total by vendor
+    this.cache.items.forEach(item => {
+      const vendor = item.vendor.urlpath + item.hub;      
+      if (!this.vendorAmount[vendor]) {
+        this.vendorAmount[vendor] = {
+          amount: 0, needed:0, discount: {}, hub:item.hub
+        };
+        Object.assign(this.vendorAmount[vendor].discount, item.vendor.discount, {total: 0});
+      }      
+      this.vendorAmount[vendor].amount += (item.price * item.quantity);
     });
 
     //
-    // compute discount based on vendor
-    const discountMagnitude = Math.floor(amount / vendor.discount.threshold);
-    this.cache.discount[vendor.urlpath] = discountMagnitude * vendor.discount.amount;
+    // compute available discount
+    Object.keys(this.vendorAmount)
+          .map(vendor => this.vendorAmount[vendor])
+          .filter(vendor => vendor.discount.threshold)
+          .forEach(vendor => {
+      const amount = vendor.amount;
+      const discountMagnitude = Math.floor(amount / vendor.discount.threshold);
+      vendor.discount.needed = vendor.discount.threshold - amount % (vendor.discount.threshold | 0) + amount;
+      vendor.discount.total = discountMagnitude * vendor.discount.amount;
+    });
 
     //
-    // return the discount or 0
-    return this.cache.discount[vendor.urlpath] || 0;
-  }
+    // DEBUG
+    // Object.keys(this.vendorAmount).forEach(vendor=>{
+    //   console.log('--- vendor.discount',vendor,this.vendorAmount[vendor])
+    // });
+  }  
 
-
-  computeShippingFees(address: UserAddress|DepositAddress) {
-    const total = this.subTotal()
-    let price = this.estimateShippingFees(address);
+  computeShippingFees(address: UserAddress|DepositAddress,hub: string) {
+    const total = this.subTotal(hub);
+    let price = this.estimateShippingFees(address,hub);
 
     //
     // TODO TESTING MERCHANT ACCOUNT
@@ -513,9 +532,9 @@ export class CartService {
     return price;
   }
 
-  estimateShippingFees(address: UserAddress) {
+  estimateShippingFees(address: UserAddress, hub: string) {
     this.checkIfReady();
-    const total = this.subTotal();
+    const total = this.subTotal(hub);
 
     //
     // check if there is a pending order for this address
@@ -551,32 +570,20 @@ export class CartService {
 
   //
   // TODO empty should manage recurent items
-  empty() {
+  clear(hub:string, order?:Order) {
     // THOSE should be available
-    this.cache.payment = new UserCard();
-    this.cache.address = new UserAddress();
-    this.cartConfig.gateway = this.DEFAULT_GATEWAY;
-    //
-    // remove all items for this HUB
-    this.cache.items = [];
-    this.cache.discount = {};
-
-    //console.log('---DEBUG cart:clear',this.cache);
-    //
-    // FIXME dont use localstorage here
-    localStorage.setItem('kng2-cart', JSON.stringify(this.cache));
-    this.save({ action: CartAction.CART_CLEARED });
-    return new Observable((obs) => {
-      this.cart$.subscribe(state => {
-        obs.next(state);
-        obs.complete();
-      },obs.error);
-    });
+    this.cache.items = this.cache.items.filter(item => item.hub != hub);
+    this.currentPendingOrder = order || this.currentPendingOrder;
+    this.save({ action: CartAction.CART_CLEARED, order });
   }
 
-  findBySku(sku: number): CartItem {
-    // TODO shall we filter items by hub ? && item.hub === this.currentHub
-    return this.getItems().find(item => item.sku === sku);
+  broadcastState() {
+    this.save({ action: CartAction.CART_CLEARED });
+  }
+
+
+  findBySku(sku: number, hub: string): CartItem {
+    return this.getItems().find(item => item.sku === sku && item.hub == hub);
   }
 
   getCurrentGateway(): { fees: number, label: string } {
@@ -587,16 +594,21 @@ export class CartService {
 
   //
   // compute amout of
-  gatewayAmount() {
+  gatewayAmount(hub: string) {
     this.checkIfReady();
-    const total = this.subTotal(),
-      shipping = this.shipping();
-    return this.getCurrentGateway().fees * (total + shipping - this.totalDiscount());
+    const total = this.subTotal(hub),
+      shipping = this.shipping(hub);
+    return this.getCurrentGateway().fees * (total + shipping - this.getTotalDiscount(hub));
+  }
+
+  getItemsQtyMap(sku: number, hub: string) {
+    const item = sku + hub;      
+    return this.itemsQtyMap[item] || 0;
   }
 
   getItems() {
     this.checkIfReady();
-    return this.cache.items.filter(item => (!item.hub || item.hub === this.currentHub));
+    return this.cache.items.slice();
   }
 
   getName(){
@@ -614,9 +626,31 @@ export class CartService {
     return this.cache.address;
   }
 
-  getCurrentShippingFees() {
+  getCurrentShippingFees(hub: string) {
     this.checkIfReady();
-    return this.shipping();
+    return this.shipping(hub);
+  }
+
+  getShippingDayForMultipleHUBs() {
+    const hubsDate = [];
+    this.defaultConfig.shared.hubs.forEach(hub => {
+      hubsDate.push(Order.fullWeekShippingDays(hub));
+    });
+
+    if(hubsDate.length==0){
+      return Order.fullWeekShippingDays(this.currentHub);
+    }
+
+    if(hubsDate.length==1){
+      return hubsDate[0];
+    }
+
+    const intersection = hubsDate[0].filter(function(n) {
+      return hubsDate[1].indexOf(n) !== -1;
+    });    
+
+    //FIXME create intersection for HUBs count > 2
+    return intersection;
   }
 
   getCurrentShippingDay() {
@@ -634,42 +668,63 @@ export class CartService {
 
   //
   // TODO should be refactored (distance between real shop settings and cart values)!!
-  getVendorDiscount(slug: string) {
-    this.checkIfReady();
-    return Utils.roundAmount(this.cache.discount[slug]);
+  getVendorDiscount(item: CartItem) {
+    const vendor = this.vendorAmount[item.vendor.urlpath + item.hub];
+    return vendor ? vendor.discount : 0;
   }
 
-  hasError(): boolean {
-    return this.getItems().some(item => item.error);
+  //
+  // FIXME, that should be based on the list of all vendors Shop[] (item.vendor.discount could change )
+  // NOTE, discount is based on items that bellongs to the current HUB
+  getTotalDiscount(hub: string): number {
+    let amount = 0;
+    for (const vendor in this.vendorAmount) {
+      if(this.vendorAmount.hub == hub) {
+        amount += (this.vendorAmount[vendor].discount.amount || 0);
+      }
+    }
+
+    return Utils.roundAmount(amount);
   }
 
-  hasPendingOrder(): boolean {
-    return !!(this.currentPendingOrder && this.currentPendingOrder.shipping);
+
+  hasError(hub: string): boolean {
+    return this.getItems().filter(item => item.hub == (hub||this.currentHub)).some(item => item.error);
   }
 
-  hasShippingReductionMultipleOrder(address?): boolean {
+  hasPendingOrder(): Order {
+    return (this.currentPendingOrder);
+  }
+
+  hasPotentialShippingReductionMultipleOrder(): boolean {
     //
     // check if there is a pending order for this address
     if(this.currentPendingOrder && this.currentPendingOrder.shipping){
       const whenDay = this.currentPendingOrder.shipping.when.getDate();
       const nextDay = this.cache.currentShippingDay.getDate();
-      const pending = UserAddress.from(this.currentPendingOrder.shipping);
-      address = address || this.cache.address;
-      if(address.isEqual(pending) && whenDay == nextDay ){
-        return true;
-      }
+      return (whenDay == nextDay );
     }
     return false;
   }
 
-  hasShippingReduction(): boolean {
-    const total = this.subTotal();
 
-    //
-    // FIXME shipping reduction for pending depends on dst address
-    if(this.hasPendingOrder()) {
+  hasShippingReductionMultipleOrder(address?): boolean {
+    const potential = this.hasPotentialShippingReductionMultipleOrder();
+    if(!potential){
+      return false;
+    }
+    const pending = UserAddress.from(this.currentPendingOrder.shipping);
+    if(address && address.isEqual(pending)){
       return true;
     }
+
+    return false;
+  }
+
+  //
+  // FIXME shipping reduction for pending depends on dst address
+  hasShippingReduction(hub?: string): boolean {
+    const total = this.subTotal(hub);
 
     // implement 3) get free shipping!
     if (this.cartConfig.shipping.discountB &&
@@ -684,8 +739,8 @@ export class CartService {
     return false;
   }
 
-  hasShippingReductionB(): boolean {
-    const total = this.subTotal();
+  hasShippingReductionB(hub?: string): boolean {
+    const total = this.subTotal(hub);
 
     // implement 3) get free shipping!
     if (this.cartConfig.shipping.discountB &&
@@ -714,11 +769,10 @@ export class CartService {
     //
     // IFF next shipping day is Null (eg. hollidays)=> currentShippingDay
     const nextShippingDay = Order.nextShippingDay(this.currentUser);
-    const currentShippingDay = config.potentialShippingWeek()[0];
+    const currentShippingDay = config.potentialShippingWeek(this.defaultConfig.shared.hub)[0];
     this.cache.currentShippingDay = new Date(nextShippingDay || currentShippingDay);
 
     this.cache.updated = new Date('1990-12-01T00:00:00');
-    this.cache.discount = {};
     this.cache.uuid = shared;
 
     try {
@@ -775,6 +829,8 @@ export class CartService {
       // get state from pending order
       // FIXME set address equals to pending
       if(this.currentPendingOrder){
+        const issuer = this.currentPendingOrder.payment.issuer;
+        this.cache.payment = new UserCard(this.currentUser.payments.find(payment => payment.issuer == issuer));  
         this.cache.address = UserAddress.from(this.currentPendingOrder.shipping);          
       }else
 
@@ -859,7 +915,6 @@ export class CartService {
       if (cart) {
         //
         // reset local cart ?
-        this.resetLocalItems(cart);
         this.cache.cid = cart.cid? cart.cid[0] : this.cache.cid ;
         this.cache.name = cart.name ;
         this.cache.updated = new Date(cart.updated);
@@ -884,10 +939,12 @@ export class CartService {
             };
           }
           vendor.discount.active = true;
-          this.computeVendorDiscount(elem || vendor);
         });
-        Object.assign(this.cache.discount, cart.discount);
+        this.computeVendorDiscount();
+        this.computeItemsQtyMap();
       }
+      console.log('---- internal load')
+
       this.cart$.next({ action: CartAction.CART_LOADED });
     });
 
@@ -896,81 +953,53 @@ export class CartService {
     // this.cart$.next({ action: CartAction.CART_LOAD_ERROR });
   }
 
-  resetLocalItems(cart: any) {
-    if (cart.reset) {
-      const updated = new Date(cart.updated);
-      const reset = new Date(cart.reset);
-      const count = this.cache.items.length;
-      this.cache.items = this.cache.items.filter(item => !item.timestamp || (new Date(item.timestamp)) > reset)
-      if (this.cache.items.length !== count) {
-        this.cache.updated = reset;
-        try {
-          //
-          // FIXME how to manage cart & HUB 
-          localStorage.setItem('kng2-cart', JSON.stringify(this.cache));
-        } catch (e) {}
-      }
-    }
-  }
 
   removeAll(product: Product | CartItem, variant?: string) {
     this.checkIfReady();
     // init
     const items = this.getItems();
-    const item = (product instanceof CartItem) ? product : CartItem.fromProduct(product);
-    //
-    // update HUB
-    item.hub = this.currentHub;
+    // FIXME same product on multiple hub  will not work
+    const indexInCache = this.cache.items.findIndex(itm => itm.sku === product.sku);
+    if(indexInCache == -1 ){
+      return this.save({ item:items[indexInCache], action: CartAction.ITEM_REMOVE });
+    }
+
+    // remove all items
+    this.cache.items.splice(indexInCache, 1);
 
     //
-    for (let i = 0; i < items.length; i++) {
-      if (items[i].equalItem(item, variant)) {
-        //
-        // sure to send remove quantity to the server
-        item.quantity = items[i].quantity;
-        const indexInCache = this.cache.items.findIndex(itm => itm.sku === items[i].sku && itm.hub === this.currentHub);
-        this.cache.items.splice(indexInCache, 1);
-        break;
-      }
-    }
-    //
     // update discount amount
-    this.computeVendorDiscount(product.vendor);
-    return this.save({ item, action: CartAction.ITEM_REMOVE });
+    this.computeVendorDiscount();
+    this.computeItemsQtyMap();
+
+    return this.save({ item:items[indexInCache], action: CartAction.ITEM_REMOVE });
   }
 
   remove(product: Product | CartItem, variant?: string) {
     this.checkIfReady();
     // init
-    const items = this.getItems();
-    const item = (product instanceof CartItem) ? Object.assign({}, product) : CartItem.fromProduct(product, variant);    
+    const items = this.cache.items;
+    const item = (product instanceof CartItem) ? Object.assign({}, product) : CartItem.fromProduct(product,this.currentHub, variant);    
+    const indexInCache = this.cache.items.findIndex(itm => itm.sku === item.sku && itm.hub === item.hub);
+    if(indexInCache == -1 ){
+      return this.save({ item, action: CartAction.ITEM_REMOVE });
+    }
+    //
     // propagate server : remove one
     item.quantity = 1;
-
+    if (items[indexInCache].quantity <= 1) {
+      this.cache.items.splice(indexInCache, 1);
+    }
     //
-    // update HUB
-    item.hub = this.currentHub;
-
-    //
-    for (let i = 0; i < items.length; i++) {
-      if (items[i].equalItem(item, variant)) {
-        // if(items[i].sku===product.sku){
-        items[i].quantity -= 1;
-
-        //
-        // update the finalprice
-        items[i].finalprice = items[i].price * items[i].quantity;
-
-        if (items[i].quantity <= 0) {
-          const indexInCache = this.cache.items.findIndex(itm => itm.sku === items[i].sku && itm.hub === this.currentHub);
-          this.cache.items.splice(indexInCache, 1);
-        }
-        break;
-      }
+    // update the finalprice
+    else{
+      items[indexInCache].quantity -= 1;
+      items[indexInCache].finalprice = items[indexInCache].price * items[indexInCache].quantity;
     }
     //
     // update discount amount
-    this.computeVendorDiscount(product.vendor);
+    this.computeVendorDiscount();
+    this.computeItemsQtyMap();
     return this.save({ item, action: CartAction.ITEM_REMOVE });
   }
 
@@ -978,6 +1007,7 @@ export class CartService {
   // save with localStorage
   // save with api/user/cart
   save(state: CartState) {
+    state.server = [];
     this.saveServer(state)
     .pipe(
       catchError(e => {
@@ -999,9 +1029,7 @@ export class CartService {
       try {
         //
         // update local date IFF not authenticated or invalid
-        if(!this.cache.updated ||
-           !this.cache.updated.getTime() ||
-           !this.currentUser.isAuthenticated()) {
+        if(!state.server || !state.server.length) {
             this.cache.updated = new Date();
         }
         //console.log('---DEBUG kng2-cart:saveLocal',this.cache.address);
@@ -1026,12 +1054,12 @@ export class CartService {
       return throwError('Unauthorized');
     }
 
-    if ([CartAction.ITEM_ADD, CartAction.ITEM_REMOVE, CartAction.ITEM_ALL, CartAction.CART_CLEARED].indexOf(state.action) === -1) {
+    if ([CartAction.ITEM_ADD,CartAction.ITEM_UPDATE, CartAction.ITEM_REMOVE, CartAction.ITEM_ALL, CartAction.CART_CLEARED].indexOf(state.action) === -1) {
       return of(state);
     }
     //
     // case of add/remove item
-    if (state.item && [CartAction.ITEM_ADD, CartAction.ITEM_REMOVE].indexOf(state.action) > -1) {
+    if (state.item && [CartAction.ITEM_ADD,CartAction.ITEM_UPDATE, CartAction.ITEM_REMOVE].indexOf(state.action) > -1) {
       model.items = [state.item];
       params.action = CartAction[state.action];
     }
@@ -1054,13 +1082,12 @@ export class CartService {
     }).pipe(
       map(model => {
       this.cache.cid = model.cid;
-      this.cache.items = model.items.map(item => new CartItem(item));
+      state.server = this.cache.items = model.items.map(item => new CartItem(item));
       this.cache.updated = new Date(model.updated);
 
       //
       // restore errors
       const hubItems = this.getItems();
-      //hubItems.filter(item => errors.some(elem => elem[item.sku]))
       errors.forEach(item => {
         const restored = (hubItems.find(i => i.sku === item.sku));
         restored && (restored.error = item.error);
@@ -1095,6 +1122,7 @@ export class CartService {
 
     this.cache.address = address;
     this.save({ action: CartAction.CART_ADDRESS });
+    return true;
   }
 
   //
@@ -1118,28 +1146,44 @@ export class CartService {
   // init cart context => load & merge available cart, with current one
   // - user latest orders (helper for complement)
   setContext(config: Config, user: User, shops?: Shop[], orders?:Order[]) {
+
+    this.currentShops = shops || this.currentShops || [];
+    //
+    // avoid multiple reset on same context
+    if(this.currentHub == config.shared.hub.slug) {
+      return;
+    }
     Object.assign(this.defaultConfig, config);
     Object.assign(this.currentUser, user);
     this.currentHub = this.defaultConfig.shared.hub.slug;
-    this.currentShops = shops || this.currentShops || [];
 
     this.cartConfig.shipping = this.defaultConfig.shared.shipping;
 
     //
     // set default shipping address
     this.cache.address = user.getDefaultAddress();
-    this.cache.currentShippingDay = Order.nextShippingDay(user);
-    // FIXME default shipping time should not be hardcoded
-    this.cache.currentShippingTime = 16;
+    // FIXME default shipping 
+    // this.cache.currentShippingDay = Order.nextShippingDay(user);
+    // this.cache.currentShippingTime = 16;
+
+    //
+    // use default date when hub.carts.items > 0
+
 
     //
     // if there is an open order, 
     // - set the default address
     // - set the default date
-    orders = orders || [];
+    orders = orders.sort((a,b)=> b.oid-a.oid) || [];
+    if(orders.length) {
+      const alias = orders[0].payment.alias;
+      this.cache.currentShippingDay = new Date(orders[0].shipping.when);
+      this.cache.payment = user.payments.find(payment => payment.alias == alias) || this.cache.payment;
+      this.cache.address = UserAddress.from(orders[0].shipping);          
+    }
     //
     // EnumFinancialStatus[EnumFinancialStatus.authorized]
-    const opens = orders.filter(order => order.payment.status == 'authorized' && !order.shipping.parent); 
+    let opens = orders.filter(order => order.payment.status == 'authorized' && !order.shipping.parent); 
     if(opens.length) {
       this.currentPendingOrder = opens[0];
     }
@@ -1150,34 +1194,28 @@ export class CartService {
     this.load();
   }
 
-  setError(errors) {
+  setError(errors, hub) {
     let sku, item;
     for (let i = 0; i < errors.length; i++) {
       sku = Object.keys(errors[i])[0];
-      item = this.findBySku(+sku);
+      item = this.findBySku(+sku,hub);
       if (item) { item.error = errors[i][sku]; }
     }
   }
 
 
-  shipping(removeDiscount?: boolean) {
+  shipping(hub: string) {
+    //
     // check if cart is available
-
-    const total = this.subTotal();
-    let price = this.computeShippingFees(this.cache.address);
-
-    // Compute shipping and substract discount
-    if (removeDiscount) {
-      const fees = this.getCurrentGateway().fees * (total + price);
-      price -= (this.totalDiscount() - fees);
-    }
+    const total = this.subTotal(hub);
+    let price = this.computeShippingFees(this.cache.address,hub);
 
     return Utils.roundAmount(Math.max(price, 0));
   }
 
 
-  subTotal(): number {
-    const items = this.getItems();
+  subTotal(hub?: string): number {
+    const items = this.getItems().filter(item => !hub || hub == item.hub );
     let total = 0;
     items.forEach((item) => {
       total += (item.price * item.quantity);
@@ -1197,8 +1235,8 @@ export class CartService {
   }
 
 
-  quantity(): number {
-    const items = this.getItems();
+  quantity(hub?: string): number {
+    const items = this.getItems().filter(item => !hub || item.hub == hub);
     let quantity = 0;
     items.forEach((item) => {
       quantity += item.quantity;
@@ -1211,10 +1249,10 @@ export class CartService {
   // total = items + shipping - total discount
   // total = stotal + stotal*payment.fees
   // WARNNG -- WARNNG -- WARNNG -- edit in all places
-  total(): number {
-    let total = this.subTotal();
-    const shipping = this.shipping();
-    const discount = this.totalDiscount();
+  total(hub: string): number {
+    let total = this.subTotal(hub);
+    const shipping = this.shipping(hub);
+    const discount = this.getTotalDiscount(hub);
     total += (shipping - discount);
 
     // Rounding up to the nearest 0.05
@@ -1222,20 +1260,9 @@ export class CartService {
 
   }
 
-  //
-  // FIXME, that should be based on the list of all vendors Shop[] (item.vendor.discount could change )
-  // NOTE, discount is based on items that bellongs to the current HUB
-  totalDiscount(): number {
-    let amount = 0;
-    for (const slug in this.cache.discount) {
-      amount += (this.cache.discount[slug] || 0);
-    }
 
-    return Utils.roundAmount(amount);
-  }
-
-  totalFees(): number {
-    const items = this.getItems();
+  totalHubFees(hub: string): number {
+    const items = this.getItems().filter(item => item.hub == hub);
     let total = 0;
     items.forEach((item) => {
       total += (item.price * item.quantity);
@@ -1267,24 +1294,5 @@ export class CartService {
     });
   }
 
-
-
-  //
-  // REST api wrapper
-  //
-
-  private handleError(error: Response | any) {
-    //
-    // In a real world app, you might use a remote logging infrastructure
-    let errMsg: string;
-    if (error instanceof Response) {
-      const body = error.json() || '';
-      const err = JSON.stringify(body);
-      errMsg = `${error.status} - ${error.statusText || ''} ${err}`;
-    } else {
-      errMsg = error.message ? error.message : error.toString();
-    }
-    return _throw(errMsg);
-  }
 }
 
