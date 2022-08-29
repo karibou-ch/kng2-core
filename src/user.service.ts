@@ -791,19 +791,6 @@ export class UserService {
       map(user => this.updateCache(user)),
       tap(user => this.user$.next(user))
     );
-    /*
-    var self = this, params = {};
-    //
-    // we can now update different user
-    if (cb === undefined) { cb = uid; uid = this.id; }
-    if (uid === undefined) uid = this.id;
-    backend.$user.save({ id: uid, action: 'payment' }, payment, function (u) {
-      $rootScope.$broadcast("user.update.payment");
-      self.payments = u.payments;
-      if (cb) cb(self);
-    });
-    return this;
-    */
   }
 
   // app.post('/v1/users/:id/payment/:alias/delete', users.ensureMeOrAdmin,users.deletePayment);
@@ -823,23 +810,6 @@ export class UserService {
       map(() => updatePayment(uid)),
       tap(user => this.user$.next(user))
     );
-    /*
-    var self = this, params = {};
-    //
-    // we can now update different user
-    if (cb === undefined) { cb = uid; uid = self.id; }
-    if (uid === undefined) uid = this.id;
-    backend.$user.save({ id: uid, action: 'payment', aid: alias, detail: 'delete' }, function () {
-      for (var p in self.payments) {
-        if (self.payments[p].alias === alias) {
-          self.payments.splice(p, 1);
-        }
-      }
-      $rootScope.$broadcast("user.update.payment");
-      if (cb) cb(self);
-    });
-    return this;
-    */
   }
 
   /**
