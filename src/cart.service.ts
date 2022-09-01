@@ -753,6 +753,9 @@ export class CartService {
 
   isCurrentShippingDayAvailable(shop: Shop): boolean {
     this.checkIfReady();
+    if(!this.cache.currentShippingDay) {
+      return false;
+    }
     const weekday = this.cache.currentShippingDay.getDay();
     return shop.available.weekdays.indexOf(weekday) > -1;
   }
@@ -1148,13 +1151,13 @@ export class CartService {
   setContext(config: Config, user: User, shops?: Shop[], orders?:Order[]) {
 
     this.currentShops = shops || this.currentShops || [];
+    Object.assign(this.currentUser, user);
     //
     // avoid multiple reset on same context
     if(this.currentHub == config.shared.hub.slug) {
       return;
     }
     Object.assign(this.defaultConfig, config);
-    Object.assign(this.currentUser, user);
     this.currentHub = this.defaultConfig.shared.hub.slug;
 
     this.cartConfig.shipping = this.defaultConfig.shared.shipping;
