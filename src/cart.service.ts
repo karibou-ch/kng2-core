@@ -555,7 +555,7 @@ export class CartService {
     // testing deposit address
     // FIXME issue with streetAdress vs. streetAddress
     const deposit = this.defaultConfig.shared.hub.deposits.find(add => {
-      return add.isEqual(address) &&
+      return address.isEqual(add) &&
         add.fees >= 0;
     });
     if (deposit) {
@@ -1177,7 +1177,7 @@ export class CartService {
     // if there is an open order, 
     // - set the default address
     // - set the default date
-    orders = orders.sort((a,b)=> b.oid-a.oid) || [];
+    orders = (orders||[]).sort((a,b)=> b.oid-a.oid) || [];
     if(orders.length) {
       const alias = orders[0].payment.alias;
       this.cache.currentShippingDay = new Date(orders[0].shipping.when);
