@@ -402,14 +402,14 @@ export class Product {
     
 
     getPrice() {
-        if (this.attributes.discount && this.pricing.discount) {
+        if (this.attributes.discount && this.pricing.discount>=0) {
         return this.pricing.discount;
         }
         return this.pricing.price;
     }
 
     isDiscount() {
-        return !!(this.attributes.discount && this.pricing.discount);
+        return !!(this.attributes.discount && this.pricing.discount>=0);
     }
 
     isAvailableForOrder() {
