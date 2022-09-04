@@ -1,3 +1,4 @@
+import { Hub } from "./hub.service";
 
 
 
@@ -27,22 +28,23 @@ export class Config {
   //
   // Compute the next potential shipping day.
   // It depends on the hours needed to harvest/prepare a placed order
-  potentialShippingDay(): Date {
+  potentialShippingDay(hub:Hub): Date {
+    const currentHub = hub || this.shared.hub;
     const now = new Date(),
-        potential = new Date(now.getTime() + 3600000 * (this.shared.hub.timelimit));
+        potential = new Date(now.getTime() + 3600000 * (currentHub.timelimit));
 
     //
     // timelimitH is hour limit to place an order
-    if (potential.getHours() >= this.shared.hub.timelimitH) {
+    if (potential.getHours() >= currentHub.timelimitH) {
       //
       // set shipping time to fix the printed countdown (eg. 'dans un jour') 16:00 vs. 12:00
-      potential.setHours(this.shared.hub.timelimitH, 0, 0, 0);
+      potential.setHours(currentHub.timelimitH, 0, 0, 0);
       return potential.plusDays(1);
     }
 
     //
     // set shipping time to fix the printed countdown (eg. 'dans un jour') 16:00 vs. 12:00
-    potential.setHours(this.shared.hub.timelimitH, 0, 0, 0);
+    potential.setHours(currentHub.timelimitH, 0, 0, 0);
 
     // next date depends on the hours needed to prepare a placed order
     return potential;
@@ -51,14 +53,16 @@ export class Config {
 
   //
   // Compute the next potential shipping days in one week.
-  potentialShippingWeek() {
-    const potential = this.potentialShippingDay();
+  potentialShippingWeek(hub: Hub) {
+    const currentHub = hub || this.shared.hub;
+    const potential = this.potentialShippingDay(currentHub);
     return potential.dayToDates(
-      config.shared.hub.weekdays
+      currentHub.weekdays
     );
   }
 
-  getShippingWeek() {
+  getShippingWeek(hub: Hub) {
+    const currentHub = hub || this.shared.hub;
     const oneWeek = ['Di', 'Lu', 'Ma', 'Me', 'Je', 'Ve', 'Sa'], today = new Date();
 
     //
@@ -68,7 +72,7 @@ export class Config {
     }
 
     return oneWeek.map((day, i) => {
-      return (this.shared.hub.weekdays.indexOf(i) > -1) ?
+      return (currentHub.weekdays.indexOf(i) > -1) ?
         {label: day, state: ''} : { label: day, state: 'disabled'};
     });
   }
@@ -76,8 +80,8 @@ export class Config {
   //
   // map potential shipping week
   // with reason of closed
-  noShippingMessage() {
-    return this.potentialShippingWeek().map(shipping => {
+  noShippingMessage(hub: Hub) {
+    return this.potentialShippingWeek(hub).map(shipping => {
       const find = this.shared.hub.noshipping.find(noshipping => {
         return shipping.in(noshipping.from, noshipping.to);
       });
