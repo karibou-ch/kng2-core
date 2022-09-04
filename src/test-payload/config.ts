@@ -750,7 +750,7 @@ export const sharedWithHUB = {
 		},
 		"checkout": {
 			"title": {
-				"fr": "Résumé de votre panier",
+				"fr": "Résumé de vos paniers",
 				"en": "Summary"
 			},
 			"address": {
