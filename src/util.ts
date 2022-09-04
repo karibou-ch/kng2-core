@@ -13,6 +13,8 @@ export class Utils {
     const navigatorInfo = window.navigator;
     const screenInfo = window.screen;
     let uid = navigatorInfo.mimeTypes.length  + '';
+    uid += navigatorInfo.language.split('').map((c, i)=> c.charCodeAt(0)).reduce((p,c)=>p*c);
+    uid += (navigatorInfo.productSub || '');
     uid += navigatorInfo.userAgent.replace(/\D+/g, '') + '';
     uid += navigatorInfo.plugins.length;
     uid += screenInfo.height || '';
