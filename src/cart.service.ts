@@ -130,6 +130,7 @@ export class CartItem {
     return new CartItem(item);
   }
   static fromProduct(product: Product, hub: string, variant?: string, quantity?: number) {
+    product = (product instanceof Product)? product : new Product(product);
     const item = {
       timestamp: (new Date()),
       title: product.title,
@@ -1177,7 +1178,7 @@ export class CartService {
     // if there is an open order, 
     // - set the default address
     // - set the default date
-    orders = (orders||[]).sort((a,b)=> b.oid-a.oid) || [];
+    orders = (orders||[]).sort((a,b)=> b.oid-a.oid);
     if(orders.length) {
       const alias = orders[0].payment.alias;
       this.cache.currentShippingDay = new Date(orders[0].shipping.when);
