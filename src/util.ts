@@ -1,6 +1,6 @@
 import { Observable, ReplaySubject } from 'rxjs';
 
-  // TODO test utility class
+// TODO test utility class
 export class Utils {
 
   private static scripts: { [url: string]: ReplaySubject<any> } = {};
