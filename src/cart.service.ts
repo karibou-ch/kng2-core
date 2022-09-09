@@ -1159,7 +1159,8 @@ export class CartService {
     // - set the default address
     // - set the default date
     orders = (orders||[]).sort((a,b)=> b.oid-a.oid);
-    if(orders.length) {
+    // FIXME this.orders[0].payment.issue is crashing 
+    if(orders.length && orders[0].payment) {
       // we can use issuer when the user is set after edition
       const issuer = orders[0].payment.issuer;
       this.cache.payment = user.payments.find(payment => payment.issuer == issuer) || this.cache.payment;
