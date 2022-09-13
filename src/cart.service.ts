@@ -1175,7 +1175,7 @@ export class CartService {
     }
     //
     // EnumFinancialStatus[EnumFinancialStatus.authorized]
-    let open = orders.find(order => order.payment.status == 'authorized' && !order.shipping.parent); 
+    let open = (orders||[]).find(order => order.payment && order.payment.status == 'authorized' && !order.shipping.parent); 
     if(open) {
       this.currentPendingOrder = open;
     }    
