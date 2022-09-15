@@ -325,10 +325,12 @@ export class CartService {
   constructor(
     private $http: HttpClient
   ) {
-    this.headers = new HttpHeaders();
-    this.headers.append('Content-Type', 'application/json');
-    this.headers.append('Cache-Control', 'no-cache');
-    this.headers.append('Pragma' , 'no-cache');
+    this.headers = new HttpHeaders({
+      'Content-Type': 'application/json',
+      'Cache-Control' : 'no-cache',
+      'Pragma' : 'no-cache',
+      'ngsw-bypass':'true'
+    });
     this.cache = new Cache();
     this.currentUser = new User();
     this.DEFAULT_GATEWAY = this.cartConfig.gateway;

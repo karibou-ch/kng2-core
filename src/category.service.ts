@@ -69,9 +69,13 @@ export class CategoryService {
   constructor(
     private http: HttpClient
     ) {
-    this.headers = new HttpHeaders();
-    this.headers.append('Content-Type', 'application/json');
-    this.config = config;
+      this.headers = new HttpHeaders({
+        'Content-Type': 'application/json',
+        'Cache-Control' : 'no-cache',
+        'Pragma' : 'no-cache',
+        'ngsw-bypass':'true'
+      });
+      this.config = config;
 
     // this.category$ = new ReplaySubject(1);
     this.categories$ = new BehaviorSubject<Category[]>(null);

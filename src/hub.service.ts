@@ -221,8 +221,12 @@ export class HubService {
   constructor(
     private http: HttpClient
   ) {
-    this.headers = new HttpHeaders();
-    this.headers.append('Content-Type', 'application/json');
+    this.headers = new HttpHeaders({
+      'Content-Type': 'application/json',
+      'Cache-Control' : 'no-cache',
+      'Pragma' : 'no-cache',
+      'ngsw-bypass':'true'
+    });
     this.hub$ = new ReplaySubject<Hub>(1);
     this.config = ConfigService.defaultConfig;
 

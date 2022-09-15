@@ -44,10 +44,12 @@ export class OrderService {
     //
     // TODO wait for observale!
     this.config = ConfigService.defaultConfig;
-    this.headers = new HttpHeaders();
-    this.headers.append('Content-Type', 'application/json');
-    this.headers.append('Cache-Control' , 'no-cache');
-    this.headers.append('Pragma' , 'no-cache');
+    this.headers = new HttpHeaders({
+      'Content-Type': 'application/json',
+      'Cache-Control' : 'no-cache',
+      'Pragma' : 'no-cache',
+      'ngsw-bypass':'true'
+    });
     this.cache = {
       list: [], map: new Map()
     };

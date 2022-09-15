@@ -61,10 +61,12 @@ export class ConfigService {
     Object.assign(config, customConfig || {});
 
 
-    this.headers = new HttpHeaders();
-    this.headers.append('Content-Type', 'application/json');
-    this.headers.append('Cache-Control' , 'no-cache');
-    this.headers.append('Pragma' , 'no-cache');
+    this.headers = new HttpHeaders({
+      'Content-Type': 'application/json',
+      'Cache-Control' : 'no-cache',
+      'Pragma' : 'no-cache',
+      'ngsw-bypass':'true'
+    });
     //
     // ReplaySubject IFF disctinct config
     this.config$ = new ReplaySubject<Config>(1);    
