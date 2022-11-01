@@ -1,5 +1,30 @@
 import { Observable, ReplaySubject } from 'rxjs';
 
+
+function hasDifferentArgs(prev: unknown[], next: unknown[]) {
+  if (prev.length !== next.length) return true;
+  for (let i = 0; i < prev.length; i++) {
+    if (!Object.is(prev[i], next[i])) return true;
+  }
+  return false;
+}
+
+//
+// cache fonction to avoid useless compute
+export function memo<T extends Function>(fnToMemoize: T): T {
+  let prevArgs = [{}];
+  let result;
+
+  return function (...newArgs) {
+    if (hasDifferentArgs(prevArgs, newArgs)) {
+      result = fnToMemoize(...newArgs);
+      prevArgs = newArgs;
+    }
+    return result;
+  } as any;
+}
+
+
 // TODO test utility class
 export class Utils {
 
