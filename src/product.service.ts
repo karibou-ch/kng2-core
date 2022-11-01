@@ -332,6 +332,7 @@ export class Product {
         available: boolean;
         home: boolean;
         boost: boolean;
+        customized: boolean;        
     };
     details: {
         keywords: string;
@@ -352,6 +353,7 @@ export class Product {
         cold: boolean;
         gluten: boolean;
         lactose: boolean;
+        depositreturn: boolean;
     };
 
     //
