@@ -33,7 +33,24 @@ export class Utils {
     return parseFloat((Math.round(value * 20) / 20).toFixed(2));
   }
 
-
+  static mod9710(iban) {
+    let remainder = iban;
+    let block;
+    while (remainder.length > 2) {
+        block = remainder.slice(0, 9);
+        remainder = parseInt(block, 10) % 97 + remainder.slice(block.length);
+    }
+    return parseInt(remainder, 10) % 97;
+  }
+  static mod10(code) {
+    code = code.replace(/ /g, "");
+    const table = [0, 9, 4, 6, 8, 2, 7, 1, 3, 5];
+    let carry = 0;
+    for (let i = 0; i < code.length; i++) {
+        carry = table[(carry + parseInt(code.substr(i, 1), 10)) % 10];
+    }
+    return ((10 - carry) % 10).toString();
+  }
   static deviceID() {
     const navigatorInfo = window.navigator;
     const screenInfo = window.screen;

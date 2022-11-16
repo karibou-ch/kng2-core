@@ -330,6 +330,13 @@ export class OrderService {
     );
   }
 
+  updateInvoices(){
+    return this.http.post<Order>(this.config.API_SERVER + '/v1/orders/invoices/update', {  }, {
+      headers: this.headers,
+      withCredentials: true
+    });
+  }
+
   // validate shop products collect
   // role:logistic
   // app.post('/v1/orders/:shopname/collect', auth.ensureLogisticOrAdmin, orders.updateCollect);
