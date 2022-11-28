@@ -17,6 +17,7 @@ export interface Metrics {
   hub: string;
   action: string;
   source: string;
+  extra?:any;
 }
 
 @Injectable()
