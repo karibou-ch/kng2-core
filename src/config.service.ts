@@ -119,15 +119,20 @@ export class ConfigService {
         //
         // HUB extension
         if (config.shared.hub) {
-          config.shared.hub.noshipping = config.shared.hub.noshipping || [];
-          config.shared.hub.noshipping.forEach(noshipping => {
+
+          const initNoShippping = noshipping => {
             noshipping.from = new Date(noshipping.from);
             noshipping.to = new Date(noshipping.to);
+          };
+          config.shared.hub.noshipping = config.shared.hub.noshipping || [];
+          config.shared.hub.noshipping.forEach(initNoShippping);
+
+          config.shared.hubs.forEach(hub => {
+            hub.noshipping.forEach(initNoShippping);
           });
 
-          //
-          // deposit
-          config.shared.hub.deposits = (config.shared.hub.deposits || []).map(deposit => new DepositAddress(
+
+          const initDeposit = deposit => new DepositAddress(
             deposit.name,
             deposit.streetAddress || deposit.streetAdress,
             deposit.floor,
@@ -138,7 +143,14 @@ export class ConfigService {
             deposit.weight,
             deposit.active,
             deposit.fees
-          ));
+          );
+
+          //
+          // deposits
+          config.shared.hub.deposits = (config.shared.hub.deposits || []).map(initDeposit);
+          config.shared.hubs.forEach(hub => {
+            hub.deposits = (hub.deposits||[]).map(initDeposit);
+          })
         }
 
         return config;
