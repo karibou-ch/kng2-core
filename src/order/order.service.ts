@@ -135,11 +135,10 @@ export class OrderService {
 
   // capture this order
   // role:admin only
-  // TODO opts => reason:'invoice'
+  // DEPRECATED opts => reason:'invoice'
   // app.post('/v1/orders/:oid/capture', auth.ensureAdmin, queued(orders.capture));
   capture(order: Order, opts?: any): Observable<any> {
     opts = opts || {};
-    // return this.chain(backend.$order.save({action:this.oid,id:'capture'},opts).$promise);
     return this.http.post<Order>(this.config.API_SERVER + '/v1/orders/' + order.oid + '/capture', opts, {
       headers: this.headers,
       withCredentials: true
@@ -330,8 +329,8 @@ export class OrderService {
     );
   }
 
-  updateInvoices(){
-    return this.http.post<Order>(this.config.API_SERVER + '/v1/orders/invoices/update', {  }, {
+  updateInvoices(oids:number[], amount?: number){    
+    return this.http.post<Order>(this.config.API_SERVER + '/v1/orders/invoices/update', {  oids, amount }, {
       headers: this.headers,
       withCredentials: true
     });
