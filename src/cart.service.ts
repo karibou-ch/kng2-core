@@ -192,6 +192,7 @@ export class CartItem {
       hub: this.hub,
       part: this.part,
       note: this.note,
+      audio: this.audio,
       finalprice: this.finalprice
     };
 
@@ -281,10 +282,6 @@ class Cache extends CartModel {
     super();
     this.address = new DepositAddress();
     this.payment = new UserCard();
-    // shipping dated depends on config...
-    // see setContext(...)
-    // this.currentShippingDay=Order.nextShippingDay();
-    // this.currentShippingTime=16;
   }
 }
 
@@ -923,7 +920,10 @@ export class CartService {
         this.cache.cid = cart.cid? cart.cid[0] : this.cache.cid ;
         this.cache.name = cart.name ;
         this.cache.updated = new Date(cart.updated);
-        this.cache.items = cart.items.map( item => new CartItem(item));
+        //
+        // FIXME wrong way to check valid items 
+        const hubs = this.defaultConfig.shared.hubs.map(hub=>hub.slug);
+        this.cache.items = cart.items.filter(item=>hubs.indexOf(item.hub)>-1).map( item => new CartItem(item));
         this.clearErrors();
 
         //
