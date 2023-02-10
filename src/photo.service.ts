@@ -26,8 +26,12 @@ export class PhotoService {
     
 
     this.config = config;
-    this.headers = new HttpHeaders();
-    this.headers.append('Content-Type', 'application/json');
+    this.headers = new HttpHeaders({
+      'Content-Type': 'application/json',
+      'Cache-Control' : 'no-cache',
+      'Pragma' : 'no-cache',
+      'ngsw-bypass':'true'
+    });
   }
 
 

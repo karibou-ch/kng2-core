@@ -1,5 +1,30 @@
 import { Observable, ReplaySubject } from 'rxjs';
 
+
+function hasDifferentArgs(prev: unknown[], next: unknown[]) {
+  if (prev.length !== next.length) return true;
+  for (let i = 0; i < prev.length; i++) {
+    if (!Object.is(prev[i], next[i])) return true;
+  }
+  return false;
+}
+
+//
+// cache fonction to avoid useless compute
+export function memo<T extends Function>(fnToMemoize: T): T {
+  let prevArgs = [{}];
+  let result;
+
+  return function (...newArgs) {
+    if (hasDifferentArgs(prevArgs, newArgs)) {
+      result = fnToMemoize(...newArgs);
+      prevArgs = newArgs;
+    }
+    return result;
+  } as any;
+}
+
+
 // TODO test utility class
 export class Utils {
 
@@ -8,7 +33,24 @@ export class Utils {
     return parseFloat((Math.round(value * 20) / 20).toFixed(2));
   }
 
-
+  static mod9710(iban) {
+    let remainder = iban;
+    let block;
+    while (remainder.length > 2) {
+        block = remainder.slice(0, 9);
+        remainder = parseInt(block, 10) % 97 + remainder.slice(block.length);
+    }
+    return parseInt(remainder, 10) % 97;
+  }
+  static mod10(code) {
+    code = code.replace(/ /g, "");
+    const table = [0, 9, 4, 6, 8, 2, 7, 1, 3, 5];
+    let carry = 0;
+    for (let i = 0; i < code.length; i++) {
+        carry = table[(carry + parseInt(code.substr(i, 1), 10)) % 10];
+    }
+    return ((10 - carry) % 10).toString();
+  }
   static deviceID() {
     const navigatorInfo = window.navigator;
     const screenInfo = window.screen;

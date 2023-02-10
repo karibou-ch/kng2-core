@@ -61,10 +61,12 @@ export class ConfigService {
     Object.assign(config, customConfig || {});
 
 
-    this.headers = new HttpHeaders();
-    this.headers.append('Content-Type', 'application/json');
-    this.headers.append('Cache-Control' , 'no-cache');
-    this.headers.append('Pragma' , 'no-cache');
+    this.headers = new HttpHeaders({
+      'Content-Type': 'application/json',
+      'Cache-Control' : 'no-cache',
+      'Pragma' : 'no-cache',
+      'ngsw-bypass':'true'
+    });
     //
     // ReplaySubject IFF disctinct config
     this.config$ = new ReplaySubject<Config>(1);    
@@ -117,15 +119,20 @@ export class ConfigService {
         //
         // HUB extension
         if (config.shared.hub) {
-          config.shared.hub.noshipping = config.shared.hub.noshipping || [];
-          config.shared.hub.noshipping.forEach(noshipping => {
+
+          const initNoShippping = noshipping => {
             noshipping.from = new Date(noshipping.from);
             noshipping.to = new Date(noshipping.to);
+          };
+          config.shared.hub.noshipping = config.shared.hub.noshipping || [];
+          config.shared.hub.noshipping.forEach(initNoShippping);
+
+          config.shared.hubs.forEach(hub => {
+            hub.noshipping.forEach(initNoShippping);
           });
 
-          //
-          // deposit
-          config.shared.hub.deposits = (config.shared.hub.deposits || []).map(deposit => new DepositAddress(
+
+          const initDeposit = deposit => new DepositAddress(
             deposit.name,
             deposit.streetAddress || deposit.streetAdress,
             deposit.floor,
@@ -136,7 +143,14 @@ export class ConfigService {
             deposit.weight,
             deposit.active,
             deposit.fees
-          ));
+          );
+
+          //
+          // deposits
+          config.shared.hub.deposits = (config.shared.hub.deposits || []).map(initDeposit);
+          config.shared.hubs.forEach(hub => {
+            hub.deposits = (hub.deposits||[]).map(initDeposit);
+          })
         }
 
         return config;

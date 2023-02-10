@@ -21,8 +21,12 @@ export class ProductService {
         private http: HttpClient
     ) {
         this.config = ConfigService.defaultConfig;
-        this.headers = new HttpHeaders();
-        this.headers.append('Content-Type', 'application/json');
+        this.headers = new HttpHeaders({
+            'Content-Type': 'application/json',
+            'Cache-Control' : 'no-cache',
+            'Pragma' : 'no-cache',
+            'ngsw-bypass':'true'
+          });
         this.cache = new Cache();
         //
         // 1 means to keep the last value
@@ -328,6 +332,7 @@ export class Product {
         available: boolean;
         home: boolean;
         boost: boolean;
+        customized: boolean;        
     };
     details: {
         keywords: string;
@@ -348,6 +353,7 @@ export class Product {
         cold: boolean;
         gluten: boolean;
         lactose: boolean;
+        depositreturn: boolean;
     };
 
     //

@@ -303,8 +303,8 @@ export const sharedRoot = {
 			"en": "Welcome on the online Geneva food market"
 		},
 		"p": {
-			"fr": "<div class=\"text-center small\">\n<h2>Notre mission, c’est de permettre aux artisans qui ont des traditions et des liens forts avec leurs produits d’être disponibles pour vous.</h2>\n<br/>\n<a href=\"/store/geneva/me/login?referrer=/store/geneva/home\" class=\"text-center enter primary-bg \"\n>Ok, c'est parti!</a>\n</div>\n",
-			"en": "<div class=\"text-center small\">\n<h2>Our mission is to allow foodmakers and vendors who have strong traditions and passion for their products to be available for you</h2>\n<br/>\n<a href=\"/store/geneva/me/login?referrer=/store/geneva/home\" class=\"text-center enter primary-bg \"\n>Ok, let's go!</a>\n</div>\n"
+			"fr": "<div class=\"text-center small\">\n<h2>Notre mission, c’est de permettre aux artisans qui ont des traditions et des liens forts avec leurs produits d’être disponibles pour vous.</h2>\n<br/>\n<a href=\"/store/mocha/me/login?referrer=/store/mocha/home\" class=\"text-center enter primary-bg \"\n>Ok, c'est parti!</a>\n</div>\n",
+			"en": "<div class=\"text-center small\">\n<h2>Our mission is to allow foodmakers and vendors who have strong traditions and passion for their products to be available for you</h2>\n<br/>\n<a href=\"/store/mocha/me/login?referrer=/store/mocha/home\" class=\"text-center enter primary-bg \"\n>Ok, let's go!</a>\n</div>\n"
 		},
 		"image": "https://ucarecdn.com/2cf84b90-088c-43d9-bffe-56a6c61b97fb/"
 	},
@@ -706,8 +706,8 @@ export const sharedWithHUB = {
 			"en": "Welcome on the online Geneva food market"
 		},
 		"p": {
-			"fr": "<div class=\"text-center small\">\n<h2>Notre mission, c’est de permettre aux artisans qui ont des traditions et des liens forts avec leurs produits d’être disponibles pour vous.</h2>\n<br/>\n<a href=\"/store/geneva/me/login?referrer=/store/geneva/home\" class=\"text-center enter primary-bg \"\n>Ok, c'est parti!</a>\n</div>\n",
-			"en": "<div class=\"text-center small\">\n<h2>Our mission is to allow foodmakers and vendors who have strong traditions and passion for their products to be available for you</h2>\n<br/>\n<a href=\"/store/geneva/me/login?referrer=/store/geneva/home\" class=\"text-center enter primary-bg \"\n>Ok, let's go!</a>\n</div>\n"
+			"fr": "<div class=\"text-center small\">\n<h2>Notre mission, c’est de permettre aux artisans qui ont des traditions et des liens forts avec leurs produits d’être disponibles pour vous.</h2>\n<br/>\n<a href=\"/store/mocha/me/login?referrer=/store/mocha/home\" class=\"text-center enter primary-bg \"\n>Ok, c'est parti!</a>\n</div>\n",
+			"en": "<div class=\"text-center small\">\n<h2>Our mission is to allow foodmakers and vendors who have strong traditions and passion for their products to be available for you</h2>\n<br/>\n<a href=\"/store/mocha/me/login?referrer=/store/mocha/home\" class=\"text-center enter primary-bg \"\n>Ok, let's go!</a>\n</div>\n"
 		},
 		"image": "https://ucarecdn.com/2cf84b90-088c-43d9-bffe-56a6c61b97fb/"
 	},
@@ -907,8 +907,8 @@ export const sharedWithHUB = {
 				"en": "Welcome on the online Geneva food market"
 			},
 			"p": {
-				"fr": "<div class=\"text-center small\">\n<h2>Notre mission, c’est de permettre aux artisans qui ont des traditions et des liens forts avec leurs produits d’être disponibles pour vous.</h2>\n<br/>\n<a href=\"/store/geneva/me/login?referrer=/store/geneva/home\" class=\"text-center enter primary-bg \"\n>Ok, c'est parti!</a>\n</div>\n",
-				"en": "<div class=\"text-center small\">\n<h2>Our mission is to allow foodmakers and vendors who have strong traditions and passion for their products to be available for you</h2>\n<br/>\n<a href=\"/store/geneva/me/login?referrer=/store/geneva/home\" class=\"text-center enter primary-bg \"\n>Ok, let's go!</a>\n</div>\n"
+				"fr": "<div class=\"text-center small\">\n<h2>Notre mission, c’est de permettre aux artisans qui ont des traditions et des liens forts avec leurs produits d’être disponibles pour vous.</h2>\n<br/>\n<a href=\"/store/mocha/me/login?referrer=/store/mocha/home\" class=\"text-center enter primary-bg \"\n>Ok, c'est parti!</a>\n</div>\n",
+				"en": "<div class=\"text-center small\">\n<h2>Our mission is to allow foodmakers and vendors who have strong traditions and passion for their products to be available for you</h2>\n<br/>\n<a href=\"/store/mocha/me/login?referrer=/store/mocha/home\" class=\"text-center enter primary-bg \"\n>Ok, let's go!</a>\n</div>\n"
 			},
 			"image": "https://ucarecdn.com/0dbac29e-e1c0-462b-8437-e7a708914f43/kbrandlg.png"
 		},

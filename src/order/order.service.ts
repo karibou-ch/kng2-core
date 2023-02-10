@@ -44,10 +44,12 @@ export class OrderService {
     //
     // TODO wait for observale!
     this.config = ConfigService.defaultConfig;
-    this.headers = new HttpHeaders();
-    this.headers.append('Content-Type', 'application/json');
-    this.headers.append('Cache-Control' , 'no-cache');
-    this.headers.append('Pragma' , 'no-cache');
+    this.headers = new HttpHeaders({
+      'Content-Type': 'application/json',
+      'Cache-Control' : 'no-cache',
+      'Pragma' : 'no-cache',
+      'ngsw-bypass':'true'
+    });
     this.cache = {
       list: [], map: new Map()
     };
@@ -133,11 +135,10 @@ export class OrderService {
 
   // capture this order
   // role:admin only
-  // TODO opts => reason:'invoice'
+  // DEPRECATED opts => reason:'invoice'
   // app.post('/v1/orders/:oid/capture', auth.ensureAdmin, queued(orders.capture));
   capture(order: Order, opts?: any): Observable<any> {
     opts = opts || {};
-    // return this.chain(backend.$order.save({action:this.oid,id:'capture'},opts).$promise);
     return this.http.post<Order>(this.config.API_SERVER + '/v1/orders/' + order.oid + '/capture', opts, {
       headers: this.headers,
       withCredentials: true
@@ -326,6 +327,13 @@ export class OrderService {
       map(order => this.updateCache(order)),
       tap(order => this.order$.next(order))
     );
+  }
+
+  updateInvoices(oids:number[], amount?: number){    
+    return this.http.post<Order>(this.config.API_SERVER + '/v1/orders/invoices/update', {  oids, amount }, {
+      headers: this.headers,
+      withCredentials: true
+    });
   }
 
   // validate shop products collect

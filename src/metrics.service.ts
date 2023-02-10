@@ -17,6 +17,7 @@ export interface Metrics {
   hub: string;
   action: string;
   source: string;
+  extra?:any;
 }
 
 @Injectable()
@@ -29,12 +30,17 @@ export class AnalyticsService {
   constructor(
     private http: HttpClient
   ) {
-    this.headers = new HttpHeaders();
-    this.headers.append('Content-Type', 'application/json');
+    this.headers = new HttpHeaders({
+      'Content-Type': 'application/json',
+      'Cache-Control' : 'no-cache',
+      'Pragma' : 'no-cache',
+      'ngsw-bypass':'true'
+    });
+
     this.config = ConfigService.defaultConfig;
     this.metrics$ = new Subject<Metrics>();
     this.metrics$.pipe(
-      debounceTime(2000),
+      debounceTime(500),
       switchMap(metrics => {
       return this.http.post<Metrics>(this.config.API_SERVER + '/v1/matrix', metrics, {
         headers: this.headers,

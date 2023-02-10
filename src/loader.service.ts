@@ -101,7 +101,7 @@ export class LoaderService {
     //
     // get last orders
     const catchError = true;
-    this.$order.findOrdersByUser({id:1},{limit:4},catchError).subscribe();
+    this.$order.findOrdersByUser({id:1},{limit:8},catchError).subscribe();
     // let me$=merge(this.$user.me(),this.$user.user$);
     const loaders: any[] = [
       this.$config.config$,

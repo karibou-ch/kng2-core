@@ -192,6 +192,7 @@ export class CartItem {
       hub: this.hub,
       part: this.part,
       note: this.note,
+      audio: this.audio,
       finalprice: this.finalprice
     };
 
@@ -281,10 +282,6 @@ class Cache extends CartModel {
     super();
     this.address = new DepositAddress();
     this.payment = new UserCard();
-    // shipping dated depends on config...
-    // see setContext(...)
-    // this.currentShippingDay=Order.nextShippingDay();
-    // this.currentShippingTime=16;
   }
 }
 
@@ -325,10 +322,12 @@ export class CartService {
   constructor(
     private $http: HttpClient
   ) {
-    this.headers = new HttpHeaders();
-    this.headers.append('Content-Type', 'application/json');
-    this.headers.append('Cache-Control', 'no-cache');
-    this.headers.append('Pragma' , 'no-cache');
+    this.headers = new HttpHeaders({
+      'Content-Type': 'application/json',
+      'Cache-Control' : 'no-cache',
+      'Pragma' : 'no-cache',
+      'ngsw-bypass':'true'
+    });
     this.cache = new Cache();
     this.currentUser = new User();
     this.DEFAULT_GATEWAY = this.cartConfig.gateway;
@@ -700,9 +699,10 @@ export class CartService {
   hasPotentialShippingReductionMultipleOrder(): boolean {
     //
     // check if there is a pending order for this address
-    if(this.currentPendingOrder && this.currentPendingOrder.shipping){
+    if(this.currentPendingOrder && 
+       this.currentPendingOrder.shipping){
       const whenDay = this.currentPendingOrder.shipping.when.getDate();
-      const nextDay = this.cache.currentShippingDay.getDate();
+      const nextDay = this.cache.currentShippingDay && this.cache.currentShippingDay.getDate();
       return (whenDay == nextDay );
     }
     return false;
@@ -831,10 +831,8 @@ export class CartService {
 
       //
       // get state from pending order
-      // FIXME set address equals to pending
+      // FIXME set address and payment in setContext fonction
       if(this.currentPendingOrder){
-        const issuer = this.currentPendingOrder.payment.issuer;
-        this.cache.payment = new UserCard(this.currentUser.payments.find(payment => payment.issuer == issuer));  
         this.cache.address = UserAddress.from(this.currentPendingOrder.shipping);          
       }else
 
@@ -922,7 +920,10 @@ export class CartService {
         this.cache.cid = cart.cid? cart.cid[0] : this.cache.cid ;
         this.cache.name = cart.name ;
         this.cache.updated = new Date(cart.updated);
-        this.cache.items = cart.items.map( item => new CartItem(item));
+        //
+        // FIXME wrong way to check valid items 
+        const hubs = this.defaultConfig.shared.hubs.map(hub=>hub.slug);
+        this.cache.items = cart.items.filter(item=>hubs.indexOf(item.hub)>-1).map( item => new CartItem(item));
         this.clearErrors();
 
         //
@@ -1153,6 +1154,33 @@ export class CartService {
 
     this.currentShops = shops || this.currentShops || [];
     Object.assign(this.currentUser, user);
+
+
+    //
+    // if there is an open order, 
+    // - set the default address
+    // - set the default date
+    orders = (orders||[]).sort((a,b)=> b.oid-a.oid);
+    // FIXME this.orders[0].payment.issue is crashing 
+    if(orders.length && orders[0].payment) {
+      // we can use issuer when the user is set after edition
+      const issuer = orders[0].payment.issuer;
+      this.cache.payment = user.payments.find(payment => payment.issuer == issuer) || this.cache.payment;
+      this.cache.address = UserAddress.from(orders[0].shipping);          
+
+      const potentialDate = new Date(orders[0].shipping.when);
+      const defaultNext = Order.nextShippingDay(user,config.shared.hub);
+      if(potentialDate>=defaultNext){
+        this.cache.currentShippingDay = potentialDate;
+      }
+
+    }
+    //
+    // EnumFinancialStatus[EnumFinancialStatus.authorized]
+    let open = (orders||[]).find(order => order.payment && order.payment.status == 'authorized' && !order.shipping.parent); 
+    if(open) {
+      this.currentPendingOrder = open;
+    }    
     //
     // avoid multiple reset on same context
     if(this.currentHub == config.shared.hub.slug) {
@@ -1166,31 +1194,6 @@ export class CartService {
     //
     // set default shipping address
     this.cache.address = user.getDefaultAddress();
-    // FIXME default shipping 
-    // this.cache.currentShippingDay = Order.nextShippingDay(user);
-    // this.cache.currentShippingTime = 16;
-
-    //
-    // use default date when hub.carts.items > 0
-
-
-    //
-    // if there is an open order, 
-    // - set the default address
-    // - set the default date
-    orders = (orders||[]).sort((a,b)=> b.oid-a.oid);
-    if(orders.length) {
-      const alias = orders[0].payment.alias;
-      this.cache.currentShippingDay = new Date(orders[0].shipping.when);
-      this.cache.payment = user.payments.find(payment => payment.alias == alias) || this.cache.payment;
-      this.cache.address = UserAddress.from(orders[0].shipping);          
-    }
-    //
-    // EnumFinancialStatus[EnumFinancialStatus.authorized]
-    let opens = orders.filter(order => order.payment.status == 'authorized' && !order.shipping.parent); 
-    if(opens.length) {
-      this.currentPendingOrder = opens[0];
-    }
 
     //
     // mark cart ready

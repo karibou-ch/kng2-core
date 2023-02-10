@@ -81,8 +81,9 @@ export class Config {
   // map potential shipping week
   // with reason of closed
   noShippingMessage(hub: Hub) {
-    return this.potentialShippingWeek(hub).map(shipping => {
-      const find = this.shared.hub.noshipping.find(noshipping => {
+    const $hub = hub || this.shared.hub;
+    return this.potentialShippingWeek($hub).map(shipping => {
+      const find = $hub.noshipping.find(noshipping => {
         return shipping.in(noshipping.from, noshipping.to);
       });
       if (find) {
