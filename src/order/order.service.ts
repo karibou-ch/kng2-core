@@ -356,7 +356,7 @@ export class OrderService {
       params: {skus},
       headers: this.headers,
       withCredentials: true
-    });    
+    }).pipe(catchError(err => of([])));    
   }
 
   // find all orders by user
