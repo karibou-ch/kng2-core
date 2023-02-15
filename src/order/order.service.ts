@@ -349,6 +349,16 @@ export class OrderService {
     );
   }
 
+
+  // /v1/orders/prodcts?skus=111
+  findProductsInPendingOrders(skus){
+    return this.http.get<Order[]>(this.config.API_SERVER + '/v1/orders/products', {
+      params: {skus},
+      headers: this.headers,
+      withCredentials: true
+    }).pipe(catchError(err => of([])));    
+  }
+
   // find all orders by user
   // role:user
   // app.get('/v1/orders/users/:id', users.ensureMeOrAdmin, orders.list);
