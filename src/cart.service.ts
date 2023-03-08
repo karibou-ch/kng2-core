@@ -1121,10 +1121,14 @@ export class CartService {
     
     //
     // check if address exist before to save it
-    if (!deposit && !this.currentUser.addresses.some(address => address.isEqual(address))){
-      return;
+    if(!deposit){
+      address = this.currentUser.addresses.find(address => address.isEqual(address)) || new UserAddress();
+    } else {
+      address = deposit;
     }
 
+    //
+    // FIXME deposit from HUB a can be set on HUB b
     this.cache.address = address;
     this.save({ action: CartAction.CART_ADDRESS });
     return true;
