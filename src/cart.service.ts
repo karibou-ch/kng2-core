@@ -1122,7 +1122,7 @@ export class CartService {
     //
     // check if address exist before to save it
     if(!deposit){
-      address = this.currentUser.addresses.find(address => address.isEqual(address)) || new UserAddress();
+      address = this.currentUser.addresses.find(add => add.isEqual(address)) || new UserAddress();
     } else {
       address = deposit;
     }
