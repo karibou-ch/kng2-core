@@ -333,6 +333,7 @@ export class Product {
         home: boolean;
         boost: boolean;
         customized: boolean;        
+        subscription: boolean;        
     };
     details: {
         keywords: string;
