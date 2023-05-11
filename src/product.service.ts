@@ -140,8 +140,9 @@ export class ProductService {
         );
     }
 
-    findByDetails(details): Observable<Product[]> {
+    findByDetails(details, params?: any): Observable<Product[]> {
         return this.http.get<Product[]>(this.config.API_SERVER + '/v1/products/details/' + details, {
+            params,
             headers: this.headers,
             withCredentials: true
         }).pipe(
@@ -149,8 +150,9 @@ export class ProductService {
         );
     }
 
-    findByAttribute(attribute): Observable<Product[]> {
+    findByAttribute(attribute, params?: any): Observable<Product[]> {
         return this.http.get<Product[]>(this.config.API_SERVER + '/v1/products/attributes/' + attribute, {
+            params,
             headers: this.headers,
             withCredentials: true
         }).pipe(
