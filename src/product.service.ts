@@ -140,6 +140,24 @@ export class ProductService {
         );
     }
 
+    findByDetails(details): Observable<Product[]> {
+        return this.http.get<Product[]>(this.config.API_SERVER + '/v1/products/details/' + details, {
+            headers: this.headers,
+            withCredentials: true
+        }).pipe(
+            map(products => products.map(this.updateCache.bind(this)))
+        );
+    }
+
+    findByAttribute(attribute): Observable<Product[]> {
+        return this.http.get<Product[]>(this.config.API_SERVER + '/v1/products/attributes/' + attribute, {
+            headers: this.headers,
+            withCredentials: true
+        }).pipe(
+            map(products => products.map(this.updateCache.bind(this)))
+        );
+    }
+
     findByLocation(location): Observable<Product[]> {
         return this.http.get<Product[]>(this.config.API_SERVER + '/v1/products/location/' + location, {
             headers: this.headers,
