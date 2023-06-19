@@ -274,7 +274,9 @@ export class User {
     if(email && email.indexOf('@')>-1) {
       this.email.address = email;
     }
-    this.balance = parseFloat(defaultUser.balance+'');
+    if(json && json.balance) {
+      this.balance = parseFloat(json.balance||'0');
+    }
     this.payments = this.payments.map(payment => new UserCard(payment));
     this.addresses = this.addresses.map(add => new UserAddress(
       add.name,
