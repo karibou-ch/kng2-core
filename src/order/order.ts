@@ -312,7 +312,7 @@ export class Order {
       });
 
       //
-      // limit lenght of a week
+      // limit length of a week
       return lst.filter(function (date) {
         return (!limit || date < limit);
       });

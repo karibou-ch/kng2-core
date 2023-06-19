@@ -26,7 +26,8 @@ export class ProductService {
             'Cache-Control' : 'no-cache',
             'Pragma' : 'no-cache',
             'ngsw-bypass':'true'
-          });
+        });
+      
         this.cache = new Cache();
         //
         // 1 means to keep the last value

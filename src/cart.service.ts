@@ -818,45 +818,46 @@ export class CartService {
 
       //
       // load only available payment
-      if (fromLocal.payment) {
-        this.cache.payment = new UserCard(fromLocal.payment);
-        // check validity
-        if (!this.cache.payment.isValid()) {
-          this.cache.payment = null;
-        } else if (
-          !this.currentUser.payments.some(payment => payment.isEqual(this.cache.payment))) {
-          this.cache.payment = new UserCard();
-        }
-      }
+      // FIXME use central context API (orders, config, date, payment, and shipping)
+      // if (fromLocal.payment) {
+      //   this.cache.payment = new UserCard(fromLocal.payment);
+      //   // check validity
+      //   if (!this.cache.payment.isValid()) {
+      //     this.cache.payment = null;
+      //   } else if (
+      //     !this.currentUser.payments.some(payment => payment.isEqual(this.cache.payment))) {
+      //     this.cache.payment = new UserCard();
+      //   }
+      // }
 
       //
       // get state from pending order
-      // FIXME set address and payment in setContext fonction
-      if(this.currentPendingOrder){
-        this.cache.address = UserAddress.from(this.currentPendingOrder.shipping);          
-      }else
+      // FIXME use central context API (orders, config, date, payment, and shipping)
+      // if(this.currentPendingOrder){
+      //   this.cache.address = UserAddress.from(this.currentPendingOrder.shipping);          
+      // }else
 
       //
-      // FIXME create function that return UserAddress DepositAddress
+      // FIXME use central context API (orders, config, date, payment, and shipping)
       // load address
-      if (fromLocal.address) {
-        this.cache.address = new UserAddress(
-          fromLocal.address.name,
-          fromLocal.address.streetAdress,
-          fromLocal.address.floor,
-          fromLocal.address.region,
-          fromLocal.address.postalCode,
-          fromLocal.address.note,
-          fromLocal.address.primary,
-          fromLocal.address.geo
-        );
+      // if (fromLocal.address) {
+      //   this.cache.address = new UserAddress(
+      //     fromLocal.address.name,
+      //     fromLocal.address.streetAdress,
+      //     fromLocal.address.floor,
+      //     fromLocal.address.region,
+      //     fromLocal.address.postalCode,
+      //     fromLocal.address.note,
+      //     fromLocal.address.primary,
+      //     fromLocal.address.geo
+      //   );
 
-        if ((fromLocal.address['fees'] >= 0)) {
-          this.cache.address = this.cache.address as DepositAddress;
-          Object.assign(this.cache.address, fromLocal.address);
-          this.cache.address.floor = '-';
-        }
-      }
+      //   if ((fromLocal.address['fees'] >= 0)) {
+      //     this.cache.address = this.cache.address as DepositAddress;
+      //     Object.assign(this.cache.address, fromLocal.address);
+      //     this.cache.address.floor = '-';
+      //   }
+      // }
 
       //
       // check existance on the current user (example when you switch account, cart should be sync )
@@ -1112,6 +1113,10 @@ export class CartService {
   //
   // set default user address
   setShippingAddress(address: UserAddress|DepositAddress) {
+    if(!address) {
+      this.cache.address = new UserAddress();
+      return;
+    }
     //
     // check if deposit
     const deposit = this.defaultConfig.shared.hub.deposits.find(add => {
@@ -1165,22 +1170,23 @@ export class CartService {
     if(orders.length && orders[0].payment) {
       // we can use issuer when the user is set after edition
       const issuer = orders[0].payment.issuer;
-      this.cache.payment = user.payments.find(payment => payment.issuer == issuer) || this.cache.payment;
-      this.cache.address = UserAddress.from(orders[0].shipping);          
-
-      const potentialDate = new Date(orders[0].shipping.when);
-      const defaultNext = Order.nextShippingDay(user,config.shared.hub);
-      if(potentialDate>=defaultNext){
-        this.cache.currentShippingDay = potentialDate;
-      }
-
+      this.cache.payment = this.cache.payment || user.payments.find(payment => payment.issuer == issuer);
+      this.cache.address = this.cache.address || UserAddress.from(orders[0].shipping);          
     }
     //
     // EnumFinancialStatus[EnumFinancialStatus.authorized]
     let open = (orders||[]).find(order => order.payment && order.payment.status == 'authorized' && !order.shipping.parent); 
     if(open) {
       this.currentPendingOrder = open;
+
+      const potentialDate = new Date(open.shipping.when);
+      const defaultNext = Order.nextShippingDay(user,config.shared.hub);
+      if(potentialDate>=defaultNext){
+        this.cache.currentShippingDay = potentialDate;
+      }
+
     }    
+
     //
     // avoid multiple reset on same context
     if(this.currentHub == config.shared.hub.slug) {
@@ -1193,7 +1199,25 @@ export class CartService {
 
     //
     // set default shipping address
-    this.cache.address = user.getDefaultAddress();
+    this.cache.address = this.cache.address || user.getDefaultAddress();
+
+
+    if ((this.cache.address['fees'] >= 0)) {
+      const deposit = this.cache.address as DepositAddress;
+      this.cache.address = new DepositAddress(
+        deposit.name,
+        deposit['streetAddress'] || deposit.streetAdress,
+        deposit.floor,
+        deposit.region,
+        deposit.postalCode,
+        deposit.note,
+        deposit.geo,
+        deposit.weight,
+        deposit.active,
+        deposit.fees
+      );
+
+    }
 
     //
     // mark cart ready
@@ -1221,8 +1245,16 @@ export class CartService {
   }
 
 
-  subTotal(hub?: string): number {
-    const items = this.getItems().filter(item => !hub || hub == item.hub );
+  subTotal(hub?: string, forSubscription?:boolean): number {
+    let items = this.getItems().filter(item => (!hub || hub == item.hub));
+    //
+    // true  for Cart, 
+    // false for Subscription
+    // undef for All
+    if(forSubscription!=undefined) {
+      items = items.filter(item => (!!item.frequency) == forSubscription)
+    }
+
     let total = 0;
     items.forEach((item) => {
       total += (item.price * item.quantity);
