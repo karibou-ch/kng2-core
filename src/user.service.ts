@@ -37,6 +37,7 @@ export class UserAddress {
     this.primary = primary;
     this.geo = geo || {lat: 0, lng: 0};
   }
+  id?: string;
   name: string;
   note: string;
   floor: string;
@@ -50,6 +51,9 @@ export class UserAddress {
   };
 
   isEqual(address: UserAddress): boolean {
+    if(this.id && address.id) {
+      return (this.id == address.id);
+    }
     return this.streetAdress == address.streetAdress &&
            this.name == address.name &&
            this.floor == address.floor &&
@@ -158,6 +162,12 @@ export class User {
   /* The provider which with the user authenticated (facebook, twitter, etc.) */
   provider: string;
 
+  // tslint:disable-next-line: variable-name
+  identity:{
+    connect_id?: string;
+    connect_state?: boolean;    
+  };
+
   email: {
     address: string;
     cc: string;
@@ -171,8 +181,6 @@ export class User {
     givenName: string;
   };
 
-  birthday: Date;
-  gender: string;
   tags: string[];
   url: string;
 
@@ -181,7 +189,6 @@ export class User {
     what: string;
   }];
 
-  photo: string;
 
   addresses: UserAddress[];
 
@@ -202,20 +209,12 @@ export class User {
 
   /* payments methods */
   payments: UserCard[];
-  // payments:[{
-  //   type:{type:String},
-  //   name:{type:String},
-  //   number:{type:String},
-  //   expiry:{type:String},
-  //   provider:{type:String,unique:true,required:true},
-  //   alias:{type:String,unique:true,required:true}
-  // }],
+  balance: number;
 
-  // tslint:disable-next-line: variable-name
-  connect_id?: string;
-  connect_state: boolean;
-
-  merchant: boolean;
+  plan:{
+    name:string;
+    end:Date;
+  };
 
   reminder: {
     defaultHub?: string;
@@ -244,7 +243,7 @@ export class User {
   roles: string[];
   rank: string;
 
-  constructor(json?: any) {
+  constructor(json?: any,email?:string) {
     const defaultUser = {
       id: null,
       name: {},
@@ -263,6 +262,7 @@ export class User {
       }],
       addresses: [],
       payments: [],
+      balance:0,
       logistic: {postalCode: []},
       orders: {
         avg: 0,
@@ -271,6 +271,12 @@ export class User {
       }
     };
     Object.assign(this, defaultUser, json || {});
+    if(email && email.indexOf('@')>-1) {
+      this.email.address = email;
+    }
+    if(json && json.balance) {
+      this.balance = parseFloat(json.balance||'0');
+    }
     this.payments = this.payments.map(payment => new UserCard(payment));
     this.addresses = this.addresses.map(add => new UserAddress(
       add.name,
@@ -491,11 +497,20 @@ export class UserService {
     // FIXME remove this hugly config propagation
     Object.assign(config, customConfig);
     this.config = config;
-    this.headers = new HttpHeaders();
-    this.headers.append('Content-Type', 'application/json');
-    this.headers.append('Cache-Control' , 'no-cache');
-    this.headers.append('Pragma' , 'no-cache');
+    this.headers = new HttpHeaders({
+      'Content-Type': 'application/json',
+      'Cache-Control' : 'no-cache',
+      'Pragma' : 'no-cache',
+      'ngsw-bypass':'true'
+    });
     this.user$ = new ReplaySubject<User>(1);
+    this.currentUser = new User();
+
+    try{
+      // get marker as helper for the next login
+      this.currentUser.email.address = localStorage.getItem('kng-auth');
+    }catch(err) {}
+
   }
 
 
@@ -503,7 +518,7 @@ export class UserService {
 
   // TODO make observable content !!
   config: any;
-  currentUser: User = new User();
+  currentUser: User;
   private cache = new Cache();
 
 
@@ -538,9 +553,9 @@ export class UserService {
   // http://blog.angular-university.io/how-to-build-angular2-apps-using-rxjs-observable-data-services-pitfalls-to-avoid/
 
   // get user data by his id
-  get(id: number): Observable<User> {
+  get(id: number, forceload?:boolean): Observable<User> {
 
-    if (this.cache.map[id]) {
+    if (!forceload && this.cache.map[id]) {
       return of(this.cache.map[id]);
     }
 
@@ -594,7 +609,7 @@ export class UserService {
         this.updateCache(user);
         return this.currentUser;
       }),
-      catchError(err => of(new User())),
+      catchError(err => of(new User({},this.currentUser.email.address))),
       tap(user => this.user$.next(user))
     );
   }
@@ -671,7 +686,7 @@ export class UserService {
       withCredentials: true
     }).pipe(
       catchError(err => of(new User())),
-      map(user => Object.assign(this.currentUser, new User())),
+      map(user => Object.assign(this.currentUser, new User({},this.currentUser.email.address))),
       tap(user => {
         console.log('user.logout()', user);
         return this.user$.next(user);
@@ -707,7 +722,13 @@ export class UserService {
       withCredentials: true
     }).pipe(
       map(user => this.updateCache(user)),
-      tap(user => this.user$.next(user))
+      tap(user => {
+        try{
+          // store a marker as helper for the next login
+          localStorage.setItem('kng-auth',user.email.address);
+        }catch(err) {}
+        this.user$.next(user)
+      })
     );
   }
 
@@ -735,6 +756,46 @@ export class UserService {
   // ================================================
 
 
+  addressAdd(uid,address: UserAddress) {
+    if (!address||!address.name) {
+      return _throw(new Error('addressUpdate missing address content'));
+    }
+    return this.http.post<User>(this.config.API_SERVER + '/v1/users/' + uid + '/address/add', address, {
+      headers: this.headers,
+      withCredentials: true
+    }).pipe(
+      map(user => this.updateCache(user)),
+      tap(user => this.user$.next(user))
+    );
+
+  }
+
+  addressRemove(uid, address: UserAddress) {
+    if (!address||!address.id) {
+      return _throw(new Error('addressUpdate missing address id'));
+    }
+    return this.http.post<User>(this.config.API_SERVER + '/v1/users/' + uid + '/address/remove', address, {
+      headers: this.headers,
+      withCredentials: true
+    }).pipe(
+      map(user => this.updateCache(user)),
+      tap(user => this.user$.next(user))
+    );
+  }
+
+  addressUpdate(uid, address: UserAddress) {
+    if (!address||!address.id) {
+      return _throw(new Error('addressUpdate missing address id'));
+    }
+    return this.http.post<User>(this.config.API_SERVER + '/v1/users/' + uid + '/address/update', address, {
+      headers: this.headers,
+      withCredentials: true
+    }).pipe(
+      map(user => this.updateCache(user)),
+      tap(user => this.user$.next(user))
+    );
+  }
+
   /**
    * payment methods
    */
@@ -746,14 +807,12 @@ export class UserService {
       return of(user);
     }
 
-    const allAlias = user.payments.map(payment => payment.alias);
-    const alias = (allAlias.length) ? allAlias.pop() : '-';
     const params: any = { };
     if (askIntent) {
       params.intent = askIntent;
     }
 
-    return this.http.post<any>(this.config.API_SERVER + '/v1/users/' + user.id + '/payment/' + alias + '/check', {alias: allAlias}, {
+    return this.http.post<any>(this.config.API_SERVER + '/v1/users/' + user.id + '/payment/-/check', {}, {
       params,
       headers: this.headers,
       withCredentials: true
@@ -792,6 +851,24 @@ export class UserService {
       tap(user => this.user$.next(user))
     );
   }
+
+  // app.post('/v1/users/:id/payment', users.ensureMeOrAdmin,users.addPayment);
+  addPaymentCreditMethod(uid, month:string, year: string): Observable<User> {
+    const params: any = {};
+    const credit ={
+      month,year
+    }
+
+    return this.http.post<User>(this.config.API_SERVER + '/v1/users/' + uid + '/payment/credit', credit, {
+      params,
+      headers: this.headers,
+      withCredentials: true
+    }).pipe(
+      map(user => this.updateCache(user)),
+      tap(user => this.user$.next(user))
+    );
+  }
+  
 
   // app.post('/v1/users/:id/payment/:alias/delete', users.ensureMeOrAdmin,users.deletePayment);
   deletePaymentMethod(alias, uid): Observable<User> {

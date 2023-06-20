@@ -37,6 +37,7 @@ export class AnalyticsService {
       'ngsw-bypass':'true'
     });
 
+
     this.config = ConfigService.defaultConfig;
     this.metrics$ = new Subject<Metrics>();
     this.metrics$.pipe(
