@@ -100,6 +100,7 @@ export class UserCard {
     if (!this.expiry) {
       this.error = 'Unvalid instance';
       this.expiry = new Date(1970, 0, 0).toISOString();
+      this.number = this.number||this.last4;
     }
     this.updated = new Date(this.updated);
   }
@@ -111,6 +112,7 @@ export class UserCard {
   issuer: string;
   name: string;
   number: string;
+  last4?: string;
   provider: string;
   updated: Date;
   error: string;

@@ -607,27 +607,22 @@ export class CartService {
   }
 
   getItems() {
-    this.checkIfReady();
-    return this.cache.items.slice();
+    return (this.cache.items||[]).slice();
   }
 
   getName(){
-    this.checkIfReady();
     return this.cache.name;
   }
 
   getCID(){
-    this.checkIfReady();
     return this.cache.cid;
   }
 
   getCurrentShippingAddress(): UserAddress {
-    this.checkIfReady();
     return this.cache.address;
   }
 
   getCurrentShippingFees(hub: string) {
-    this.checkIfReady();
     return this.shipping(hub);
   }
 
@@ -654,11 +649,9 @@ export class CartService {
   }
 
   getCurrentShippingDay() {
-    this.checkIfReady();
     return this.cache.currentShippingDay;
   }
   getCurrentShippingTime() {
-    this.checkIfReady();
     return this.cache.currentShippingTime;
   }
 
@@ -949,7 +942,12 @@ export class CartService {
         this.computeVendorDiscount();
         this.computeItemsQtyMap();
       }
-      console.log('---- internal load')
+
+      //
+      // first load initiate cart
+      this.isReady = true;
+
+      console.log('---- internal load',this.cache.items)
 
       this.cart$.next({ action: CartAction.CART_LOADED });
     });
@@ -1014,6 +1012,7 @@ export class CartService {
   // save with api/user/cart
   save(state: CartState) {
     state.server = [];
+
     this.saveServer(state)
     .pipe(
       catchError(e => {
@@ -1038,8 +1037,10 @@ export class CartService {
         if(!state.server || !state.server.length) {
             this.cache.updated = new Date();
         }
-        //console.log('---DEBUG kng2-cart:saveLocal',this.cache.address);
-        localStorage.setItem('kng2-cart', JSON.stringify(this.cache));
+        // console.log('---DEBUG kng2-cart:saveLocal',this.cache);
+        if(this.isReady){
+          localStorage.setItem('kng2-cart', JSON.stringify(this.cache));
+        }
         observer.next(state);
       } catch (e) {
         observer.error(e);
@@ -1056,7 +1057,6 @@ export class CartService {
     const errors = model.items.filter(item => item.error);
 
     if (!this.currentUser.isAuthenticated()) {
-      // console.log('--- DBG cart.save unauthorized');
       return throwError('Unauthorized');
     }
 
@@ -1225,7 +1225,6 @@ export class CartService {
 
     //
     // mark cart ready
-    this.isReady = true;
     this.load();
   }
 
