@@ -1237,9 +1237,7 @@ export class CartService {
   shipping(hub: string) {
     //
     // check if cart is available
-    const total = this.subTotal(hub);
     let price = this.computeShippingFees(this.cache.address,hub);
-
     return Utils.roundAmount(Math.max(price, 0));
   }
 

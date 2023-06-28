@@ -147,6 +147,7 @@ export class Order {
     handle?: string;
     provider?: string;
     logs: string[],
+    customer_credit:number; // paid from customer.balance
     fees: {
       charge: number;
       shipping: number;
@@ -404,6 +405,10 @@ export class Order {
     if (factor) { total *= factor; }
 
     return Utils.roundAmount(total);
+  }
+
+  getTotalPriceForBill() {
+    return this.getTotalPrice() - (this.payment.customer_credit||0);
   }
 
   getShippingPrice() {
