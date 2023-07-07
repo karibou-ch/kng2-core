@@ -616,6 +616,21 @@ export class UserService {
     );
   }
 
+  applyCode(code:string): Observable<User> {
+    return this.http.get<User>(this.config.API_SERVER + '/v1/users/redeem/'+code, {
+      params: {tls: Date.now() + ''},
+      headers: this.headers,
+      withCredentials: true
+    }).pipe(
+      map(user => {
+        this.updateCache(user);
+        return this.currentUser;
+      }),
+      tap(user => this.user$.next(user))
+    );
+  }
+
+
   // app.get('/v1/users', auth.ensureAdmin, users.list);
   query(filter?: any): Observable<User[]> {
     filter = filter || {};

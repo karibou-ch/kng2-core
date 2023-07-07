@@ -68,12 +68,17 @@ export class OrderService {
   };
 
   private updateCache(order: Order) {
-    if (!this.cache.map[order.oid]) {
+    if (!this.cache.map.has(order.oid)) {
       this.cache.map.set(order.oid, new Order(order));
       return this.cache.map.get(order.oid);
     }
     // FIXME check if new Order(...) is mandatory at this point ???
-    return Object.assign(this.cache.map[order.oid], new Order(order));
+    const incache = this.cache.map.get(order.oid);
+    incache.items = [];
+    incache.vendors = [] as any;
+    incache.shipping = {} as any;
+    incache.payment = {} as any;
+    return Object.assign(incache, (order));
   }
 
   private deleteCache(order: Order) {
