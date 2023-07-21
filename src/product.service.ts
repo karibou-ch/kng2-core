@@ -35,15 +35,17 @@ export class ProductService {
     }
 
     private updateCache(product: Product) {
-        if (!this.cache.map.get(product.sku)) {
+        const incache = this.cache.map.get(product.sku);
+        if (!incache) {
             this.cache.map.set(product.sku, new Product(product));
             return this.cache.map.get(product.sku);
         }
 
         // clear date field to avoid type collusion
-        delete product.updated;
-        delete product.created;
-        return Object.assign(this.cache.map.get(product.sku), product);
+
+        product.updated = new Date(product.updated||incache.updated);
+        product.created = new Date(product.created||incache.created);
+        return Object.assign(incache, product);
     }
 
     private deleteCache(sku: number) {
