@@ -30,7 +30,6 @@ export class ConfigService {
     },
 
     shared: {
-      token: 'Zz7YkTpPPp5YFQnCprtc7O9'
     },
     loader: [],
     loginPath: ['/admin', '/account'],
@@ -153,6 +152,8 @@ export class ConfigService {
           })
         }
 
+        config.shared.faq = config.shared.faq || [];
+        config.shared.faq_title = config.shared.faq_title || {en:"",fr:""};
         return config;
       }),
       tap(config => {
@@ -217,6 +218,9 @@ export class ConfigService {
         else {
           config.shared.hub = hub;
         }
+
+        config.shared.faq == config.shared.faq || [];        
+        config.shared.faq_title = config.shared.faq_title || {en:"",fr:""};
 
         return config;
       }),

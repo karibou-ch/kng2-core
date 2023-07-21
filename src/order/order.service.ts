@@ -78,6 +78,10 @@ export class OrderService {
     incache.vendors = [] as any;
     incache.shipping = {} as any;
     incache.payment = {} as any;
+    order.shipping.when = new Date(order.shipping.when);
+    order.created = new Date(order.created);
+    order.closed = order.closed?new Date(order.closed):undefined;
+
     return Object.assign(incache, (order));
   }
 
