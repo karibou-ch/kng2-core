@@ -32,6 +32,7 @@ export class ConfigService {
     shared: {
     },
     loader: [],
+    preloadOrders: 12,
     loginPath: ['/admin', '/account'],
     readonlyPath: ['/wallet/create'],
     avoidShopUIIn: ['/admin', '/login', '/signup', '/content']

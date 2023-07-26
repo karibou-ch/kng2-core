@@ -232,8 +232,13 @@ export class User {
     last6Month: number;
     after6Month: number;
     errors: number;
+    count: number;
+    latest: Date;
     refunds: number;
     updated: Date;
+    rating: number;
+    latestErrors: number;
+    hubs: any;
   };
 
   hubs?: string[];
@@ -267,8 +272,14 @@ export class User {
       balance:0,
       logistic: {postalCode: []},
       orders: {
+        hubs:{},
+        count: 0,
+        rating: -1,
         avg: 0,
+        latest: 0,
+        latestErrors: 0,
         last1Month: 0,
+        last3Month: 0,
         last6Month: 0,
       }
     };
@@ -279,6 +290,16 @@ export class User {
     if(json && json.balance) {
       this.balance = parseFloat(json.balance||'0');
     }
+
+
+    //
+    // FIXME bad latest date format for some users
+    this.orders.latest = new Date(this.orders.latest);
+    if(isNaN(this.orders.latest.getTime())){
+      this.orders.latest = new Date(0);
+    }
+    this.orders.updated = new Date(this.orders.updated);
+
     this.payments = this.payments.map(payment => new UserCard(payment));
     this.addresses = this.addresses.map(add => new UserAddress(
       add.name,
@@ -631,7 +652,6 @@ export class UserService {
   }
 
 
-  // app.get('/v1/users', auth.ensureAdmin, users.list);
   query(filter?: any): Observable<User[]> {
     filter = filter || {};
 
@@ -643,6 +663,66 @@ export class UserService {
       map(users => users.map(user => new User(user)))
     );
   }
+
+  customerNew(filter?: any): Observable<User[]> {
+    filter = filter || {};
+
+    return this.http.get<User[]>(this.config.API_SERVER + '/v1/stats/customers/new', {
+      params: filter,
+      headers: this.headers,
+      withCredentials: true
+    }).pipe(
+      map(users => users.map(user => new User(user)))
+    );
+  }
+
+  customerEarly(filter?: any): Observable<User[]> {
+    filter = filter || {};
+
+    return this.http.get<User[]>(this.config.API_SERVER + '/v1/stats/customers/early', {
+      params: filter,
+      headers: this.headers,
+      withCredentials: true
+    }).pipe(
+      map(users => users.map(user => new User(user)))
+    );
+  }
+
+  customerRecurrent(filter?: any): Observable<User[]> {
+    filter = filter || {};
+
+    return this.http.get<User[]>(this.config.API_SERVER + '/v1/stats/customers/recurrent', {
+      params: filter,
+      headers: this.headers,
+      withCredentials: true
+    }).pipe(
+      map(users => users.map(user => new User(user)))
+    );
+  }
+
+  customerPremium(filter?: any): Observable<User[]> {
+    filter = filter || {};
+
+    return this.http.get<User[]>(this.config.API_SERVER + '/v1/stats/customers/premium', {
+      params: filter,
+      headers: this.headers,
+      withCredentials: true
+    }).pipe(
+      map(users => users.map(user => new User(user)))
+    );
+  }  
+
+  customerQuit(filter?: any): Observable<User[]> {
+    filter = filter || {};
+
+    return this.http.get<User[]>(this.config.API_SERVER + '/v1/stats/customers/quit', {
+      params: filter,
+      headers: this.headers,
+      withCredentials: true
+    }).pipe(
+      map(users => users.map(user => new User(user)))
+    );
+  }  
 
   // Reçoit un statut de requête http
   // app.get ('/v1/validate/:uid/:email', emails.validate);
@@ -817,7 +897,7 @@ export class UserService {
    * payment methods
    */
   // app.post('/v1/users/:id/payment/:alias/check', users.ensureMeOrAdmin,users.checkPaymentMethod);
-  checkPaymentMethod(user, askIntent?: string): Observable<User> {
+  checkPaymentMethod(user, askIntent?: string, amount?:number): Observable<User> {
     //
     // if payment list is empty, and also ask intent
     if (!user.payments.length && !askIntent) {
@@ -827,6 +907,9 @@ export class UserService {
     const params: any = { };
     if (askIntent) {
       params.intent = askIntent;
+    }
+    if(amount) {
+      params.amount = amount;
     }
 
     return this.http.post<any>(this.config.API_SERVER + '/v1/users/' + user.id + '/payment/-/check', {}, {
