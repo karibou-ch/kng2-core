@@ -239,6 +239,7 @@ export class User {
     rating: number;
     latestErrors: number;
     hubs: any;
+    funnel: string;
   };
 
   hubs?: string[];
@@ -299,6 +300,7 @@ export class User {
       this.orders.latest = new Date(0);
     }
     this.orders.updated = new Date(this.orders.updated);
+    this.created = new Date(this.created);
 
     this.payments = this.payments.map(payment => new UserCard(payment));
     this.addresses = this.addresses.map(add => new UserAddress(
@@ -664,6 +666,35 @@ export class UserService {
     );
   }
 
+  crmFunnel(content): Observable<any> {
+    // var self = this, params = {};
+    return this.http.post<any>(this.config.API_SERVER + '/v1/crm/funnel', content, {
+      headers: this.headers,
+      withCredentials: true
+    });
+  }
+
+  crmEmail(content): Observable<any> {
+    // var self = this, params = {};
+    return this.http.post<any>(this.config.API_SERVER + '/v1/crm/emails', content, {
+      headers: this.headers,
+      withCredentials: true
+    });
+  }
+
+
+  customerOblivious(filter?: any): Observable<User[]> {
+    filter = filter || {};
+
+    return this.http.get<User[]>(this.config.API_SERVER + '/v1/stats/customers/oblivious', {
+      params: filter,
+      headers: this.headers,
+      withCredentials: true
+    }).pipe(
+      map(users => users.map(user => new User(user)))
+    );
+  }  
+
   customerNew(filter?: any): Observable<User[]> {
     filter = filter || {};
 
@@ -1003,7 +1034,6 @@ export class UserService {
       tap(user => this.user$.next(user))
     );
   }
-
 
   /**
    * Subscribe to the user stream.
