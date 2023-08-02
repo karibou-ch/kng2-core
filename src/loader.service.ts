@@ -33,6 +33,7 @@ export class LoaderService {
   private preload: {
     categories: boolean;
     shops: boolean;
+    orders: number;
   };
 
 
@@ -54,7 +55,8 @@ export class LoaderService {
 
     this.preload = {
       categories: (ConfigService.defaultConfig.loader.indexOf('categories') > -1),
-      shops: (ConfigService.defaultConfig.loader.indexOf('shops') > -1)
+      shops: (ConfigService.defaultConfig.loader.indexOf('shops') > -1),
+      orders: ConfigService.defaultConfig.preloadOrders
     };
 
     //
@@ -101,7 +103,7 @@ export class LoaderService {
     //
     // get last orders
     const catchError = true;
-    this.$order.findOrdersByUser({id:1},{limit:8},catchError).subscribe();
+    this.$order.findOrdersByUser({id:1},{limit:(this.preload.orders)},catchError).subscribe();
     // let me$=merge(this.$user.me(),this.$user.user$);
     const loaders: any[] = [
       this.$config.config$,
