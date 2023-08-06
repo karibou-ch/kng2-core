@@ -42,9 +42,8 @@ export class ConfirmDeleteDirective implements OnInit{
       this.element.next().show();
     });
     this.element.next().submit(()=>{
-      let pwd=this.element.next().find('input[type=password]').val();
-      //scope.action({password:pwd});
-      this.onconfirm.emit(this.id);
+      const pwd=this.element.next().find('input[type=password]').val();
+      this.onconfirm.emit({id:this.id, password:pwd});
       this.element.next().hide('.prompt-passwd');
       return false;
     });

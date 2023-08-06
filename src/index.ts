@@ -13,6 +13,7 @@ export { CartAction,
          CartModel,
          CartItem,
          CartService,
+         CartSubscriptionContext,
          CartState } from './cart.service';
 
 export { Category,
@@ -70,6 +71,7 @@ export { Utils } from './util';
 //
 // directives & pipes
 export { bgSrcDirective } from './util.bg-src.directive';
+export { OneClickDirective } from './util.one-click.directive';
 export { ConfirmDeleteDirective } from './util.confirm-delete.directive';
 export { OrderPortionPipe, OrderBasepricePipe } from './order/order.pipe.portion';
 
