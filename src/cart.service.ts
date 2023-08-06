@@ -26,19 +26,20 @@ export enum CartItemFrequency {
 //
 // on cart action
 export enum CartAction {
-  ITEM_ADD = 1,
-  ITEM_UPDATE = 13,
-  ITEM_REMOVE = 2,
-  ITEM_MAX = 3,
-  ITEM_ALL = 12,
-  CART_INIT = 4,
-  CART_LOADED = 5,
-  CART_LOAD_ERROR = 6,
-  CART_SAVE_ERROR = 7,
-  CART_ADDRESS = 8,
-  CART_PAYMENT = 9,
-  CART_SHPPING = 10,
-  CART_CLEARED = 11
+  ITEM_ADD = "item_add",
+  ITEM_UPDATE = "item_update",
+  ITEM_REMOVE = "item_remove",
+  ITEM_MAX = "item_max",
+  ITEM_ALL = "item_max",
+  CART_INIT = "item_init",
+  CART_LOADED = "cart_loaded",
+  CART_LOAD_ERROR = "cart_loaded_error",
+  CART_SAVE_ERROR = "cart_save_error",
+  CART_ADDRESS = "cart_address",
+  CART_PAYMENT = "cart_payment",
+  CART_SHIPPING = "cart_shipping",
+  CART_CLEARED = "cart_cleared",
+  CART_SUBSCRIPTION = "cart_subscription"
 }
 
 //
@@ -60,7 +61,8 @@ export class CartItem {
     Object.assign(this, item);
   }
   deleted?: boolean;
-  frequency?: CartItemFrequency;
+  frequency?: CartItemFrequency; // subscription
+  active: boolean; // subscription
   timestamp: Date;
   displayName?: string;
   email?: string;
@@ -200,7 +202,16 @@ export class CartItem {
 }
 
 //
-// cart
+// subscription context
+export class CartSubscriptionContext {
+  frequency:CartItemFrequency;
+  dayOfWeek:number;
+  active:boolean;
+  note:string;
+}
+
+//
+// DEPRECATED: user config.shared instead
 export class CartConfig {
   namespace: string;
   gateway: {
@@ -252,13 +263,23 @@ export class CartConfig {
 
 }
 
+//
+// server content
 export class CartModel {
   cid: string | [string];
   items: CartItem[];
   updated: Date;
   reset: Date;
+  subscription: CartSubscriptionContext;
   constructor() {
     this.items = [];
+    // frequency is 1 or 3
+    // dayOfWeek is 2,3, 5
+    this.subscription = {
+      active:false,
+      frequency: 1,
+      dayOfWeek:2
+    } as CartSubscriptionContext
   }
 }
 
@@ -266,7 +287,7 @@ export class CartModel {
 // Cart Cache content
 // which is used over time (close/open navigator)
 // this should be serialized in server side
-class Cache extends CartModel {
+class CartContext extends CartModel {
 
   //
   // vendors discounts
@@ -306,7 +327,7 @@ export class CartService {
   // initial cart configuration
   private cartConfig: CartConfig = new CartConfig();
 
-  private cache = new Cache();
+  private cache:CartContext;
 
   private load$: Subject<string>;
 
@@ -328,7 +349,7 @@ export class CartService {
       'Pragma' : 'no-cache',
       'ngsw-bypass':'true'
     });
-    this.cache = new Cache();
+    this.cache = new CartContext();
     this.currentUser = new User();
     this.DEFAULT_GATEWAY = this.cartConfig.gateway;
     //
@@ -681,6 +702,10 @@ export class CartService {
   }
 
 
+  getCartSubscriptionContext() {
+    return this.cache.subscription;
+  }
+
   hasError(hub: string): boolean {
     return this.getItems().filter(item => item.hub == (hub||this.currentHub)).some(item => item.error);
   }
@@ -773,7 +798,7 @@ export class CartService {
     this.cache.uuid = shared;
 
     try {
-      const fromLocal = JSON.parse(localStorage.getItem('kng2-cart')) as Cache;
+      const fromLocal = JSON.parse(localStorage.getItem('kng2-cart')) as CartContext;
 
       // FIXME missing test for shared cart 
       if (!fromLocal || shared) {
@@ -807,6 +832,12 @@ export class CartService {
       // items will be completed on load()
       if (fromLocal.items) {
         this.cache.items = fromLocal.items as CartItem[];
+      }
+
+      //
+      // restore local subscription values
+      if(fromLocal.subscription) {
+        Object.assign(this.cache.subscription, fromLocal.subscription);
       }
 
       //
@@ -918,6 +949,14 @@ export class CartService {
         // FIXME wrong way to check valid items 
         const hubs = this.defaultConfig.shared.hubs.map(hub=>hub.slug);
         this.cache.items = cart.items.filter(item=>hubs.indexOf(item.hub)>-1).map( item => new CartItem(item));
+
+        //
+        // server subscription values
+        if(cart.subscription) {
+          Object.assign(this.cache.subscription, cart.subscription);
+        }
+
+
         this.clearErrors();
 
         //
@@ -1059,8 +1098,14 @@ export class CartService {
     if (!this.currentUser.isAuthenticated()) {
       return throwError('Unauthorized');
     }
-
-    if ([CartAction.ITEM_ADD,CartAction.ITEM_UPDATE, CartAction.ITEM_REMOVE, CartAction.ITEM_ALL, CartAction.CART_CLEARED].indexOf(state.action) === -1) {
+    const states = [
+          CartAction.ITEM_ADD,
+          CartAction.ITEM_UPDATE, 
+          CartAction.ITEM_REMOVE, 
+          CartAction.ITEM_ALL, 
+          CartAction.CART_CLEARED, 
+          CartAction.CART_SUBSCRIPTION];
+    if (states.indexOf(state.action) === -1) {
       return of(state);
     }
     //
@@ -1109,6 +1154,19 @@ export class CartService {
     }));
   }
 
+  setCartSubscriptionContext(context: CartSubscriptionContext) {
+    if(!context) {
+      return;
+    }
+    this.cache.subscription.active = context.active;
+    this.cache.subscription.dayOfWeek = context.dayOfWeek || 2;// default value is mardi
+    this.cache.subscription.frequency = context.frequency || 1;// default value is week
+    this.cache.subscription.note = context.note || "";
+
+    // save and broadcast cart
+    this.save({ action: CartAction.CART_SUBSCRIPTION });
+  }
+
 
   //
   // set default user address
@@ -1153,7 +1211,7 @@ export class CartService {
     }
     this.cache.currentShippingDay = newDate;
     this.cache.currentShippingTime = hours || 16;
-    this.save({ action: CartAction.CART_SHPPING });
+    this.save({ action: CartAction.CART_SHIPPING });
   }
 
   //
