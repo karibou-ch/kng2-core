@@ -28,6 +28,7 @@ import { MarkdownDirective } from './util.markdown.directive';
 import { ReportingService } from './reporting.service';
 import { HubService } from './hub.service';
 import { AnalyticsService } from './metrics.service';
+import { OneClickDirective } from './util.one-click.directive';
 
 //
 // dynamic injection of module configuration
@@ -43,6 +44,7 @@ import { AnalyticsService } from './metrics.service';
     bgSrcDirective, 
     ConfirmDeleteDirective, 
     MarkdownDirective,
+    OneClickDirective,
     OrderPortionPipe, 
     OrderBasepricePipeEx,
     OrderBasepricePipe
@@ -51,6 +53,7 @@ import { AnalyticsService } from './metrics.service';
     bgSrcDirective, 
     ConfirmDeleteDirective, 
     MarkdownDirective,
+    OneClickDirective,
     OrderPortionPipe, 
     OrderBasepricePipeEx,
     OrderBasepricePipe,
