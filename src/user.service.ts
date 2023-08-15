@@ -216,6 +216,8 @@ export class User {
   plan:{
     name:string;
     end:Date;
+    shipping_price:number;
+    open_invoice:number
   };
 
   reminder: {

@@ -32,7 +32,7 @@ export { LoaderService,
 export { Order,
          OrderShipping,
          OrderItem } from './order/order';
-export { OrderService } from './order/order.service';
+export { OrderService, OrderCustomerInvoices } from './order/order.service';
 
 export { Photo,
          PhotoService } from './photo.service';
