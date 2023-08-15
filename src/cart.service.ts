@@ -208,6 +208,8 @@ export class CartSubscriptionContext {
   dayOfWeek:number;
   active:boolean;
   note:string;
+  pause:Date;
+  unpause: Date;
 }
 
 //
