@@ -18,6 +18,14 @@ import { UserCard, UserAddress } from '../user.service';
 import { CartItem } from '../cart.service';
 
 
+export interface OrderCustomerInvoices {
+  transfers:any[];
+  paids:any[];
+  invoices:any[]
+}
+
+
+
 @Injectable()
 export class OrderService {
 
@@ -96,8 +104,14 @@ export class OrderService {
 
 
   //
-  // common order services
-  // TODO should be splited on differents services and classes
+  // customer order services
+  customerInvoices():Observable<OrderCustomerInvoices> {
+    return this.http.get<OrderCustomerInvoices>(this.config.API_SERVER + '/v1/orders/invoices', {
+      headers: this.headers,
+      withCredentials: true
+    });
+
+  }
 
   //
   // create a new order
