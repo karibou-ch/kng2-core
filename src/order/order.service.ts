@@ -19,9 +19,11 @@ import { CartItem } from '../cart.service';
 
 
 export interface OrderCustomerInvoices {
+  month:number;
+  year:number;
   transfers:any[];
   paids:any[];
-  invoices:any[]
+  invoices:any[];
 }
 
 
@@ -105,8 +107,8 @@ export class OrderService {
 
   //
   // customer order services
-  customerInvoices():Observable<OrderCustomerInvoices> {
-    return this.http.get<OrderCustomerInvoices>(this.config.API_SERVER + '/v1/orders/invoices', {
+  customerInvoices():Observable<OrderCustomerInvoices[]> {
+    return this.http.get<OrderCustomerInvoices[]>(this.config.API_SERVER + '/v1/orders/invoices', {
       headers: this.headers,
       withCredentials: true
     });
