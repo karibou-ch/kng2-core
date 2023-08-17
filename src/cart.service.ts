@@ -207,9 +207,9 @@ export class CartSubscriptionContext {
   frequency:CartItemFrequency;
   dayOfWeek:number;
   active:boolean;
-  note:string;
-  pause:Date;
-  unpause: Date;
+  note?:string;
+  pause?:Date;
+  unpause?: Date;
 }
 
 //
