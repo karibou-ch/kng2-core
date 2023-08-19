@@ -7,14 +7,12 @@ import { map, tap, catchError } from 'rxjs/operators';
 
 import {
   EnumCancelReason,
-  EnumFinancialStatus,
   EnumFulfillments,
-  EnumOrderIssue,
-  EnumShippingMode
+  EnumOrderIssue
 } from './order.enum';
 
 import { Order, OrderItem, OrderShipping } from './order';
-import { UserCard, UserAddress } from '../user.service';
+import { UserCard } from '../user.service';
 import { CartItem } from '../cart.service';
 
 
