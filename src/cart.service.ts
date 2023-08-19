@@ -18,10 +18,10 @@ import './es5';
 // on recurrent order
 export enum CartItemFrequency {
   ITEM_ONCE = 0,
-  ITEM_WEEK = 1,
-  ITEM_2WEEKS = 2,
-  ITEM_MONTH = 3,
-  ITEM_QUARTER = 4
+  ITEM_WEEK = "week",
+  ITEM_2WEEKS = "2weeks",
+  ITEM_MONTH = "month",
+  ITEM_QUARTER = "quarter"
 }
 //
 // on cart action
@@ -610,7 +610,9 @@ export class CartService {
   }
 
   getCurrentGateway(): { fees: number, label: string } {
-    this.checkIfReady();
+    if(!this.isReady){
+      return this.cartConfig.gateway;
+    }
     this.updateGatewayFees();
     return this.cartConfig.gateway;
   }
@@ -1368,7 +1370,12 @@ export class CartService {
       total += (item.price * item.quantity);
     });
 
-    const fees = (config.shared.hub.serviceFees) * total;
+    //
+    // adding gateway fees
+    const gateway = this.getCurrentGateway();
+    const totalFees = config.shared.hub.serviceFees + gateway.fees;
+
+    const fees = (totalFees) * total;
     return Utils.roundAmount(fees);
   }
 
