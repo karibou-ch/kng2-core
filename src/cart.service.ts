@@ -26,20 +26,20 @@ export enum CartItemFrequency {
 //
 // on cart action
 export enum CartAction {
-  ITEM_ADD = "item_add",
-  ITEM_UPDATE = "item_update",
-  ITEM_REMOVE = "item_remove",
-  ITEM_MAX = "item_max",
-  ITEM_ALL = "item_max",
-  CART_INIT = "item_init",
-  CART_LOADED = "cart_loaded",
-  CART_LOAD_ERROR = "cart_loaded_error",
-  CART_SAVE_ERROR = "cart_save_error",
-  CART_ADDRESS = "cart_address",
-  CART_PAYMENT = "cart_payment",
-  CART_SHIPPING = "cart_shipping",
-  CART_CLEARED = "cart_cleared",
-  CART_SUBSCRIPTION = "cart_subscription"
+  ITEM_ADD = "ITEM_ADD",
+  ITEM_UPDATE = "ITEM_UPDATE",
+  ITEM_REMOVE = "ITEM_REMOVE",
+  ITEM_MAX = "ITEM_MAX",
+  ITEM_ALL = "ITEM_ALL",
+  CART_INIT = "CART_INIT",
+  CART_LOADED = "CART_LOADED",
+  CART_LOAD_ERROR = "CART_LOAD_ERROR",
+  CART_SAVE_ERROR = "CART_SAVE_ERROR",
+  CART_ADDRESS = "CART_ADDRESS",
+  CART_PAYMENT = "CART_PAYMENT",
+  CART_SHIPPING = "CART_SHIPPING",
+  CART_CLEARED = "CART_CLEARED",
+  CART_SUBSCRIPTION = "CART_SUBSCRIPTION"
 }
 
 //
@@ -279,7 +279,7 @@ export class CartModel {
     // dayOfWeek is 2,3, 5
     this.subscription = {
       active:false,
-      frequency: 1,
+      frequency: "week",
       dayOfWeek:2
     } as CartSubscriptionContext
   }
@@ -1116,7 +1116,7 @@ export class CartService {
     // case of add/remove item
     if (state.item && [CartAction.ITEM_ADD,CartAction.ITEM_UPDATE, CartAction.ITEM_REMOVE].indexOf(state.action) > -1) {
       model.items = [state.item];
-      params.action = CartAction[state.action];
+      params.action = state.action as CartAction;
     }
 
     //
