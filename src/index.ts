@@ -13,6 +13,7 @@ export { CartAction,
          CartModel,
          CartItem,
          CartService,
+         CartItemFrequency,
          CartSubscriptionContext,
          CartState } from './cart.service';
 
