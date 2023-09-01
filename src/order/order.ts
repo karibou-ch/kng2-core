@@ -415,7 +415,7 @@ export class Order {
 
     // check if value exist, (after creation)
     if (this.payment.fees &&
-      this.payment.fees.shipping !== null) {
+      this.payment.fees.shipping >=0) {
       return this.payment.fees.shipping;
     }
 
