@@ -25,12 +25,13 @@ export function memo<T extends Function>(fnToMemoize: T): T {
 }
 
 
-// TODO test utility class
+// FIXME test utility class and replace class by exported functions
 export class Utils {
 
   private static scripts: { [url: string]: ReplaySubject<any> } = {};
   static roundAmount(value) {
-    return parseFloat((Math.round(value * 20) / 20).toFixed(2));
+    //return parseFloat((Math.round(value * 20) / 20).toFixed(2));
+    return parseFloat((Math.round(value * 100) / 100).toFixed(2));
   }
 
   static mod9710(iban) {
@@ -127,31 +128,31 @@ export class XorCipher {
   constructor() {
   }
 
-  // static encode(key, data:string) {
-  //   data = this.xor_encrypt(key, data);
-  //   return btoa(data);
-  // }
+  encode(key, data:string) {
+    const bytes = this.xor_encrypt(key, data);
+    return btoa(bytes.join());
+  }
 
-  // static decode(key, data:string) {
-  //   data = atob(data);
-  //   return this.xor_decrypt(key, data);
-  // }
+  decode(key, data:string) {
+    data = atob(data);
+    return this.xor_decrypt(key, data);
+  }
 
-  // private static keyCharAt(key, i) {
-  //   return key.charCodeAt( Math.floor(i % key.length) );
-  // }
+  private keyCharAt(key, i) {
+    return key.charCodeAt( Math.floor(i % key.length) );
+  }
 
-  // private static xor_encrypt(key, data:string) {
-  //   return data.split('').map((c, i)=> {
-  //     return c.charCodeAt(0) ^ this.keyCharAt(key, i);
-  //   });
-  // }
+  private xor_encrypt(key, data:string) {
+    return data.split('').map((c, i)=> {
+      return c.charCodeAt(0) ^ this.keyCharAt(key, i);
+    });
+  }
 
-  // private static xor_decrypt(key, data:string) {
-  //   return data.split('').map((c, i)=>{
-  //     return String.fromCharCode( c ^ this.keyCharAt(key, i) );
-  //   }).join("");
-  // }
+  private xor_decrypt(key, data:string) {
+    return data.split('').map((c:any, i)=>{
+      return String.fromCharCode( c ^ this.keyCharAt(key, i) );
+    }).join("");
+  }
 }
 
 
