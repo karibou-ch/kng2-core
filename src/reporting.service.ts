@@ -8,16 +8,19 @@ import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 
 export class ReportCustomer {
-  // tslint:disable-next-line: variable-name
+  // tslint:disable-next-line: variable-name  
   _id: string;
+  displayName:string;
   last1Month: number;
   last3Month: number;
   last6Month: number;
   after6Month: number;
   amount: number;
+  avg?:number;
   orders: number;
   errors?: number;
   refunds?: number;
+  created?: Date|number;
 }
 
 export interface ReportOrderIssue {
