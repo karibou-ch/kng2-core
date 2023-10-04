@@ -6,7 +6,7 @@ interface Date {
   daysInMonth(month: number): number;
   monthDiff(d: Date): number;
   dayToDates(days: number[], limit?: number): Date[];
-  toYYYYMMDD(): string;
+  toYYYYMMDD(sep?): string;
   tomorrow(): Date;
   plusDays(nb: number): Date;
   in(d1: Date, d2: Date): boolean;
@@ -71,8 +71,11 @@ Date.prototype.dayToDates = function (days?: number[], limit?: number): Date[] {
   return result;
 };
 
-Date.prototype.toYYYYMMDD = function (): string {
-  return '' + this.getFullYear() + this.getMonth() + this.getDate();
+Date.prototype.toYYYYMMDD = function (sep?): string {
+  sep=sep||'';
+  const f_day = ((this.getDate()) + '').padStart(2, '0');
+  const f_month =  ((this.getMonth()+1)+'').padStart(2, '0');
+  return ''+this.getFullYear()+sep+f_month+sep+f_day;
 }
 
 Date.prototype.tomorrow = function (): Date {
