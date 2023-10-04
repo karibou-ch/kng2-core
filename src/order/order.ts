@@ -53,6 +53,10 @@ export interface OrderItem {
   category: string;
 
   //
+  // for subscription
+  frequency?: string;
+
+  //
   // customer quantity
   quantity: number;
 
