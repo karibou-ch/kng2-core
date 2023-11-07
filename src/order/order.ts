@@ -361,11 +361,6 @@ export class Order {
     return amount;
   }
 
-  getFees(amount) {
-    let order = this;
-    return parseFloat((this.payment.fees.charge * amount).toFixed(2));
-  }
-
 
   getSubTotal(options?) {
     options = options || {};
