@@ -76,13 +76,17 @@ export class OrderService {
   };
 
   private updateCache(order: Order) {
+    //
+    // avoid update cache on error
+    if(order.errors) {
+      return order;
+    }
     if (!this.cache.map.has(order.oid)) {
       this.cache.map.set(order.oid, new Order(order));
       return this.cache.map.get(order.oid);
     }
     // FIXME check if new Order(...) is mandatory at this point ???
     const incache = this.cache.map.get(order.oid);
-    incache.items = [];
     incache.vendors = [] as any;
     incache.shipping = {} as any;
     incache.payment = {} as any;
@@ -90,6 +94,16 @@ export class OrderService {
     order.created = new Date(order.created);
     order.closed = order.closed?new Date(order.closed):undefined;
 
+    //
+    // update only modified items 
+    incache.items.forEach(item =>  {
+      const updated = order.items.find(elem => elem.sku == item.sku);
+      if(!updated) {
+        return;
+      }
+      Object.assign(item,updated);
+    });
+    order.items = incache.items;
     return Object.assign(incache, (order));
   }
 
