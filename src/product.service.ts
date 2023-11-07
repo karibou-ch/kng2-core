@@ -420,17 +420,18 @@ export class Product {
       return {part, unit, offset, isWeight};
     }
 
-    round1cts(value: number, round?:number) {
-      round = round || 100; //centimes
-      if (value <= 5) {
-        return parseFloat(value.toFixed(1));
-      }
-      if (value <= 50) {
-        return Math.round(value);
-      }
-      return (Math.round(value / round) * round);      
+    round1cts(value: number) {
+    // round = round || 100; //centimes
+    //   if (value <= 5) {
+    //     return parseFloat(value.toFixed(1));
+    //   }
+    //   if (value <= 50) {
+    //     return Math.round(value);
+    //   }
+      return parseFloat((Math.round(value*100)/100).toFixed(2));      
     }
     
+          
 
     getPrice() {
         if (this.attributes.discount && this.pricing.discount>=0) {
