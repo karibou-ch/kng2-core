@@ -569,8 +569,9 @@ export class UserService {
 
   private updateCache(user: User) {
     if (!this.cache.map.get(user.id)) {
-      // TODO unit test of payments/address Class existances after updates
-      Object.assign(this.currentUser, new User(user));
+      if(!this.currentUser.id||this.currentUser.id == user.id) {
+        Object.assign(this.currentUser, new User(user));
+      }
       this.cache.map.set(user.id, this.currentUser);
       return this.cache.map.get(user.id);
     }

@@ -150,6 +150,7 @@ export class Order {
     status: string; // string|EnumFinancialStatus;
     handle?: string;
     provider?: string;
+    subscription?: string;
     logs: string[],
     customer_credit:number; // paid from customer.balance
     fees: {
