@@ -5,8 +5,10 @@ interface Date {
   message:string;
   daysInMonth(month: number): number;
   monthDiff(d: Date): number;
+  daysDiff(d: Date): number;
+  hoursDiff(d: Date): number;
   dayToDates(days: number[], limit?: number): Date[];
-  toYYYYMMDD(): string;
+  toYYYYMMDD(sep?): string;
   tomorrow(): Date;
   plusDays(nb: number): Date;
   in(d1: Date, d2: Date): boolean;
@@ -30,16 +32,29 @@ Date.prototype.daysInMonth = function (month: number): number {
   return new Date(this.getFullYear(), (month || this.getMonth()) + 1, 0).getDate();
 };
 
-// the number of months in the difference
+// the number of months between dates
 // http://stackoverflow.com/questions/2536379/difference-in-months-between-two-dates-in-javascript
 Date.prototype.monthDiff = function (d1: Date): number {
-  var months;
+  let months;
   months = (d1.getFullYear() - this.getFullYear()) * 12;
   months -= this.getMonth() + 1;
   months += d1.getMonth();
   return months <= 0 ? 0 : months;
 };
 
+
+// the number of days between dates
+Date.prototype.daysDiff = function (d1: Date|number): number {
+  const oneday = 86400000;
+  return Math.round((<number>d1 - <number>this)/oneday) ;
+};
+
+
+// the number of days between dates
+Date.prototype.hoursDiff = function (d1: Date|number): number {
+  const onehour = 3600000;
+  return Math.round((<number>d1 - <number>this)/onehour) ;
+};
 
 //
 // give an array of days (in the form [0..6]) and return the ordered dates corresponding (starting from new Date())
@@ -71,8 +86,11 @@ Date.prototype.dayToDates = function (days?: number[], limit?: number): Date[] {
   return result;
 };
 
-Date.prototype.toYYYYMMDD = function (): string {
-  return '' + this.getFullYear() + this.getMonth() + this.getDate();
+Date.prototype.toYYYYMMDD = function (sep?): string {
+  sep=sep||'';
+  const f_day = ((this.getDate()) + '').padStart(2, '0');
+  const f_month =  ((this.getMonth()+1)+'').padStart(2, '0');
+  return ''+this.getFullYear()+sep+f_month+sep+f_day;
 }
 
 Date.prototype.tomorrow = function (): Date {

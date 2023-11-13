@@ -10,7 +10,7 @@ import { Shop, ShopService } from './shop.service';
 
 import { Observable, merge, combineLatest, throwError as _throw, ReplaySubject } from 'rxjs';
 
-import { catchError, flatMap, map, publishReplay, refCount, filter } from 'rxjs/operators';
+import { catchError, flatMap, map, publishReplay, refCount, filter, mergeMap } from 'rxjs/operators';
 import { CartService, CartState } from './cart.service';
 import { OrderService } from './order/order.service';
 import { Order } from './order/order';
@@ -64,7 +64,7 @@ export class LoaderService {
     this.config$ = this.$config.get();
 
     this.loader = this.config$.pipe(
-      flatMap(this.preloader.bind(this)),
+      mergeMap(this.preloader.bind(this)),
       //
       // transform observable to ConnectableObservable (multicasting)
       publishReplay(1),
@@ -89,15 +89,15 @@ export class LoaderService {
     //
     // preload cats
     if (this.preload.categories) {
-      this.$category.select().subscribe();
       this.$category.categories$ = new ReplaySubject<Category[]>();
+      this.$category.select().subscribe();
     }
 
     //
     // in case of preload shops, shops$ should block
     if (this.preload.shops) {
-      this.$shop.query().subscribe();
       this.$shop.shops$ = new ReplaySubject<Shop[]>();
+      this.$shop.query().subscribe();
     }
 
     //

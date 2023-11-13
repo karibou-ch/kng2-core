@@ -53,6 +53,10 @@ export interface OrderItem {
   category: string;
 
   //
+  // for subscription
+  frequency?: string;
+
+  //
   // customer quantity
   quantity: number;
 
@@ -146,6 +150,7 @@ export class Order {
     status: string; // string|EnumFinancialStatus;
     handle?: string;
     provider?: string;
+    subscription?: string;
     logs: string[],
     customer_credit:number; // paid from customer.balance
     fees: {
@@ -355,11 +360,6 @@ export class Order {
     });
 
     return amount;
-  }
-
-  getFees(amount) {
-    let order = this;
-    return parseFloat((this.payment.fees.charge * amount).toFixed(2));
   }
 
 

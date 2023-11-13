@@ -108,6 +108,7 @@ export class Shop {
   // - > is saved on each order to compute bill
   account:{
     IBAN?: string;
+    BIC?: string;
     fees?: number;
     tva: {
       number?: string,

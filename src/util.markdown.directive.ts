@@ -24,6 +24,7 @@ const CDNJS_SHOWDOWN = window['CDNJS_SHOWDOWN'] || 'https://cdnjs.cloudflare.com
 })
 export class MarkdownDirective implements AfterViewInit {
 
+
   @Input()
   set data(value: string) {
     this.fromData(value || '');
@@ -40,15 +41,6 @@ export class MarkdownDirective implements AfterViewInit {
     this.element = this.elementRef.nativeElement;
     this.html = '';
 
-    // https://guides.codechewing.com/add-custom-attributes-to-anchor-html-tag-showdown
-    // Our custom extension
-    this.sdExtAttr = {
-      type: 'output',
-      regex: /\)\((.+=".+" ?)+\)/g,
-      replace: (match, $1, $2) => {
-        return $1.replace('">', `" ${$2}>`);
-      }
-    };
 
 
   }
@@ -102,38 +94,35 @@ export class MarkdownDirective implements AfterViewInit {
   }
 
   process(markdown): Promise<string> {
-    const removeRoot = (md) => {
-      const div = document.createElement('div');
-      let finalTxt = '';
-      div.innerHTML = md;
-      for (var i=0; i<div.children.length; ++i) {
-        if (div.children[i].tagName.toLowerCase() === 'p') {
-          finalTxt += div.children[i].innerHTML;
-        }
+
+    return import('markdown-it').then(module => {
+      if(!MarkdownDirective.converter) {
+        MarkdownDirective.converter = new module.default({
+          html:true,
+          breaks:true,
+          typographer:true
+        });  
       }
-      return finalTxt;      
-    };
-    if (MarkdownDirective.converter) {
-      return new Promise((resolve, reject) => {
-        const md = MarkdownDirective.converter.makeHtml(markdown);
-        resolve((md));
-      });
-    }
+      if(this.removeRoot) {
+        return MarkdownDirective.converter.renderInline(markdown);
+      }
+      return MarkdownDirective.converter.render(markdown);
+    })
 
     // Showdown.extension('extAttributes', this.sdExtAttr);
     // MarkdownDirective.converter = new Showdown.Converter({ extensions: ['extAttributes'] });
-    return Utils.script(CDNJS_SHOWDOWN, 'showdown')
-         .toPromise().then((showdown: any) => {
-      showdown.extension('extAttributes', this.sdExtAttr);
-      MarkdownDirective.converter = new showdown.Converter({
-        emoji: true,
-        parseImgDimensions: true,
-        simplifiedAutoLink: true
-      });
+    // return Utils.script(CDNJS_SHOWDOWN, 'showdown')
+    //      .toPromise().then((showdown: any) => {
+    //   showdown.extension('extAttributes', this.sdExtAttr);
+    //   MarkdownDirective.converter = new showdown.Converter({
+    //     emoji: true,
+    //     parseImgDimensions: true,
+    //     simplifiedAutoLink: true
+    //   });
 
-      const md = MarkdownDirective.converter.makeHtml(markdown);
-      return (md);
-    });
+    //   const md = MarkdownDirective.converter.makeHtml(markdown);
+    //   return (md);
+    // });
   }
 
   highlight(html) {

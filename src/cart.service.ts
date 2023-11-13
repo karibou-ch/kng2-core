@@ -1,13 +1,11 @@
-import { HttpHeaders, HttpClient } from '@angular/common/http';
+import { HttpHeaders, HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { ReplaySubject, SubscriptionLike as ISubscription, throwError as _throw, Observable, of, throwError, from, Subject } from 'rxjs';
+import { ReplaySubject, SubscriptionLike as ISubscription, throwError as _throw, Observable, of, throwError, Subject } from 'rxjs';
 
 import { config, Config } from './config';
-
 import { Product } from './product.service';
 import { Utils } from './util';
-
-import { Order, OrderItem } from './order/order';
+import { Order } from './order/order';
 import { Shop } from './shop.service';
 import { User, UserAddress, UserCard, DepositAddress } from './user.service';
 import { map, catchError, switchMap, debounceTime, tap } from 'rxjs/operators';
@@ -52,7 +50,7 @@ export class CartItem {
     Object.assign(this, item);
   }
   deleted?: boolean;
-  frequency?: CartItemFrequency; // subscription
+  frequency?: CartItemFrequency|string|boolean; // subscription
   active: boolean; // subscription
   timestamp: Date;
   displayName?: string;
@@ -87,41 +85,20 @@ export class CartItem {
   quantity: number;
   stockLimit?: number;
 
-  static fromOrder(orderItem: OrderItem, vendor: Shop) {
-    const variant = (orderItem.variant) ? orderItem.variant.title : null;
-    const item = {
+  static fromContract(item:CartSubscriptionProductItem) {
+    return {
       timestamp: (new Date()),
-      title: orderItem.title,
-      sku: orderItem.sku,
-      hub: orderItem.hub,
-      variant: (variant),
-      thumb: orderItem.thumb,
-      price: orderItem.price,
-      finalprice: orderItem.price,
-      category: {
-        slug: orderItem.category,
-        name: orderItem.category
-      },
-      vendor: {
-        urlpath: vendor.urlpath,
-        name: vendor.name,
-        weekdays: vendor.available.weekdays,
-        photo: vendor.photo.owner,
-        discount: { threshold: null, amount: 0 }
-      },
-      part: orderItem.part,
-      quantity: orderItem.quantity
-    };
-    //
-    // init discount
-    // TODO howto manage discount link
-    if (vendor.discount &&
-        vendor.discount.active) {
-      item.vendor.discount.threshold = (vendor.discount.threshold);
-      item.vendor.discount.amount = (vendor.discount.amount);
-    }
-    return new CartItem(item);
+      title: item.title,
+      sku: item.sku,
+      hub: item.hub,
+      variant: (item.variant),
+      price: item.fees,
+      quantity: item.quantity,
+      finalprice: item.fees*item.quantity,
+      active:true
+    } as CartItem;
   }
+
   static fromProduct(product: Product, hub: string, variant?: string, quantity?: number) {
     product = (product instanceof Product)? product : new Product(product);
     const item = {
@@ -162,7 +139,12 @@ export class CartItem {
   }
 
   equalItem(other: CartItem, variant?: string) {
-    const bSku = this.sku == other.sku && this.hub == other.hub;
+    const bSku = (
+      this.sku == other.sku && 
+      this.hub == other.hub && 
+      this.frequency == other.frequency && 
+      !this.active
+    );
     if (!variant) {
       return bSku;
     }
@@ -178,6 +160,7 @@ export class CartItem {
       sku: this.sku,
       title: this.title,
       variant: this.variant,
+      frequency: this.frequency,
       categories: this.category.name,
       vendor: this.vendor.urlpath,
       quantity: this.quantity,
@@ -188,8 +171,19 @@ export class CartItem {
       audio: this.audio,
       finalprice: this.finalprice
     };
-
   }
+}
+
+//
+// get a list of Items in regard of the context
+// - forSubscription ==> item with frequency
+// - onSubscription ==> item with active subscription (default none)
+//
+export interface CartItemsContext {
+  address?:DepositAddress | UserAddress,
+  forSubscription?:boolean| undefined,
+  onSubscription?:boolean,
+  hub?: string
 }
 
 //
@@ -202,8 +196,10 @@ export interface CartSubscriptionProductItem{
   sku:number|string,
   title:string,
   note: string,
+  hub: string,
   part: string,
-  variant?:string
+  variant?:string,
+  error?:string
 }
 
 export interface CartSubscriptionServiceItem{
@@ -214,7 +210,7 @@ export interface CartSubscriptionServiceItem{
 }
 
 
-export enum SchedulerStatus {
+export enum CartSchedulerStatus {
   active = "active", 
   paused="paused", 
   pending="pending", 
@@ -229,21 +225,46 @@ export enum CartItemFrequency {
   ITEM_2WEEKS    = "2weeks",
   ITEM_MONTH     = "month"
 }
-export interface CartSubscriptionContext {
+export interface CartSubscription {
   id: string,
+  plan:string,
   customer: string,
   description: string,
   start:Date,
-  nextBilling:Date,
+  nextInvoice:Date,
   pauseUntil: Date|0,
   frequency:CartItemFrequency,
   dayOfWeek:number,
   status:string,
   issue?:string,
+  latestPaymentIntent:{
+    source:string, 
+    status:string,
+    id:string,
+    client_secret:string
+  },
   shipping: DepositAddress | UserAddress,
   items: CartSubscriptionProductItem[],
-  services: CartSubscriptionServiceItem[]
+  services: CartSubscriptionServiceItem[],
+
+  errors?:any
 };
+
+export interface CartSubscriptionParams{
+  time?:number,
+  dayOfWeek:number,
+  frequency: CartItemFrequency|string,
+  activeForm:boolean;
+}
+
+export interface CartSubscriptionData{
+  dayOfWeek:number,
+  frequency: CartItemFrequency|string,
+  items:any[],
+  shipping:DepositAddress | UserAddress,
+  payment:string,
+  hub:string
+}
 
 //
 // DEPRECATED: user config.shared instead
@@ -305,12 +326,19 @@ export class CartModel {
   items: CartItem[];
   updated: Date;
   reset: Date;
-  subscriptions: CartSubscriptionContext[];
+  subscriptionParams: CartSubscriptionParams;
+  subscriptions: string[];
   constructor() {
     this.items = [];
     // frequency is 1 or 3
     // dayOfWeek is 2,3, 5
-    this.subscriptions = []
+    this.subscriptions = [];
+    this.subscriptionParams = {
+      dayOfWeek:2,
+      time:16,
+      frequency: "week",
+      activeForm: true,
+    }
   }
 }
 
@@ -327,6 +355,7 @@ class CartContext extends CartModel {
   payment: UserCard;
   currentShippingDay: Date;
   currentShippingTime: number;
+  subscriptionsContent: CartSubscription[];
   uuid?: string;
   name?: string;
   loaded: boolean;
@@ -350,6 +379,7 @@ export class CartService {
   private currentPendingOrder: Order;
   private vendorAmount: any;
   private itemsQtyMap: any;
+  private itemsSubsMap: any;
 
 
   private defaultConfig: Config = config;
@@ -370,6 +400,7 @@ export class CartService {
 
   public DEFAULT_GATEWAY: any;
   public cart$: ReplaySubject<CartState>;
+  public subscription$: ReplaySubject<CartSubscription[]>;
 
   constructor(
     private $http: HttpClient
@@ -386,10 +417,12 @@ export class CartService {
     //
     // 1 means to keep the last value
     this.cart$ = new ReplaySubject(1);
+    this.subscription$ = new ReplaySubject(1);
     this.load$ = new Subject();
     this.isReady = false;
     this.vendorAmount = {};
     this.itemsQtyMap = {};
+    this.itemsSubsMap = {};
 
     this.load$.asObservable().pipe(debounceTime(300)).subscribe((cached)=> {
       this.internalLoad(cached);
@@ -398,87 +431,200 @@ export class CartService {
     // this.cart$.next({action:CartAction.CART_INIT});
   }
 
-  subscriptionsGetAll(): Observable<CartSubscriptionContext[]> {
-    return this.$http.get<CartSubscriptionContext[]>(this.defaultConfig.API_SERVER + '/v1/cart/subscriptions', {
+  subscriptionsGetAll(): Observable<CartSubscription[]> {
+    return this.$http.get<CartSubscription[]>(this.defaultConfig.API_SERVER + '/v1/cart/subscriptions', {
       headers: this.headers,
       withCredentials: true
     })
   }  
   
-  subscriptionsGet(): Observable<CartSubscriptionContext[]> {
-    return this.$http.get<CartSubscriptionContext[]>(this.defaultConfig.API_SERVER + '/v1/cart/subscription', {
+  subscriptionsGet(): Observable<CartSubscription[]> {
+    return this.$http.get<CartSubscription[]>(this.defaultConfig.API_SERVER + '/v1/cart/subscription', {
       headers: this.headers,
       withCredentials: true
     }).pipe(
+      catchError((err:HttpErrorResponse) => {
+        if(err.status == 401){
+          return of([]);
+        }
+        return throwError(err)
+      }),
       tap(subscriptions=> {        
         //
         // server subscription values
-        this.cache.subscriptions = subscriptions || [];
+        this.cache.subscriptionsContent = subscriptions || [];
+        this.subscription$.next(subscriptions);
         return subscriptions;      
       })
     )
   }
 
-  subscriptionPause(subscription:CartSubscriptionContext, to:Date): Observable<CartSubscriptionContext> {
-    return this.$http.post<CartSubscriptionContext>(this.defaultConfig.API_SERVER + `/v1/cart/subscription/${subscription.id}/pause`, {to}, {
+  subscriptionPause(subscription:CartSubscription, to:Date): Observable<CartSubscription> {
+    return this.$http.post<CartSubscription>(this.defaultConfig.API_SERVER + `/v1/cart/subscription/${subscription.id}/pause`, {to}, {
       headers: this.headers,
       withCredentials: true
     }).pipe(
       tap(subscription=> {
         //
         // server subscription values
-        const indexSub = this.cache.subscriptions.findIndex(sub => sub.id == subscription.id);
-        Object.assign(this.cache.subscriptions[indexSub], subscription);
+        this.cache.subscriptionsContent = this.cache.subscriptionsContent || [];
+        const indexSub = this.cache.subscriptionsContent.findIndex(sub => sub.id == subscription.id);
+        Object.assign(this.cache.subscriptionsContent[indexSub], subscription);
+        this.subscription$.next(this.cache.subscriptionsContent);
         return subscription;
       })
     )
   }
 
-  subscriptionResume(subscription:CartSubscriptionContext): Observable<CartSubscriptionContext> {
-    return this.$http.post<CartSubscriptionContext>(this.defaultConfig.API_SERVER + `/v1/cart/subscription/${subscription.id}/resume`, {}, {
+  subscriptionResume(subscription:CartSubscription): Observable<CartSubscription> {
+    return this.$http.post<CartSubscription>(this.defaultConfig.API_SERVER + `/v1/cart/subscription/${subscription.id}/resume`, {}, {
       headers: this.headers,
       withCredentials: true
     }).pipe(
       tap(subscription=> {
         //
         // server subscription values
-        const indexSub = this.cache.subscriptions.findIndex(sub => sub.id == subscription.id);
-        Object.assign(this.cache.subscriptions[indexSub], subscription);
+        this.cache.subscriptionsContent = this.cache.subscriptionsContent || [];
+        const indexSub = this.cache.subscriptionsContent.findIndex(sub => sub.id == subscription.id);
+        Object.assign(this.cache.subscriptionsContent[indexSub], subscription);
+        this.subscription$.next(this.cache.subscriptionsContent);
         return subscription;
       })
     )
   }
 
-  subscriptionCancel(subscription:CartSubscriptionContext): Observable<CartSubscriptionContext> {
-    return this.$http.post<CartSubscriptionContext>(this.defaultConfig.API_SERVER + `/v1/cart/subscription/${subscription.id}/cancel`, {}, {
+  subscriptionCancel(subscription:CartSubscription): Observable<CartSubscription> {
+    return this.$http.post<CartSubscription>(this.defaultConfig.API_SERVER + `/v1/cart/subscription/${subscription.id}/cancel`, {}, {
       headers: this.headers,
       withCredentials: true
     }).pipe(
       tap(subscription=> {
         //
         // server subscription values
-        const indexSub = this.cache.subscriptions.findIndex(sub => sub.id == subscription.id);
-        Object.assign(this.cache.subscriptions[indexSub], subscription);
+        this.cache.subscriptionsContent = this.cache.subscriptionsContent || [];
+        const indexSub = this.cache.subscriptionsContent.findIndex(sub => sub.id == subscription.id);
+        this.cache.subscriptionsContent.splice(indexSub, 1);
+        this.subscription$.next(this.cache.subscriptionsContent);
         return subscription;
       })
     )
   }
 
-  subscriptionCreate(shipping, items, payment,frequency, dayOfWeek): Observable<CartSubscriptionContext> {
-    return this.$http.post<CartSubscriptionContext>(this.defaultConfig.API_SERVER + '/v1/cart/subscription', { shipping, items, payment, dayOfWeek, frequency }, {
+  // body = {account, frequency, token, payment, product}
+  subscriptionCreatePatreon(frequency, payment,product) {
+    return this.$http.post<CartSubscription>(this.defaultConfig.API_SERVER + '/v1/cart/patreon', { payment, frequency, product }, {
+      headers: this.headers,
+      withCredentials: true
+    }).pipe(
+      tap(subscription=> {
+        if(subscription.errors){
+          return subscription;
+        }
+        //
+        // server subscription values
+        this.cache.subscriptionsContent = this.cache.subscriptionsContent || [];
+        this.cache.subscriptionsContent.push(subscription)
+        this.subscription$.next(this.cache.subscriptionsContent);
+        return subscription;
+      })
+    )
+
+  }
+
+
+  subscriptionCreate(params:CartSubscriptionData): Observable<CartSubscription> {
+    //const {shipping, items, payment,frequency, dayOfWeek } = params;
+    return this.$http.post<CartSubscription>(this.defaultConfig.API_SERVER + '/v1/cart/subscription', params, {
+      headers: this.headers,
+      withCredentials: true
+    }).pipe(
+      tap(subscription=> {
+        if(subscription.errors){
+          return subscription;
+        }
+        //
+        // server subscription values
+        this.cache.subscriptionsContent = this.cache.subscriptionsContent || [];
+        this.cache.subscriptionsContent.push(subscription)
+        this.subscription$.next(this.cache.subscriptionsContent);
+        return subscription;
+      })
+    )
+  }
+
+  subscriptionUpdate(sid,params:CartSubscriptionData): Observable<CartSubscription>{
+    return this.$http.post<CartSubscription>(this.defaultConfig.API_SERVER + '/v1/cart/subscription/'+sid+'/update', params, {
+      headers: this.headers,
+      withCredentials: true
+    }).pipe(
+      tap(subscription=> {
+        if(subscription.errors){
+          return subscription;
+        }
+        //
+        // server subscription values
+        this.cache.subscriptionsContent = this.cache.subscriptionsContent || [];
+        const indexSub = this.cache.subscriptionsContent.findIndex(sub => sub.id == subscription.id);
+        Object.assign(this.cache.subscriptionsContent[indexSub], subscription);
+        this.subscription$.next(this.cache.subscriptionsContent);
+        return subscription;
+      })
+    )
+
+  }
+
+  subscriptionUpdatePayment(sid,payment): Observable<CartSubscription>{
+    return this.$http.post<CartSubscription>(this.defaultConfig.API_SERVER + '/v1/cart/subscription/'+sid+'/payment', {payment}, {
       headers: this.headers,
       withCredentials: true
     }).pipe(
       tap(subscription=> {
         //
         // server subscription values
-        const indexSub = this.cache.subscriptions.findIndex(sub => sub.id == subscription.id);
-        Object.assign(this.cache.subscriptions[indexSub], subscription);
+        const indexSub = this.cache.subscriptionsContent.findIndex(sub => sub.id == subscription.id);
+        Object.assign(this.cache.subscriptionsContent[indexSub], subscription);
+        this.subscription$.next(this.cache.subscriptionsContent);
         return subscription;
       })
     )
   }
 
+  subscriptionPaymentConfirm(sid,intent): Observable<CartSubscription>{
+    return this.$http.post<CartSubscription>(this.defaultConfig.API_SERVER + '/v1/cart/subscription/'+sid+'/confirm', { intent }, {
+      headers: this.headers,
+      withCredentials: true
+    }).pipe(
+      tap(subscription=> {
+        //
+        // server subscription values
+        const indexSub = this.cache.subscriptionsContent.findIndex(sub => sub.id == subscription.id);
+        Object.assign(this.cache.subscriptionsContent[indexSub], subscription);
+        this.subscription$.next(this.cache.subscriptionsContent);
+        return subscription;
+      })
+    )
+  }
+
+
+  subscriptionGetPatreonProducts(): Observable<any> {
+    return this.$http.get<any>(this.defaultConfig.API_SERVER + '/v1/cart/patreon', {
+      headers: this.headers,
+      withCredentials: true
+    });
+  }
+
+
+
+  subscriptionSetParams(params:CartSubscriptionParams) {
+    if(params.time>0) {
+      this.cache.currentShippingTime=params.time;
+    }
+    this.cache.subscriptionParams = params;
+  }
+
+  subscriptionGetParams():CartSubscriptionParams {
+    return this.cache.subscriptionParams;
+  }
 
   //
   // API
@@ -534,6 +680,17 @@ export class CartService {
         }
 
         //
+        // item already in active Subscription, return max error
+        if(this.getSubsQtyMap(item.sku)) {
+          if (quiet) {
+            return;
+          }
+          this.cart$.next({ item: items[i], action: CartAction.ITEM_MAX });
+          return;
+          
+        }
+
+        //
         //  fast cart load
         if (items[i].quantity > 6) {
           items[i].quantity += 2;
@@ -575,10 +732,29 @@ export class CartService {
 
   // clear error
   clearErrors() {
-    const items = this.cache.items;
-    for (let i = 0; i < items.length; i++) {
-      items[i].error = undefined;
+    this.cache.items.forEach(item => item.error = undefined);
+  }
+
+  //
+  // FIXME, it should be done by the server
+  clearAfterOrder(hub:string, order?:Order,contract?:CartSubscription) {
+    // 
+    // protect active items from subscriptions
+    if(order){
+      this.cache.items = this.cache.items.filter(item => item.hub != hub && !item.frequency);
     }
+
+    // 
+    // protect active items from subscriptions
+    if(contract) {
+      this.cache.items = this.cache.items.filter(item => item.hub != hub && !item.frequency && !item.frequency);
+    }
+    this.currentPendingOrder = order || this.currentPendingOrder;
+    this.save({ action: CartAction.CART_CLEARED, order });
+  }
+
+  broadcastState() {
+    this.save({ action: CartAction.CART_CLEARED });
   }
 
   //
@@ -590,9 +766,17 @@ export class CartService {
   //
   computeItemsQtyMap(){
     this.itemsQtyMap = {};
-    this.cache.items.forEach(item => {
-      const sku = item.sku + item.hub;      
+    this.cache.items.filter(item => !item.active).forEach(item => {
+      const sku = item.sku + item.hub + (!!item.frequency);      
       this.itemsQtyMap[sku] = item.quantity;
+    });
+  }
+
+  computeSubsQtyMap(items: CartItem[]){
+    this.itemsSubsMap = {};
+    items.forEach(item => {
+      const sku = item.sku;      
+      this.itemsSubsMap[sku] = item.quantity;
     });
   }
   //
@@ -634,22 +818,36 @@ export class CartService {
     // });
   }  
 
-  computeShippingFees(address: UserAddress|DepositAddress,hub: string) {
-    const total = this.subTotal(hub);
-    let price = this.estimateShippingFees(address,hub);
- 
+  //
+  // this method start from estimateShippingFees, 
+  // and compute the final amount
+  computeShippingFees(ctx:CartItemsContext) {
+    ctx.address = ctx.address || this.cache.address;
+
+    let {price,status} = this.estimateShippingFeesWithoutReduction(ctx);
+    //
+    // 0. testing deposit
+    if(status == 'multiple' && !ctx.forSubscription) {
+      return price;
+    }
+
+
     //
     // 1. testing deposit
-    if(address['fees'] >= 0) {
-      return address['fees'];
+    if(status == 'deposit') {
+      return price;
     }
 
     //
     // 2. check if user plan is available
-    if(this.currentUser.plan && 
-      this.currentUser.plan.defaultShipping) {
-     return this.currentUser.plan.defaultShipping;
+    if(status == 'plan') {
+      return price;
     }
+
+    //
+    // for normal shipping, the price is variable
+    const total = this.subTotal(ctx);
+
 
     //
     // 3. compute shipping
@@ -659,73 +857,69 @@ export class CartService {
     } else if (this.cartConfig.shipping.discountA &&
       total >= this.cartConfig.shipping.discountA) {
       price = Math.max(price - this.cartConfig.shipping.priceA,0);
-    }
+    }    
 
     return price;
   }
 
-  estimateShippingFees(address: UserAddress, hub: string) {
+  estimateShippingFeesWithoutReduction(ctx) {
     this.checkIfReady();
-    const total = this.subTotal(hub);
+    const address = ctx.address;
 
     //
     // 1. check if there is a pending order for this address
-    if(this.hasShippingReductionMultipleOrder(address)) {
-      return 0;
+    if(!ctx.forSubscription && this.hasShippingReductionMultipleOrder(address)) {
+      return {price:0,status:'multiple'};
     }
 
     //
     // 2. testing deposit
     // FIXME issue with streetAdress vs. streetAddress
     const deposit = this.defaultConfig.shared.hub.deposits.find(add => {
-      return address.isEqual(add) &&
+      return UserAddress.isEqual(address,add) &&
         add.fees >= 0;
     });
+
     if (deposit && deposit.fees>=0) {
-      return deposit.fees;
+      return {price:deposit.fees,status:'deposit'};
     }
 
     //
     // 3. check if user plan is available
     if(this.currentUser.plan && 
-       this.currentUser.plan.defaultShipping) {
-      return this.currentUser.plan.defaultShipping;
+       this.currentUser.plan.defaultShipping >=0 ) {
+      return {price:this.currentUser.plan.defaultShipping,status:'plan'};
     }
+
 
     //
     // 4. compute shipping fees based on address 
-    const postalCode = address.postalCode || '1234567';
+    const postalCode = address&&address.postalCode || '1234567';
 
     let district = config.getShippingDistrict(postalCode);
 
 
     //
     // get default price for this address
-    let price = this.cartConfig.shipping.price[district];
-
-
-    //
-    // TODO TESTING MERCHANT ACCOUNT
-    return price;
+    let price = this.cartConfig.shipping.price[district];    
+    price += this.getCurrentShippingTimePrice();
+  
+    return {price,status:'shipping'};
   }
+
+
 
   //
-  // TODO empty should manage recurent items
-  clear(hub:string, order?:Order) {
-    // THOSE should be available
-    this.cache.items = this.cache.items.filter(item => item.hub != hub);
-    this.currentPendingOrder = order || this.currentPendingOrder;
-    this.save({ action: CartAction.CART_CLEARED, order });
+  // always look for items that are not in subscription
+  // Get the item whatever the frequency is
+  findBySku(sku: number, hub: string, frequency?:boolean): CartItem {
+    const item = this.cache.items.find(item => item.sku == sku && item.hub == hub && !!item.frequency == !!frequency);
+    return Object.assign({},item);
+  }
+  findIndexBySku(sku: number, hub: string, frequency?:boolean): number {
+    return this.cache.items.findIndex(item => item.sku == sku && item.hub == hub && !!item.frequency == !!frequency );
   }
 
-  broadcastState() {
-    this.save({ action: CartAction.CART_CLEARED });
-  }
-
-
-  findBySku(sku: number, hub: string): CartItem {
-    return this.getItems().find(item => item.sku === sku && item.hub == hub);
-  }
 
   getCurrentGateway(): { fees: number, label: string } {
     if(!this.isReady){
@@ -735,22 +929,27 @@ export class CartService {
     return this.cartConfig.gateway;
   }
 
-  //
-  // compute amout of
-  gatewayAmount(hub: string) {
-    this.checkIfReady();
-    const total = this.subTotal(hub),
-      shipping = this.shipping(hub);
-    return this.getCurrentGateway().fees * (total + shipping - this.getTotalDiscount(hub));
-  }
 
-  getItemsQtyMap(sku: number, hub: string) {
-    const item = sku + hub;      
+  getItemsQtyMap(sku: number, hub: string, frequency?) {
+    const item = sku + hub +(!!frequency);      
     return this.itemsQtyMap[item] || 0;
   }
 
-  getItems() {
-    return (this.cache.items||[]).slice();
+  getSubsQtyMap(sku: number) {
+    const item = sku;// + hub ;      
+    return this.itemsSubsMap[item] || 0;
+  }
+
+  //
+  // by default all items without active subscription
+  // forSubscription => only for "week" or "month" item
+  // onSubscription => include active items
+  getItems(ctx:CartItemsContext) {
+    const onsubs =ctx.onSubscription ? this.cache.items.filter(item => item.active): [];
+    const items = (this.cache.items||[])
+    return items.filter(item =>  (!ctx.hub||item.hub == ctx.hub))
+                .filter(item =>  (ctx.forSubscription==undefined)||
+                                 (ctx.forSubscription==!!item.frequency)).concat(onsubs);                
   }
 
   getName(){
@@ -765,9 +964,6 @@ export class CartService {
     return this.cache.address;
   }
 
-  getCurrentShippingFees(hub: string) {
-    return this.shipping(hub);
-  }
 
   getShippingDayForMultipleHUBs() {
     const hubsDate = [];
@@ -798,6 +994,10 @@ export class CartService {
     return this.cache.currentShippingTime;
   }
 
+  getCurrentShippingTimePrice() {
+    return this.cartConfig.shipping.pricetime[this.cache.currentShippingTime]||0;
+  }
+
   getCurrentPaymentMethod() {
     return this.cache.payment;
   }
@@ -805,31 +1005,34 @@ export class CartService {
   //
   // TODO should be refactored (distance between real shop settings and cart values)!!
   getVendorDiscount(item: CartItem) {
-    const vendor = this.vendorAmount[item.vendor.urlpath + item.hub];
-    return vendor ? vendor.discount : 0;
+    // const vendor = this.vendorAmount[item.vendor.urlpath + item.hub];
+    // return vendor ? vendor.discount : 0;
+    return 0;
   }
 
   //
-  // FIXME, that should be based on the list of all vendors Shop[] (item.vendor.discount could change )
+  // FIXME, discount.vendorAmount is DEPRECATED
   // NOTE, discount is based on items that bellongs to the current HUB
   getTotalDiscount(hub: string): number {
     let amount = 0;
-    for (const vendor in this.vendorAmount) {
-      if(this.vendorAmount.hub == hub) {
-        amount += (this.vendorAmount[vendor].discount.amount || 0);
-      }
-    }
+    // for (const vendor in this.vendorAmount) {
+    //   if(this.vendorAmount.hub == hub) {
+    //     amount += (this.vendorAmount[vendor].discount.amount || 0);
+    //   }
+    // }
 
     return Utils.roundAmount(amount);
   }
 
 
-  getCartSubscriptionContext() {
-    return this.cache.subscriptions;
-  }
-
   hasError(hub: string): boolean {
-    return this.getItems().filter(item => item.hub == (hub||this.currentHub)).some(item => item.error);
+    //
+    // get all items to remove at the right position
+    const ctx:CartItemsContext = {
+      hub: (hub||this.currentHub)
+    }
+
+    return this.getItems(ctx).some(item => item.error);
   }
 
   hasPendingOrder(): Order {
@@ -837,6 +1040,9 @@ export class CartService {
   }
 
   hasPotentialShippingReductionMultipleOrder(): boolean {
+    if(!this.isReady) {
+      return false;
+    }
     //
     // check if there is a pending order for this address
     if(this.currentPendingOrder && 
@@ -855,40 +1061,39 @@ export class CartService {
       return false;
     }
     const pending = UserAddress.from(this.currentPendingOrder.shipping);
-    if(address && address.isEqual(pending)){
-      return true;
-    }
-
-    return false;
+    return (UserAddress.isEqual(address,pending));
   }
 
   //
   // FIXME shipping reduction for pending depends on dst address
-  hasShippingReduction(hub?: string): boolean {
-    const total = this.subTotal(hub);
+  hasShippingReduction(ctx:CartItemsContext) {
+    // total items + service fees
+    const total = this.subTotal(ctx);
+    const address = ctx.address||this.cache.address;
 
-    // implement 3) get free shipping!
-    if (this.cartConfig.shipping.discountB &&
-      total >= this.cartConfig.shipping.discountB) {
-      return true;
-    } else
-      if (this.cartConfig.shipping.discountA &&
-        total >= this.cartConfig.shipping.discountA) {
-        return true;
-      }
+    // return
+    const multiple = this.hasShippingReductionMultipleOrder(address);
+    let discountA=false, discountB=false, deposit=false;
 
-    return false;
-  }
-
-  hasShippingReductionB(hub?: string): boolean {
-    const total = this.subTotal(hub);
-
-    // implement 3) get free shipping!
-    if (this.cartConfig.shipping.discountB &&
-      total >= this.cartConfig.shipping.discountB) {
-      return true;
+    if(address && address['fees']>=0) {
+      deposit = true;
     }
-    return false;
+
+    if(multiple||deposit){
+      return {multiple,discountA,discountB,deposit};
+    }
+
+    // implement 3) get free shipping!
+    if (this.cartConfig.shipping.discountB &&
+      total >= this.cartConfig.shipping.discountB) {
+        discountB=true;
+    }
+    else if (this.cartConfig.shipping.discountA &&
+      total >= this.cartConfig.shipping.discountA) {
+        discountA=true;
+    }
+
+    return {multiple,discountA,discountB,deposit};
   }
 
 
@@ -931,20 +1136,26 @@ export class CartService {
       //
       // check shipping date or get the next one
       // FIXME default shipping time is hardcoded
-      this.cache.currentShippingTime = fromLocal.currentShippingTime || 16;
-      this.cache.currentShippingDay = new Date(fromLocal.currentShippingDay || nextShippingDay || currentShippingDay);
+      const day = new Date(fromLocal.currentShippingDay || nextShippingDay || currentShippingDay);
+      const hours = this.defaultConfig.getDefaultTimeByDay(day);
+      this.setShippingDay(day,hours);
 
       //
       // get state from pending order
       if(this.currentPendingOrder){
-        this.cache.currentShippingDay = new Date(this.currentPendingOrder.shipping.when);
+        const day = new Date(this.currentPendingOrder.shipping.when);
+        const hours = this.defaultConfig.getDefaultTimeByDay(day);
+        this.setShippingDay(day,hours);
       }
 
       //
       // if selected shipping date is before the next one => reset the default date
       if (this.cache.currentShippingDay < nextShippingDay) {
-        this.cache.currentShippingDay = nextShippingDay;
+        const day = nextShippingDay;
+        const hours = this.defaultConfig.getDefaultTimeByDay(day);
+        this.setShippingDay(day,hours);
       }
+
 
       if (fromLocal.updated) {
         this.cache.updated = new Date(fromLocal.updated);
@@ -957,52 +1168,15 @@ export class CartService {
       }
 
       //
-      // load only available payment
-      // FIXME use central context API (orders, config, date, payment, and shipping)
-      // if (fromLocal.payment) {
-      //   this.cache.payment = new UserCard(fromLocal.payment);
-      //   // check validity
-      //   if (!this.cache.payment.isValid()) {
-      //     this.cache.payment = null;
-      //   } else if (
-      //     !this.currentUser.payments.some(payment => payment.isEqual(this.cache.payment))) {
-      //     this.cache.payment = new UserCard();
-      //   }
-      // }
-
-      //
-      // get state from pending order
-      // FIXME use central context API (orders, config, date, payment, and shipping)
-      // if(this.currentPendingOrder){
-      //   this.cache.address = UserAddress.from(this.currentPendingOrder.shipping);          
-      // }else
-
-      //
-      // FIXME use central context API (orders, config, date, payment, and shipping)
-      // load address
-      // if (fromLocal.address) {
-      //   this.cache.address = new UserAddress(
-      //     fromLocal.address.name,
-      //     fromLocal.address.streetAdress,
-      //     fromLocal.address.floor,
-      //     fromLocal.address.region,
-      //     fromLocal.address.postalCode,
-      //     fromLocal.address.note,
-      //     fromLocal.address.primary,
-      //     fromLocal.address.geo
-      //   );
-
-      //   if ((fromLocal.address['fees'] >= 0)) {
-      //     this.cache.address = this.cache.address as DepositAddress;
-      //     Object.assign(this.cache.address, fromLocal.address);
-      //     this.cache.address.floor = '-';
-      //   }
-      // }
+      // subscription params
+      if(fromLocal.subscriptionParams) {
+        this.cache.subscriptionParams = fromLocal.subscriptionParams;
+      }
 
       //
       // check existance on the current user (example when you switch account, cart should be sync )
-      if (!this.currentUser.addresses.some(address => address.isEqual(this.cache.address)) &&
-        !this.defaultConfig.shared.hub.deposits.some(address => address.isEqual(this.cache.address))) {
+      if (!this.currentUser.addresses.some(address => UserAddress.isEqual(address,this.cache.address)) &&
+        !this.defaultConfig.shared.hub.deposits.some(address => UserAddress.isEqual(address,this.cache.address))) {
         this.cache.address = new UserAddress();
       }
 
@@ -1054,20 +1228,28 @@ export class CartService {
       catchError(() => {
         return of(syncCart);
       })
-    ).subscribe(cart => {
+    ).subscribe((cart:CartContext) => {
       if (cart) {
         //
         // reset local cart ?
         this.cache.cid = cart.cid? cart.cid[0] : this.cache.cid ;
         this.cache.name = cart.name ;
         this.cache.updated = new Date(cart.updated);
+        this.cache.subscriptionParams = this.cache.subscriptionParams || cart.subscriptionParams;
         //
         // FIXME wrong way to check valid items 
-        const hubs = this.defaultConfig.shared.hubs.map(hub=>hub.slug);
-        this.cache.items = cart.items.filter(item=>hubs.indexOf(item.hub)>-1).map( item => new CartItem(item));
+        const hubs = this.defaultConfig.shared.hubs.map(hub=>hub.slug);        
 
+        //
+        // restore errors from the last checkout validation
+        const itemsWithError = this.cache.items.filter(item => item.error);
 
-        this.clearErrors();
+        this.cache.items = cart.items.map( item => {
+          const got = itemsWithError.find(itm => itm.sku == item.sku);
+          item.error = got && got.error;
+          return new CartItem(item)          
+        });
+
 
         //
         // compute temporary discount on load
@@ -1090,13 +1272,27 @@ export class CartService {
         });
         this.computeVendorDiscount();
         this.computeItemsQtyMap();
+
+        //
+        // broadcast subscriptions 
+        if(cart.subscriptions && cart.subscriptions.length) {
+          this.subscriptionsGet().toPromise().then((contracts)=>{
+            const items = contracts.map(contract => contract.items).reduce((all,items)=>{
+              return all.concat(items.map(itm=> CartItem.fromContract(itm)));
+            },[] as CartItem[])
+
+            this.computeSubsQtyMap(items);
+
+          });
+        }
+        console.log('---- cart.remote-load (def:time)',this.getCurrentShippingTime(),'(def:items)',this.cache.items)
+
       }
 
       //
       // first load initiate cart
       this.isReady = true;
 
-      console.log('---- internal load',this.cache.items)
 
       this.cart$.next({ action: CartAction.CART_LOADED });
     });
@@ -1107,16 +1303,19 @@ export class CartService {
   }
 
 
-  removeAll(product: Product | CartItem, variant?: string) {
+  removeAll(product: CartItem, variant?: string) {
     this.checkIfReady();
-    // init
-    const items = this.getItems();
+    //
+    // get all items to remove at the right position
+    const items = this.cache.items;
     // FIXME same product on multiple hub  will not work
-    const indexInCache = this.cache.items.findIndex(itm => itm.sku === product.sku);
+    const indexInCache = this.findIndexBySku(product.sku,product.hub,!!product.frequency);
     if(indexInCache == -1 ){
       return this.save({ item:items[indexInCache], action: CartAction.ITEM_REMOVE });
     }
 
+    const item = items[indexInCache];
+    // can not remove item from active sub
     // remove all items
     this.cache.items.splice(indexInCache, 1);
 
@@ -1125,29 +1324,34 @@ export class CartService {
     this.computeVendorDiscount();
     this.computeItemsQtyMap();
 
-    return this.save({ item:items[indexInCache], action: CartAction.ITEM_REMOVE });
+    return this.save({ item, action: CartAction.ITEM_REMOVE });
   }
 
-  remove(product: Product | CartItem, variant?: string) {
+  remove(product: CartItem, variant?: string) {
     this.checkIfReady();
-    // init
+
+    //
+    // get all items to remove at the right position
     const items = this.cache.items;
-    const item = (product instanceof CartItem) ? Object.assign({}, product) : CartItem.fromProduct(product,this.currentHub, variant);    
-    const indexInCache = this.cache.items.findIndex(itm => itm.sku === item.sku && itm.hub === item.hub);
+    const indexInCache = this.findIndexBySku(product.sku, product.hub,!!product.frequency);
     if(indexInCache == -1 ){
-      return this.save({ item, action: CartAction.ITEM_REMOVE });
+      return this.save({ item:product, action: CartAction.ITEM_REMOVE });
     }
     //
-    // propagate server : remove one
-    item.quantity = 1;
-    if (items[indexInCache].quantity <= 1) {
+    // always remove one item qty
+    product.quantity = 1;
+    const item = items[indexInCache];
+    //
+    // can not remove item from active sub => throw Err('...')
+
+    if (item.quantity <= 1) {
       this.cache.items.splice(indexInCache, 1);
     }
     //
     // update the finalprice
     else{
-      items[indexInCache].quantity -= 1;
-      items[indexInCache].finalprice = items[indexInCache].price * items[indexInCache].quantity;
+      item.quantity -= 1;
+      item.finalprice = item.price * item.quantity;
     }
     //
     // update discount amount
@@ -1172,6 +1376,7 @@ export class CartService {
       })
     )
     .subscribe(state => {
+      this.computeItemsQtyMap();
       this.cart$.next(state);
     }, error => {
       this.cart$.next({ action: CartAction.CART_SAVE_ERROR});
@@ -1188,6 +1393,10 @@ export class CartService {
         }
         // console.log('---DEBUG kng2-cart:saveLocal',this.cache);
         if(this.isReady){
+          const keep = this.cache.subscriptionsContent;
+          const cached = Object.assign({},this.cache);
+          cached.subscriptionsContent = [];
+          this.cache.subscriptionsContent = keep;
           localStorage.setItem('kng2-cart', JSON.stringify(this.cache));
         }
         observer.next(state);
@@ -1202,19 +1411,22 @@ export class CartService {
     const model: CartModel = new CartModel();
     const params: any = {};
     model.cid = this.cache.cid;
-    model.items = this.getItems();
-    const errors = model.items.filter(item => item.error);
+    model.items = this.cache.items;
 
     if (!this.currentUser.isAuthenticated()) {
       return throwError('Unauthorized');
     }
+    //
+    // those events don't need to store on server 
+    // - CartAction.CART_SUBSCRIPTION
+    // - CartAction.PAYMENT
+    // - CartAction.SHIPPING
     const states = [
           CartAction.ITEM_ADD,
           CartAction.ITEM_UPDATE, 
           CartAction.ITEM_REMOVE, 
           CartAction.ITEM_ALL, 
-          CartAction.CART_CLEARED, 
-          CartAction.CART_SUBSCRIPTION];
+          CartAction.CART_CLEARED];
     if (states.indexOf(state.action) === -1) {
       return of(state);
     }
@@ -1243,16 +1455,17 @@ export class CartService {
     }).pipe(
       map(model => {
       this.cache.cid = model.cid;
-      state.server = this.cache.items = model.items.map(item => new CartItem(item));
       this.cache.updated = new Date(model.updated);
 
       //
-      // restore errors
-      const hubItems = this.getItems();
-      errors.forEach(item => {
-        const restored = (hubItems.find(i => i.sku === item.sku));
-        restored && (restored.error = item.error);
+      // restore errors from the last checkout validation
+      const itemsWithError = this.cache.items.filter(item => item.error);
+      state.server = this.cache.items = model.items.map( item => {
+        const got = itemsWithError.find(itm => itm.sku == item.sku);
+        item.error = got && got.error;
+        return new CartItem(item)          
       });
+
       //console.log('---DEBUG kng2-cart:saveServer',this.cache.address);
 
       //
@@ -1269,23 +1482,34 @@ export class CartService {
   //
   // set default user address
   setShippingAddress(address: UserAddress|DepositAddress) {
+    //
+    // reset cache address
     if(!address) {
       this.cache.address = new UserAddress();
       return;
     }
+
+    if(UserAddress.isEqual(address,this.cache.address)) {
+      return true;
+    }
+
     //
     // check if deposit
     const deposit = this.defaultConfig.shared.hub.deposits.find(add => {
-      return add.isEqual(address) && add.fees >= 0;
+      return UserAddress.isEqual(address,add) && add.fees >= 0;
     });
     
     
     //
     // check if address exist before to save it
-    if (!deposit && !this.currentUser.addresses.some(address => address.isEqual(address))){
-      return;
+    if(!deposit){
+      address = this.currentUser.addresses.find(add => UserAddress.isEqual(address,add)) || new UserAddress();
+    } else {
+      address = deposit;
     }
 
+    //
+    // FIXME deposit from HUB a can be set on HUB b
     this.cache.address = address;
     this.save({ action: CartAction.CART_ADDRESS });
     return true;
@@ -1294,17 +1518,20 @@ export class CartService {
   //
   // set default user payment
   setPaymentMethod(payment: UserCard) {
+    if(UserCard.isEqual(this.cache.payment,payment)) {
+      return;
+    }
     this.cache.payment = payment;
     this.updateGatewayFees();
     this.save({ action: CartAction.CART_PAYMENT });
   }
 
-  setShippingDay(newDate: Date, hours?: number) {
+  setShippingDay(newDate: Date, hours: number) {
     if (newDate.equalsDate(this.cache.currentShippingDay)) {
       return;
     }
     this.cache.currentShippingDay = newDate;
-    this.cache.currentShippingTime = hours || 16;
+    this.cache.currentShippingTime = hours;
     this.save({ action: CartAction.CART_SHIPPING });
   }
 
@@ -1322,25 +1549,40 @@ export class CartService {
     // - set the default address
     // - set the default date
     orders = (orders||[]).sort((a,b)=> b.oid-a.oid);
-    // FIXME this.orders[0].payment.issue is crashing 
-    if(orders.length && orders[0].payment) {
-      // we can use issuer when the user is set after edition
-      const issuer = orders[0].payment.issuer;
-      this.cache.payment = this.cache.payment || user.payments.find(payment => payment.issuer == issuer);
-      this.cache.address = this.cache.address || UserAddress.from(orders[0].shipping);          
-    }
-    //
-    // EnumFinancialStatus[EnumFinancialStatus.authorized]
-    let open = (orders||[]).find(order => order.payment && order.payment.status == 'authorized' && !order.shipping.parent); 
-    if(open) {
-      this.currentPendingOrder = open;
 
-      const potentialDate = new Date(open.shipping.when);
-      const defaultNext = Order.nextShippingDay(user,config.shared.hub);
+    //
+    // find order for the next shipping day
+    // EnumFinancialStatus.authorized or EnumFinancialStatus.prepaid
+    const defaultNext = Order.nextShippingDay(user,config.shared.hub);
+    let order = orders.filter(order => ['authorized','prepaid'].indexOf(order.payment?.status)>-1)
+                      .find(order =>  !order.shipping.parent && order.shipping.when == defaultNext);
+                      
+    //
+    // no order for next shipping day
+    // find the first open 
+    if(!order) {
+      order = orders.filter(order => ['authorized','prepaid'].indexOf(order.payment?.status)>-1)
+                    .find(order =>  !order.shipping.parent);
+    }
+
+    this.currentPendingOrder = order;
+
+    //
+    // no open order 
+    // find the first order 
+    if(!order && orders.length) {
+      order = orders.find(order => order.payment && order.shipping);
+    }
+
+    if(order) {
+      const issuer = order.payment.issuer;
+      this.cache.payment = this.cache.payment || user.payments.find(payment => payment.issuer == issuer);
+      this.cache.address = this.cache.address || UserAddress.from(order.shipping);          
+
+      const potentialDate = new Date(order.shipping.when);
       if(potentialDate>=defaultNext){
         this.cache.currentShippingDay = potentialDate;
       }
-
     }    
 
     //
@@ -1381,38 +1623,27 @@ export class CartService {
   }
 
   setError(errors, hub) {
-    let sku, item;
-    for (let i = 0; i < errors.length; i++) {
-      sku = Object.keys(errors[i])[0];
-      item = this.findBySku(+sku,hub);
-      if (item) { item.error = errors[i][sku]; }
+    for (let error of errors) {
+      const sku = Object.keys(error)[0];
+      const items = this.cache.items.filter(item => item.sku == +sku);
+      items.forEach(item => item.error = error[sku]);
     }
   }
 
 
-  shipping(hub: string) {
-    //
-    // check if cart is available
-    let price = this.computeShippingFees(this.cache.address,hub);
-    return Utils.roundAmount(Math.max(price, 0));
-  }
 
-
-  subTotal(hub?: string, forSubscription?:boolean): number {
-    let items = this.getItems().filter(item => (!hub || hub == item.hub));
-    //
-    // true  for Cart, 
-    // false for Subscription
-    // undef for All
-    if(forSubscription!=undefined) {
-      items = items.filter(item => (!!item.frequency) == forSubscription)
-    }
+  subTotal(ctx:CartItemsContext): number {
+    let items = this.getItems(ctx);
 
     let total = 0;
     items.forEach((item) => {
       total += (item.price * item.quantity);
     });
-    const fees = (config.shared.hub.serviceFees) * total;
+
+    const gateway = this.getCurrentGateway();
+    const totalFees = config.shared.hub.serviceFees + gateway.fees;
+
+    const fees = (totalFees) * total;
     return Utils.roundAmount(total + fees);
   }
 
@@ -1427,24 +1658,15 @@ export class CartService {
   }
 
 
-  quantity(hub?: string): number {
-    const items = this.getItems().filter(item => !hub || item.hub == hub);
-    let quantity = 0;
-    items.forEach((item) => {
-      quantity += item.quantity;
-    });
-    return quantity;
-  }
-
 
   //
   // total = items + shipping - total discount
   // total = stotal + stotal*payment.fees
   // WARNNG -- WARNNG -- WARNNG -- edit in all places
-  total(hub: string): number {
-    let total = this.subTotal(hub);
-    const shipping = this.shipping(hub);
-    const discount = this.getTotalDiscount(hub);
+  total(ctx:CartItemsContext): number {
+    let total = this.subTotal(ctx);
+    const shipping = this.computeShippingFees(ctx);
+    const discount = this.getTotalDiscount(ctx.hub);
     total += (shipping - discount);
 
     // Rounding up to the nearest 0.05
@@ -1453,8 +1675,8 @@ export class CartService {
   }
 
 
-  totalHubFees(hub: string): number {
-    const items = this.getItems().filter(item => item.hub == hub);
+  totalHubFees(ctx:CartItemsContext): number {
+    const items = this.getItems(ctx).filter(item => !item.active);
     let total = 0;
     items.forEach((item) => {
       total += (item.price * item.quantity);

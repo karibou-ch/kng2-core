@@ -14,7 +14,7 @@ import { catchError, map, tap } from 'rxjs/operators';
 //
 import { config } from './config';
 import { Shop } from './shop.service';
-import { Utils } from './util';
+import { Utils, XorCipher } from './util';
 
 export class UserAddress {
 
@@ -50,14 +50,17 @@ export class UserAddress {
     lng: number;
   };
 
-  isEqual(address: UserAddress): boolean {
-    if(this.id && address.id) {
-      return (this.id == address.id);
+  static isEqual(source:UserAddress, address: UserAddress): boolean {
+    if(!source||!address) {
+      return false;
     }
-    return this.streetAdress == address.streetAdress &&
-           this.name == address.name &&
-           this.floor == address.floor &&
-           this.postalCode == address.postalCode;
+    if(source.id && address.id) {
+      return (source.id == address.id);
+    }
+    return source.streetAdress == address.streetAdress &&
+           source.name == address.name &&
+           source.floor == address.floor &&
+           source.postalCode == address.postalCode;
   }
 
   static from(content: any) {
@@ -150,9 +153,11 @@ export class UserCard {
     return date > now;
   }
 
-  isEqual(payment: UserCard) {
-    return this.number == payment.number &&
-           this.alias == payment.alias;
+  static isEqual(source: UserCard, payment: UserCard) {
+    if(!source||!payment) {
+      return false;
+    }
+    return source.alias == payment.alias;
   }
 }
 
@@ -511,10 +516,15 @@ class Cache {
 @Injectable()
 export class UserService {
 
+  mixer:XorCipher;
+
   constructor(
     @Inject('KNG2_OPTIONS') private customConfig: any,
     public http: HttpClient
   ) {
+
+    this.mixer = new XorCipher();
+
     //
     // Use dynamic server settings
     if (!customConfig.API_SERVER) {
@@ -534,8 +544,13 @@ export class UserService {
     this.currentUser = new User();
 
     try{
+      const isMail=(val) => (val||'').indexOf('@')>-1 && val;
       // get marker as helper for the next login
-      this.currentUser.email.address = localStorage.getItem('kng-auth');
+      const value = localStorage.getItem('kng-auth');
+
+      //const address = this.mixer.decode(config.shared.key,value);
+      //this.currentUser.email.address = isMail(address)||value;
+      this.currentUser.email.address = value;
     }catch(err) {}
 
   }
@@ -554,8 +569,9 @@ export class UserService {
 
   private updateCache(user: User) {
     if (!this.cache.map.get(user.id)) {
-      // TODO unit test of payments/address Class existances after updates
-      Object.assign(this.currentUser, new User(user));
+      if(!this.currentUser.id||this.currentUser.id == user.id) {
+        Object.assign(this.currentUser, new User(user));
+      }
       this.cache.map.set(user.id, this.currentUser);
       return this.cache.map.get(user.id);
     }
@@ -855,7 +871,9 @@ export class UserService {
       tap(user => {
         try{
           // store a marker as helper for the next login
-          localStorage.setItem('kng-auth',user.email.address);
+          if(!user.isAdmin || !user.isAdmin()) {
+            localStorage.setItem('kng-auth',user.email.address);
+          }
         }catch(err) {}
         this.user$.next(user)
       })

@@ -6,10 +6,10 @@ import { DepositAddress } from './user.service';
 
 
 // import { _throw } from 'rxjs/observable/throw';
-import { Observable } from 'rxjs';
+import { Observable, of, throwError } from 'rxjs';
 // import { of } from 'rxjs/observable/of';
 import { ReplaySubject } from 'rxjs';
-import { map, tap, retryWhen, delay, take, distinctUntilChanged } from 'rxjs/operators';
+import { map, tap, retryWhen, delay, take, distinctUntilChanged, concatMap } from 'rxjs/operators';
 
 
 @Injectable()
@@ -96,7 +96,10 @@ export class ConfigService {
       withCredentials: true,
       params: (params)
     }).pipe(
-      retryWhen(errors => errors.pipe(delay(1000), take(3))),
+      retryWhen(errors => errors.pipe(
+        delay(1000), 
+        concatMap((err, index) => index === 3 ? throwError(err) : of(null)))
+      ),
       map((shared: any) => {
         //
         // based on server timestamp, previous config is more recent

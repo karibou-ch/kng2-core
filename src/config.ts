@@ -61,21 +61,6 @@ export class Config {
     );
   }
 
-  getShippingWeek(hub: Hub) {
-    const currentHub = hub || this.shared.hub;
-    const oneWeek = ['Di', 'Lu', 'Ma', 'Me', 'Je', 'Ve', 'Sa'], today = new Date();
-
-    //
-    // all the week is off!
-    if (!this.shared.order) {
-      return oneWeek.map((day, i) => ({label:day,state:'disabled'}));
-    }
-
-    return oneWeek.map((day, i) => {
-      return (currentHub.weekdays.indexOf(i) > -1) ?
-        {label: day, state: ''} : { label: day, state: 'disabled'};
-    });
-  }
 
   //
   // map potential shipping week
@@ -94,8 +79,13 @@ export class Config {
 
   }
 
-  getShippingDays(): Date[] {
-    return this.shared.shippingweek || [];
+
+  getDefaultTimeByDay(day:Date): number {
+    // get default value before shared config is loaded (FIXME remove => (day.getDay()==6)?12:16)    
+    if(!this.shared.shipping ||!this.shared.shipping.defaultTimeByDay) {
+      return (day.getDay()==6)?12:16;
+    }
+    return this.shared.shipping.defaultTimeByDay[day.getDay()];
   }
 
   getShippingDistrict(postalCode) {

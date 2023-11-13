@@ -356,7 +356,8 @@ export class Product {
         home: boolean;
         boost: boolean;
         customized: boolean;        
-        subscription: boolean;        
+        subscription: boolean;     
+        business:boolean;   
     };
     details: {
         keywords: string;
@@ -413,23 +414,24 @@ export class Product {
       // [3] => unit
       const part = parseFloat(m[2]); 
       const unit = (m[3]).toLowerCase();
-      const offset = (!m[1])? 0:this.getRoundPrice(part * delta);
+      const offset = (!m[1])? 0:this.round1cts(part * delta);
       const isWeight = ['g','gr','k','kg','kilo'].indexOf(unit)>-1;
       // 'portion entre ' + (part - offset) + unit + ' et ' + (part + offset) + '' + unit
       return {part, unit, offset, isWeight};
     }
 
-    getRoundPrice(value: number, round?:number) {
-      round = round || 5; //centimes
-      if (value <= 5) {
-        return parseFloat(value.toFixed(1));
-      }
-      if (value <= 50) {
-        return Math.round(value);
-      }
-      return (Math.round(value / round) * round);      
+    round1cts(value: number) {
+    // round = round || 100; //centimes
+    //   if (value <= 5) {
+    //     return parseFloat(value.toFixed(1));
+    //   }
+    //   if (value <= 50) {
+    //     return Math.round(value);
+    //   }
+      return parseFloat((Math.round(value*100)/100).toFixed(2));      
     }
     
+          
 
     getPrice() {
         if (this.attributes.discount && this.pricing.discount>=0) {
