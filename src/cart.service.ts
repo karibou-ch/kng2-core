@@ -2,15 +2,16 @@ import { HttpHeaders, HttpClient, HttpErrorResponse } from '@angular/common/http
 import { Injectable } from '@angular/core';
 import { ReplaySubject, SubscriptionLike as ISubscription, throwError as _throw, Observable, of, throwError, Subject } from 'rxjs';
 
-import { config, Config } from './config';
+import { config, Config, configCors } from './config';
 import { Product } from './product.service';
 import { Utils } from './util';
-import { Order } from './order/order';
+import { Order, OrderAddress } from './order/order';
 import { Shop } from './shop.service';
-import { User, UserAddress, UserCard, DepositAddress } from './user.service';
+import { User, UserAddress, UserCard, DepositAddress, ShippingAddress } from './user.service';
 import { map, catchError, switchMap, debounceTime, tap } from 'rxjs/operators';
 import { ConfigService } from './config.service';
 import './es5';
+import { AnalyticsService } from './metrics.service';
 
 //
 // on cart action
@@ -37,6 +38,7 @@ export class CartState {
   item?: CartItem;
   order?: Order;
   action: CartAction;
+  data?:any;
   server?: CartItem[];
 }
 
@@ -45,14 +47,25 @@ export class CartState {
 export class CartItem {
 
   constructor(item: any | CartItem) {
-    // avoid UI artefact on loading 
+    // avoid UI artefact on loading
     item['selected'] = undefined;
     Object.assign(this, item);
+
+    item.active = (item.active =='true');
+    item.shared = (item.shared =='true');
+    item.bundle = (item.bundle =='true');
+    item.discount = (item.discount =='true');
+    item.frequency = item.frequency == 'false' ? undefined : item.frequency;
+    item.timestamp = new Date(item.timestamp);
   }
+  shared?: boolean;
   deleted?: boolean;
+  bundle?: boolean|"true"|"false";
   frequency?: CartItemFrequency|string|boolean; // subscription
   active: boolean; // subscription
   timestamp: Date;
+  timelimit?: number;
+
   displayName?: string;
   email?: string;
   hub: string;
@@ -109,6 +122,7 @@ export class CartItem {
       variant: (variant),
       thumb: product.photo.url,
       price: product.getPrice(),
+      timelimit: product.attributes.timelimit||0,
       finalprice: product.getPrice(),
       category: {
         slug: product.categories.slug,
@@ -117,8 +131,6 @@ export class CartItem {
       vendor: {
         urlpath: product.vendor.urlpath,
         name: product.vendor.name,
-        weekdays: product.vendor.available.weekdays,
-        photo: product.vendor.photo.owner,
         /* FIXME vendor discount should be managed */
         discount: { threshold: null, amount: 0 }
       },
@@ -128,7 +140,7 @@ export class CartItem {
       quantity: (quantity || 1),
       stockLimit : product.pricing&&product.pricing.stock };
     //
-    // init discount 
+    // init discount
     // TODO howto manage discount link
     if (product.vendor.discount &&
         product.vendor.discount.active) {
@@ -140,9 +152,9 @@ export class CartItem {
 
   equalItem(other: CartItem, variant?: string) {
     const bSku = (
-      this.sku == other.sku && 
-      this.hub == other.hub && 
-      this.frequency == other.frequency && 
+      this.sku == other.sku &&
+      this.hub == other.hub &&
+      this.frequency == other.frequency &&
       !this.active
     );
     if (!variant) {
@@ -161,6 +173,7 @@ export class CartItem {
       title: this.title,
       variant: this.variant,
       frequency: this.frequency,
+      timelimit: this.timelimit||0,
       categories: this.category.name,
       vendor: this.vendor.urlpath,
       quantity: this.quantity,
@@ -206,15 +219,16 @@ export interface CartSubscriptionServiceItem{
   unit_amount:number,
   quantity:number,
   fees:number,
-  id:string
+  id:string,
+  title?:string
 }
 
 
 export enum CartSchedulerStatus {
-  active = "active", 
-  paused="paused", 
-  pending="pending", 
-  incomplete="incomplete", 
+  active = "active",
+  paused="paused",
+  pending="pending",
+  incomplete="incomplete",
   trialing="trialing",
   cancel="cancel"
 }
@@ -229,6 +243,8 @@ export interface CartSubscription {
   id: string,
   plan:string,
   customer: string,
+  paymentId: string;
+  paymentAlias: string;
   description: string,
   start:Date,
   nextInvoice:Date,
@@ -238,14 +254,15 @@ export interface CartSubscription {
   status:string,
   issue?:string,
   latestPaymentIntent:{
-    source:string, 
+    source:string,
     status:string,
     id:string,
     client_secret:string
   },
-  shipping: DepositAddress | UserAddress,
+  shipping: ShippingAddress| DepositAddress | UserAddress,
   items: CartSubscriptionProductItem[],
   services: CartSubscriptionServiceItem[],
+  patreon: CartSubscriptionServiceItem[],
 
   errors?:any
 };
@@ -337,7 +354,7 @@ export class CartModel {
       dayOfWeek:2,
       time:16,
       frequency: "week",
-      activeForm: true,
+      activeForm: false,
     }
   }
 }
@@ -356,12 +373,13 @@ class CartContext extends CartModel {
   currentShippingDay: Date;
   currentShippingTime: number;
   subscriptionsContent: CartSubscription[];
+  shared?: CartModel;
   uuid?: string;
   name?: string;
   loaded: boolean;
   constructor() {
     super();
-    this.address = new DepositAddress();
+    this.address = new DepositAddress({});
     this.payment = new UserCard();
   }
 }
@@ -383,6 +401,7 @@ export class CartService {
 
 
   private defaultConfig: Config = config;
+
 
   //
   // initial cart configuration
@@ -409,7 +428,8 @@ export class CartService {
       'Content-Type': 'application/json',
       'Cache-Control' : 'no-cache',
       'Pragma' : 'no-cache',
-      'ngsw-bypass':'true'
+      'ngsw-bypass':'true',
+      'k-dbg': AnalyticsService.FBP
     });
     this.cache = new CartContext();
     this.currentUser = new User();
@@ -427,21 +447,22 @@ export class CartService {
     this.load$.asObservable().pipe(debounceTime(300)).subscribe((cached)=> {
       this.internalLoad(cached);
     })
-    
+
     // this.cart$.next({action:CartAction.CART_INIT});
   }
+
 
   subscriptionsGetAll(): Observable<CartSubscription[]> {
     return this.$http.get<CartSubscription[]>(this.defaultConfig.API_SERVER + '/v1/cart/subscriptions', {
       headers: this.headers,
-      withCredentials: true
+      withCredentials: (configCors())
     })
-  }  
-  
+  }
+
   subscriptionsGet(): Observable<CartSubscription[]> {
     return this.$http.get<CartSubscription[]>(this.defaultConfig.API_SERVER + '/v1/cart/subscription', {
       headers: this.headers,
-      withCredentials: true
+      withCredentials: (configCors())
     }).pipe(
       catchError((err:HttpErrorResponse) => {
         if(err.status == 401){
@@ -449,12 +470,12 @@ export class CartService {
         }
         return throwError(err)
       }),
-      tap(subscriptions=> {        
+      tap(subscriptions=> {
         //
         // server subscription values
         this.cache.subscriptionsContent = subscriptions || [];
         this.subscription$.next(subscriptions);
-        return subscriptions;      
+        return subscriptions;
       })
     )
   }
@@ -462,7 +483,7 @@ export class CartService {
   subscriptionPause(subscription:CartSubscription, to:Date): Observable<CartSubscription> {
     return this.$http.post<CartSubscription>(this.defaultConfig.API_SERVER + `/v1/cart/subscription/${subscription.id}/pause`, {to}, {
       headers: this.headers,
-      withCredentials: true
+      withCredentials: (configCors())
     }).pipe(
       tap(subscription=> {
         //
@@ -479,7 +500,7 @@ export class CartService {
   subscriptionResume(subscription:CartSubscription): Observable<CartSubscription> {
     return this.$http.post<CartSubscription>(this.defaultConfig.API_SERVER + `/v1/cart/subscription/${subscription.id}/resume`, {}, {
       headers: this.headers,
-      withCredentials: true
+      withCredentials: (configCors())
     }).pipe(
       tap(subscription=> {
         //
@@ -496,7 +517,7 @@ export class CartService {
   subscriptionCancel(subscription:CartSubscription): Observable<CartSubscription> {
     return this.$http.post<CartSubscription>(this.defaultConfig.API_SERVER + `/v1/cart/subscription/${subscription.id}/cancel`, {}, {
       headers: this.headers,
-      withCredentials: true
+      withCredentials: (configCors())
     }).pipe(
       tap(subscription=> {
         //
@@ -511,10 +532,10 @@ export class CartService {
   }
 
   // body = {account, frequency, token, payment, product}
-  subscriptionCreatePatreon(frequency, payment,product) {
-    return this.$http.post<CartSubscription>(this.defaultConfig.API_SERVER + '/v1/cart/patreon', { payment, frequency, product }, {
+  subscriptionCreatePatreon(options) {
+    return this.$http.post<CartSubscription>(this.defaultConfig.API_SERVER + '/v1/cart/patreon', options, {
       headers: this.headers,
-      withCredentials: true
+      withCredentials: (configCors())
     }).pipe(
       tap(subscription=> {
         if(subscription.errors){
@@ -536,7 +557,7 @@ export class CartService {
     //const {shipping, items, payment,frequency, dayOfWeek } = params;
     return this.$http.post<CartSubscription>(this.defaultConfig.API_SERVER + '/v1/cart/subscription', params, {
       headers: this.headers,
-      withCredentials: true
+      withCredentials: (configCors())
     }).pipe(
       tap(subscription=> {
         if(subscription.errors){
@@ -555,7 +576,7 @@ export class CartService {
   subscriptionUpdate(sid,params:CartSubscriptionData): Observable<CartSubscription>{
     return this.$http.post<CartSubscription>(this.defaultConfig.API_SERVER + '/v1/cart/subscription/'+sid+'/update', params, {
       headers: this.headers,
-      withCredentials: true
+      withCredentials: (configCors())
     }).pipe(
       tap(subscription=> {
         if(subscription.errors){
@@ -573,10 +594,10 @@ export class CartService {
 
   }
 
-  subscriptionUpdatePayment(sid,payment): Observable<CartSubscription>{
-    return this.$http.post<CartSubscription>(this.defaultConfig.API_SERVER + '/v1/cart/subscription/'+sid+'/payment', {payment}, {
+  subscriptionUpdatePayment(hub,sid,payment): Observable<CartSubscription>{
+    return this.$http.post<CartSubscription>(this.defaultConfig.API_SERVER + '/v1/cart/subscription/'+sid+'/payment', {payment,hub}, {
       headers: this.headers,
-      withCredentials: true
+      withCredentials: (configCors())
     }).pipe(
       tap(subscription=> {
         //
@@ -592,7 +613,7 @@ export class CartService {
   subscriptionPaymentConfirm(sid,intent): Observable<CartSubscription>{
     return this.$http.post<CartSubscription>(this.defaultConfig.API_SERVER + '/v1/cart/subscription/'+sid+'/confirm', { intent }, {
       headers: this.headers,
-      withCredentials: true
+      withCredentials: (configCors())
     }).pipe(
       tap(subscription=> {
         //
@@ -609,17 +630,24 @@ export class CartService {
   subscriptionGetPatreonProducts(): Observable<any> {
     return this.$http.get<any>(this.defaultConfig.API_SERVER + '/v1/cart/patreon', {
       headers: this.headers,
-      withCredentials: true
+      withCredentials: (configCors())
     });
   }
 
 
 
-  subscriptionSetParams(params:CartSubscriptionParams) {
+  subscriptionSetParams(params:CartSubscriptionParams, quiet?:boolean) {
     if(params.time>0) {
       this.cache.currentShippingTime=params.time;
     }
     this.cache.subscriptionParams = params;
+    const data = {
+      currentShippingTime:this.cache.currentShippingTime
+    }
+
+    if(!quiet) {
+      this.save({ action: CartAction.CART_SUBSCRIPTION, data });
+    }
   }
 
   subscriptionGetParams():CartSubscriptionParams {
@@ -647,7 +675,7 @@ export class CartService {
     const items = this.cache.items;
     const index = items.findIndex(elem => elem.sku == item.sku && elem.hub == item.hub);
     if (index>-1){
-      items[index].note =  item.note || items[index].note;        
+      items[index].note =  item.note || items[index].note;
       items[index].audio = item.audio || items[index].audio;
       this.save({ item: items[index], action: CartAction.ITEM_UPDATE });
       return;
@@ -687,7 +715,7 @@ export class CartService {
           }
           this.cart$.next({ item: items[i], action: CartAction.ITEM_MAX });
           return;
-          
+
         }
 
         //
@@ -697,13 +725,12 @@ export class CartService {
         } else {
           items[i].quantity++;
         }
-        console.log('--DBG add note',item.note,item.audio)
         //
         // update the finalprice and vendor
         items[i].finalprice = items[i].price * items[i].quantity;
         items[i].vendor = item.vendor;
-        items[i].note =  items[i].note || item.note;        
-        items[i].audio = items[i].audio || item.audio;        
+        items[i].note =  items[i].note || item.note;
+        items[i].audio = items[i].audio || item.audio;
 
         // TODO warn update
         this.computeVendorDiscount();
@@ -738,18 +765,20 @@ export class CartService {
   //
   // FIXME, it should be done by the server
   clearAfterOrder(hub:string, order?:Order,contract?:CartSubscription) {
-    // 
+    //
     // protect active items from subscriptions
     if(order){
       this.cache.items = this.cache.items.filter(item => item.hub != hub && !item.frequency);
     }
 
-    // 
+    //
     // protect active items from subscriptions
     if(contract) {
       this.cache.items = this.cache.items.filter(item => item.hub != hub && !item.frequency && !item.frequency);
     }
-    this.currentPendingOrder = order || this.currentPendingOrder;
+    if(order && order.oid) {
+      this.currentPendingOrder = order || this.currentPendingOrder;
+    }
     this.save({ action: CartAction.CART_CLEARED, order });
   }
 
@@ -767,7 +796,7 @@ export class CartService {
   computeItemsQtyMap(){
     this.itemsQtyMap = {};
     this.cache.items.filter(item => !item.active).forEach(item => {
-      const sku = item.sku + item.hub + (!!item.frequency);      
+      const sku = item.sku + item.hub + (!!item.frequency);
       this.itemsQtyMap[sku] = item.quantity;
     });
   }
@@ -775,7 +804,7 @@ export class CartService {
   computeSubsQtyMap(items: CartItem[]){
     this.itemsSubsMap = {};
     items.forEach(item => {
-      const sku = item.sku;      
+      const sku = item.sku;
       this.itemsSubsMap[sku] = item.quantity;
     });
   }
@@ -789,13 +818,13 @@ export class CartService {
     //
     // sum total by vendor
     this.cache.items.forEach(item => {
-      const vendor = item.vendor.urlpath + item.hub;      
+      const vendor = item.vendor.urlpath + item.hub;
       if (!this.vendorAmount[vendor]) {
         this.vendorAmount[vendor] = {
           amount: 0, needed:0, discount: {}, hub:item.hub
         };
         Object.assign(this.vendorAmount[vendor].discount, item.vendor.discount, {total: 0});
-      }      
+      }
       this.vendorAmount[vendor].amount += (item.price * item.quantity);
     });
 
@@ -816,13 +845,15 @@ export class CartService {
     // Object.keys(this.vendorAmount).forEach(vendor=>{
     //   console.log('--- vendor.discount',vendor,this.vendorAmount[vendor])
     // });
-  }  
+  }
 
   //
-  // this method start from estimateShippingFees, 
+  // this method start from estimateShippingFees,
   // and compute the final amount
   computeShippingFees(ctx:CartItemsContext) {
     ctx.address = ctx.address || this.cache.address;
+
+    const customTime = this.getCurrentShippingTimePrice();
 
     let {price,status} = this.estimateShippingFeesWithoutReduction(ctx);
     //
@@ -841,7 +872,7 @@ export class CartService {
     //
     // 2. check if user plan is available
     if(status == 'plan') {
-      return price;
+      return price ;
     }
 
     //
@@ -857,13 +888,16 @@ export class CartService {
     } else if (this.cartConfig.shipping.discountA &&
       total >= this.cartConfig.shipping.discountA) {
       price = Math.max(price - this.cartConfig.shipping.priceA,0);
-    }    
+    }
 
-    return price;
+    return price ;
   }
 
   estimateShippingFeesWithoutReduction(ctx) {
-    this.checkIfReady();
+    if(!this.isReady) {
+      return {price:0,status:'shipping'};
+    }
+
     const address = ctx.address;
 
     //
@@ -886,14 +920,14 @@ export class CartService {
 
     //
     // 3. check if user plan is available
-    if(this.currentUser.plan && 
+    if(this.currentUser.plan &&
        this.currentUser.plan.defaultShipping >=0 ) {
       return {price:this.currentUser.plan.defaultShipping,status:'plan'};
     }
 
 
     //
-    // 4. compute shipping fees based on address 
+    // 4. compute shipping fees based on address
     const postalCode = address&&address.postalCode || '1234567';
 
     let district = config.getShippingDistrict(postalCode);
@@ -901,9 +935,9 @@ export class CartService {
 
     //
     // get default price for this address
-    let price = this.cartConfig.shipping.price[district];    
+    let price = this.cartConfig.shipping.price[district];
     price += this.getCurrentShippingTimePrice();
-  
+
     return {price,status:'shipping'};
   }
 
@@ -931,12 +965,12 @@ export class CartService {
 
 
   getItemsQtyMap(sku: number, hub: string, frequency?) {
-    const item = sku + hub +(!!frequency);      
+    const item = sku + hub +(!!frequency);
     return this.itemsQtyMap[item] || 0;
   }
 
   getSubsQtyMap(sku: number) {
-    const item = sku;// + hub ;      
+    const item = sku;// + hub ;
     return this.itemsSubsMap[item] || 0;
   }
 
@@ -948,8 +982,7 @@ export class CartService {
     const onsubs =ctx.onSubscription ? this.cache.items.filter(item => item.active): [];
     const items = (this.cache.items||[])
     return items.filter(item =>  (!ctx.hub||item.hub == ctx.hub))
-                .filter(item =>  (ctx.forSubscription==undefined)||
-                                 (ctx.forSubscription==!!item.frequency)).concat(onsubs);                
+                .filter(item =>  (ctx.forSubscription==undefined)||(ctx.forSubscription==!!item.frequency)).concat(onsubs);
   }
 
   getName(){
@@ -960,6 +993,19 @@ export class CartService {
     return this.cache.cid;
   }
 
+  getShared(name:string): Observable<CartModel>  {
+    const params = { name };
+    return this.$http.get<CartModel>(ConfigService.defaultConfig.API_SERVER + '/v1/cart/shared', {
+      params,
+      headers: this.headers,
+      withCredentials: (configCors())
+    }).pipe(
+      tap(model => {
+        model.items.forEach(item => Object.assign(item , new CartItem(item)))
+        this.cache.shared = model;
+      })
+    );
+  }
   getCurrentShippingAddress(): UserAddress {
     return this.cache.address;
   }
@@ -981,13 +1027,16 @@ export class CartService {
 
     const intersection = hubsDate[0].filter(function(n) {
       return hubsDate[1].indexOf(n) !== -1;
-    });    
+    });
 
     //FIXME create intersection for HUBs count > 2
     return intersection;
   }
 
   getCurrentShippingDay() {
+    if(!this.cache.currentShippingDay) {
+      return Order.nextShippingDay();
+    }
     return this.cache.currentShippingDay;
   }
   getCurrentShippingTime() {
@@ -1045,7 +1094,7 @@ export class CartService {
     }
     //
     // check if there is a pending order for this address
-    if(this.currentPendingOrder && 
+    if(this.currentPendingOrder &&
        this.currentPendingOrder.shipping){
       const whenDay = this.currentPendingOrder.shipping.when.getDate();
       const nextDay = this.cache.currentShippingDay && this.cache.currentShippingDay.getDate();
@@ -1098,7 +1147,6 @@ export class CartService {
 
 
   isCurrentShippingDayAvailable(shop: Shop): boolean {
-    this.checkIfReady();
     if(!this.cache.currentShippingDay) {
       return false;
     }
@@ -1111,7 +1159,6 @@ export class CartService {
   }
 
   loadCache(shared?: string) {
-
     if(this.cache.loaded) {
       return;
     }
@@ -1127,8 +1174,8 @@ export class CartService {
     try {
       const fromLocal = JSON.parse(localStorage.getItem('kng2-cart')) as CartContext;
 
-      // FIXME missing test for shared cart 
-      if (!fromLocal || shared) {
+      // FIXME missing test
+      if (!fromLocal) {
         return;
       }
 
@@ -1162,9 +1209,9 @@ export class CartService {
       }
 
       //
-      // items will be completed on load()
-      if (fromLocal.items) {
-        this.cache.items = fromLocal.items as CartItem[];
+      // items are overrided on serverLoad()
+      if (!shared&&fromLocal.items) {
+        this.cache.items = fromLocal.items.map(item => new CartItem(item));
       }
 
       //
@@ -1177,7 +1224,7 @@ export class CartService {
       // check existance on the current user (example when you switch account, cart should be sync )
       if (!this.currentUser.addresses.some(address => UserAddress.isEqual(address,this.cache.address)) &&
         !this.defaultConfig.shared.hub.deposits.some(address => UserAddress.isEqual(address,this.cache.address))) {
-        this.cache.address = new UserAddress();
+        this.cache.address = new UserAddress({});
       }
 
       //console.log('---DEBUG cart:load',this.cache.address);
@@ -1199,7 +1246,7 @@ export class CartService {
     // check values
     const syncCart: any = {
         items: this.cache.items || [],
-        updated: this.cache.updated 
+        updated: this.cache.updated
     };
 
     //
@@ -1210,7 +1257,7 @@ export class CartService {
     };
 
     //
-    // use a shared cart ? 
+    // use a shared cart ?
     const query: any = {};
     if(shared) {
       query.uuid = shared;
@@ -1220,7 +1267,7 @@ export class CartService {
     this.$http.post<CartModel>(ConfigService.defaultConfig.API_SERVER + '/v1/cart/get', params, {
       params: query,
       headers: this.headers,
-      withCredentials: true
+      withCredentials: (configCors())
     }).pipe(
       map(cart => {
         return cart;
@@ -1237,8 +1284,8 @@ export class CartService {
         this.cache.updated = new Date(cart.updated);
         this.cache.subscriptionParams = this.cache.subscriptionParams || cart.subscriptionParams;
         //
-        // FIXME wrong way to check valid items 
-        const hubs = this.defaultConfig.shared.hubs.map(hub=>hub.slug);        
+        // FIXME wrong way to check valid items
+        const hubs = this.defaultConfig.shared.hubs.map(hub=>hub.slug);
 
         //
         // restore errors from the last checkout validation
@@ -1247,7 +1294,8 @@ export class CartService {
         this.cache.items = cart.items.map( item => {
           const got = itemsWithError.find(itm => itm.sku == item.sku);
           item.error = got && got.error;
-          return new CartItem(item)          
+          item.shared=(!!shared);
+          return new CartItem(item)
         });
 
 
@@ -1274,7 +1322,7 @@ export class CartService {
         this.computeItemsQtyMap();
 
         //
-        // broadcast subscriptions 
+        // broadcast subscriptions
         if(cart.subscriptions && cart.subscriptions.length) {
           this.subscriptionsGet().toPromise().then((contracts)=>{
             const items = contracts.map(contract => contract.items).reduce((all,items)=>{
@@ -1285,7 +1333,7 @@ export class CartService {
 
           });
         }
-        console.log('---- cart.remote-load (def:time)',this.getCurrentShippingTime(),'(def:items)',this.cache.items)
+        // console.log('---- cart.remote-load (def:time)',this.getCurrentShippingTime(),'(def:items)',this.cache.items)
 
       }
 
@@ -1417,15 +1465,15 @@ export class CartService {
       return throwError('Unauthorized');
     }
     //
-    // those events don't need to store on server 
+    // those events don't need to store on server
     // - CartAction.CART_SUBSCRIPTION
     // - CartAction.PAYMENT
     // - CartAction.SHIPPING
     const states = [
           CartAction.ITEM_ADD,
-          CartAction.ITEM_UPDATE, 
-          CartAction.ITEM_REMOVE, 
-          CartAction.ITEM_ALL, 
+          CartAction.ITEM_UPDATE,
+          CartAction.ITEM_REMOVE,
+          CartAction.ITEM_ALL,
           CartAction.CART_CLEARED];
     if (states.indexOf(state.action) === -1) {
       return of(state);
@@ -1440,10 +1488,9 @@ export class CartService {
     //
     // FIXME assert currentHub existance
     params.hub = this.currentHub;
-    params.device = Utils.deviceID();
 
     //
-    // use a shared cart ? 
+    // use a shared cart ?
     if(this.cache.uuid) {
       params.uuid = this.cache.uuid;
     }
@@ -1451,7 +1498,7 @@ export class CartService {
     return this.$http.post<CartModel>(ConfigService.defaultConfig.API_SERVER + '/v1/cart', model, {
       params: (params),
       headers: this.headers,
-      withCredentials: true
+      withCredentials: (configCors())
     }).pipe(
       map(model => {
       this.cache.cid = model.cid;
@@ -1463,7 +1510,7 @@ export class CartService {
       state.server = this.cache.items = model.items.map( item => {
         const got = itemsWithError.find(itm => itm.sku == item.sku);
         item.error = got && got.error;
-        return new CartItem(item)          
+        return new CartItem(item)
       });
 
       //console.log('---DEBUG kng2-cart:saveServer',this.cache.address);
@@ -1485,7 +1532,7 @@ export class CartService {
     //
     // reset cache address
     if(!address) {
-      this.cache.address = new UserAddress();
+      this.cache.address = new UserAddress({});
       return;
     }
 
@@ -1498,18 +1545,20 @@ export class CartService {
     const deposit = this.defaultConfig.shared.hub.deposits.find(add => {
       return UserAddress.isEqual(address,add) && add.fees >= 0;
     });
-    
-    
+
     //
-    // check if address exist before to save it
-    if(!deposit){
-      address = this.currentUser.addresses.find(add => UserAddress.isEqual(address,add)) || new UserAddress();
-    } else {
-      address = deposit;
+    // deposit from HUB a can not be set on HUB b
+    if(!deposit && address['fees']>=0) {
+      address = new UserAddress({});
     }
 
     //
-    // FIXME deposit from HUB a can be set on HUB b
+    // check if address exist before to save it
+    if(deposit && deposit.fees>=0) {
+      address = deposit;
+    }
+
+
     this.cache.address = address;
     this.save({ action: CartAction.CART_ADDRESS });
     return true;
@@ -1527,12 +1576,17 @@ export class CartService {
   }
 
   setShippingDay(newDate: Date, hours: number) {
-    if (newDate.equalsDate(this.cache.currentShippingDay)) {
+    if (newDate.equalsDate(this.cache.currentShippingDay) &&
+        this.cache.currentShippingTime == hours) {
       return;
     }
     this.cache.currentShippingDay = newDate;
     this.cache.currentShippingTime = hours;
-    this.save({ action: CartAction.CART_SHIPPING });
+    const data = {
+      currentShippingDay:newDate,
+      currentShippingTime:hours
+    }
+    this.save({ action: CartAction.CART_SHIPPING, data});
   }
 
   //
@@ -1545,45 +1599,57 @@ export class CartService {
 
 
     //
-    // if there is an open order, 
+    // if there is an open order,
     // - set the default address
     // - set the default date
     orders = (orders||[]).sort((a,b)=> b.oid-a.oid);
 
-    //
-    // find order for the next shipping day
-    // EnumFinancialStatus.authorized or EnumFinancialStatus.prepaid
-    const defaultNext = Order.nextShippingDay(user,config.shared.hub);
-    let order = orders.filter(order => ['authorized','prepaid'].indexOf(order.payment?.status)>-1)
-                      .find(order =>  !order.shipping.parent && order.shipping.when == defaultNext);
-                      
-    //
-    // no order for next shipping day
-    // find the first open 
-    if(!order) {
-      order = orders.filter(order => ['authorized','prepaid'].indexOf(order.payment?.status)>-1)
-                    .find(order =>  !order.shipping.parent);
-    }
+    // DEPRECATED
+    // // find order for the next shipping day
+    // // EnumFinancialStatus.authorized or EnumFinancialStatus.prepaid
+    // const availableShippingDays = config.potentialShippingWeek(config.shared.hub);
+    // const defaultNext = Order.nextShippingDay(user,config.shared.hub);
+    // let order = orders.filter(order => ['authorized','prepaid'].indexOf(order.payment?.status)>-1)
+    //                   .find(order =>  !order.shipping.parent && order.shipping.when == defaultNext);
 
-    this.currentPendingOrder = order;
+    // //
+    // // no order for next shipping day
+    // // find the first open
+    // if(!order) {
+    //   order = orders.filter(order => ['authorized','prepaid'].indexOf(order.payment?.status)>-1)
+    //                 .find(order =>  !order.shipping.parent);
+    // }
 
     //
-    // no open order 
-    // find the first order 
-    if(!order && orders.length) {
-      order = orders.find(order => order.payment && order.shipping);
-    }
-
-    if(order) {
+    // setup default payment and address
+    if(orders.length){
+      const order = orders.find(order =>  order.payment && order.shipping);
       const issuer = order.payment.issuer;
       this.cache.payment = this.cache.payment || user.payments.find(payment => payment.issuer == issuer);
-      this.cache.address = this.cache.address || UserAddress.from(order.shipping);          
+      this.cache.address = this.cache.address || UserAddress.from(order.shipping);
+    }
 
-      const potentialDate = new Date(order.shipping.when);
-      if(potentialDate>=defaultNext){
-        this.cache.currentShippingDay = potentialDate;
+    // find the first pending order
+    let order = orders.filter(order => ['authorized','prepaid'].indexOf(order.payment?.status)>-1)
+                      .find(order =>  !order.shipping.parent);
+
+
+
+    //
+    // setup default shipping day
+    if(!this.currentPendingOrder && order){
+      this.currentPendingOrder = order;
+      const day = new Date(this.currentPendingOrder.shipping.when);
+      const hours = this.defaultConfig.getDefaultTimeByDay(day);
+      //
+      // verify if the day is available on current HUB
+      const days = config.potentialShippingWeek(config.shared.hub);
+      if(days.some(one => one.equalsDate(day))) {
+        this.cache.currentShippingDay = day;
+        this.cache.currentShippingTime = hours;
       }
-    }    
+    }
+
 
     //
     // avoid multiple reset on same context
@@ -1602,18 +1668,7 @@ export class CartService {
 
     if ((this.cache.address['fees'] >= 0)) {
       const deposit = this.cache.address as DepositAddress;
-      this.cache.address = new DepositAddress(
-        deposit.name,
-        deposit['streetAddress'] || deposit.streetAdress,
-        deposit.floor,
-        deposit.region,
-        deposit.postalCode,
-        deposit.note,
-        deposit.geo,
-        deposit.weight,
-        deposit.active,
-        deposit.fees
-      );
+      this.cache.address = new DepositAddress(deposit);
 
     }
 

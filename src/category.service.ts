@@ -1,11 +1,12 @@
 import { HttpClient,HttpHeaders } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { config } from './config';
+import { config, configCors } from './config';
 import { Utils } from './util';
 
 
 import { ReplaySubject ,  Observable ,  throwError as _throw ,  of, BehaviorSubject } from 'rxjs';
 import { map, catchError, tap } from 'rxjs/operators';
+import { AnalyticsService } from './metrics.service';
 
 
 export class Category {
@@ -73,7 +74,8 @@ export class CategoryService {
         'Content-Type': 'application/json',
         'Cache-Control' : 'no-cache',
         'Pragma' : 'no-cache',
-        'ngsw-bypass':'true'
+        'ngsw-bypass':'true',
+        'k-dbg': AnalyticsService.FBP
       });
       this.config = config;
 
@@ -129,7 +131,6 @@ export class CategoryService {
     return this.http.get<Category[]>(this.config.API_SERVER + '/v1/category', {
       params: filter,
       headers: this.headers,
-      withCredentials: true
     }).pipe(
       map(categories => categories.map(this.updateCache.bind(this)) as Category[]),
       tap(categories => {
@@ -145,10 +146,8 @@ export class CategoryService {
     if (this.cache.map.get(slug)){
       return of(this.cache.map.get(slug));
     }
-
     return this.http.get<Category>(this.config.API_SERVER + '/v1/category/'+slug, {
       headers: this.headers,
-      withCredentials: true
     }).pipe(
       map(cat => this.updateCache(cat))
     );
@@ -157,10 +156,9 @@ export class CategoryService {
 
   //   app.post('/v1/category/:category', auth.ensureAdmin, categories.update);
   save(slug:string, cat:Category):Observable<Category> {
-
     return this.http.post<Category>(this.config.API_SERVER + '/v1/category/'+slug, cat, {
       headers: this.headers,
-      withCredentials: true
+      withCredentials:true
     }).pipe(
       map(cat => this.updateCache(cat))
     );
@@ -171,7 +169,7 @@ export class CategoryService {
   create(cat: Category):Observable<Category> {
     return this.http.post<Category>(this.config.API_SERVER + '/v1/category', cat, {
       headers: this.headers,
-      withCredentials: true
+      withCredentials:true
     }).pipe(
       map(cat => this.updateCache(cat))
     );
@@ -181,7 +179,7 @@ export class CategoryService {
   remove(slug:string, password:string) {
     return this.http.put(this.config.API_SERVER + '/v1/category/' + slug,{password:password}, {
       headers: this.headers,
-      withCredentials: true
+      withCredentials:true
     }).pipe(
       map(result => this.deleteCache(slug))
     );

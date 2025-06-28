@@ -91,6 +91,10 @@ export class LoaderService {
     if (this.preload.categories) {
       this.$category.categories$ = new ReplaySubject<Category[]>();
       this.$category.select().subscribe();
+      // this.$category.select().subscribe(()=>({}),error => {
+      //   console.log('--- DBG loader.category (1)',error.error);
+      //   console.log('--- DBG loader.category (2)',error);
+      // });
     }
 
     //

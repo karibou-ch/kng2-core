@@ -1,7 +1,7 @@
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Injectable, Inject } from '@angular/core';
 
-import { Config } from './config';
+import { Config, configCors, config } from './config';
 import { ConfigService } from './config.service';
 
 
@@ -23,6 +23,9 @@ export interface Metrics {
 @Injectable()
 export class AnalyticsService {
 
+  //
+  // use MARKER default or previous available on localStorage
+  static FBP = "fb.1."+Date.now()+"."+(Math.random()*1000000000|0);
   private headers: HttpHeaders;
   public config: Config | any;
   public metrics$: Subject<Metrics>;
@@ -34,18 +37,29 @@ export class AnalyticsService {
       'Content-Type': 'application/json',
       'Cache-Control' : 'no-cache',
       'Pragma' : 'no-cache',
-      'ngsw-bypass':'true'
+      'ngsw-bypass':'true',
+      'k-dbg': AnalyticsService.FBP
     });
 
 
-    this.config = ConfigService.defaultConfig;
+    //
+    // build a custom pixel marker for Meta (FB)
+    try {
+      AnalyticsService.FBP = localStorage.getItem('meta-fbp') || AnalyticsService.FBP;
+      localStorage.setItem('meta-fbp',(AnalyticsService.FBP));
+    } catch (err) {
+    }
+
+
+
+    this.config = config;
     this.metrics$ = new Subject<Metrics>();
     this.metrics$.pipe(
       debounceTime(500),
       switchMap(metrics => {
       return this.http.post<Metrics>(this.config.API_SERVER + '/v1/matrix', metrics, {
         headers: this.headers,
-        withCredentials: true
+        withCredentials: (configCors())
       })
     })).subscribe();
   }
@@ -54,12 +68,19 @@ export class AnalyticsService {
     this.metrics$.next(metrics);
   }
 
-  get(params?) {
+  feedback(evaluation, content) {    
+    return this.http.post<any>(this.config.API_SERVER + '/v1/metrics/feedback',{evaluation,content}, {
+      headers: this.headers,
+      withCredentials: (configCors())
+    })
 
+  }
+
+  get(params?) {
     return this.http.get<any>(this.config.API_SERVER + '/v1/metrics', {
       params:params||{},
       headers: this.headers,
-      withCredentials: true
+      withCredentials: (configCors())
     })
   }
 }

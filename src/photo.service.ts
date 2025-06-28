@@ -1,7 +1,7 @@
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Injectable, Inject } from '@angular/core';
 
-import { Config, config, ConfigKeyStoreEnum } from './config';
+import { Config, config, configCors, ConfigKeyStoreEnum } from './config';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 
@@ -52,7 +52,7 @@ export class PhotoService {
     return this.http.get<Photo[]>(config.API_SERVER + '/v1/shops/photos', {
       params:params,
       headers: this.headers,
-      withCredentials: true,
+      withCredentials: (configCors()),
     }).pipe(
       map((photos:any[]) => {
         return photos;
@@ -76,7 +76,7 @@ export class PhotoService {
     return this.http.get<Photo[]>(config.API_SERVER + '/v1/products/photos', {
       params:params,
       headers: this.headers,
-      withCredentials: true,
+      withCredentials: (configCors()),
     }).pipe(
       map((photos:any[]) => {
         return photos;

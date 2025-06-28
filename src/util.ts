@@ -1,4 +1,5 @@
 import { Observable, ReplaySubject } from 'rxjs';
+import { map } from 'rxjs/operators';
 
 
 function hasDifferentArgs(prev: unknown[], next: unknown[]) {
@@ -24,6 +25,63 @@ export function memo<T extends Function>(fnToMemoize: T): T {
   } as any;
 }
 
+const typecache = {};
+export function audioMimeType(url) {
+  const xhr = new XMLHttpRequest();
+  return new Promise((resolve => {
+    if( typecache[url]) {
+      return resolve(typecache[url]);
+    }
+    xhr.open('HEAD', url);
+    xhr.onreadystatechange = function() {
+      if (xhr.readyState === XMLHttpRequest.DONE) {
+        if (xhr.status === 200) {
+          const type = xhr.getResponseHeader('Content-Type');
+          typecache[url]= type;
+          resolve(type);
+        } else {
+          resolve("");
+        }
+      }
+    };  
+    xhr.send();
+  }));
+}
+
+//
+// simple geolocation function to get lat/long from address
+// add context.$http and context.config 
+export function geolocation(address, context) {
+  const postal = address.postalCode || '';
+  const region = address.region || 'Suisse';
+  const street = address.streetAdress;
+  const fulladdress = [street, postal, region].join(',');
+  const url = context.config.API_SERVER + '/v1/geocode?address=' + fulladdress + '&sensor=false';
+  return context.$http.get(url, { withCredentials: false }).pipe(
+    map((geo: any) => {
+      //
+      // return error message
+      if (geo.error_message){
+        throw(geo.error_message);
+      }
+      const result: any = { address: address};
+      if (!geo || !geo.results.length || !geo.results[0].geometry) {
+        return result;
+      }
+      result.geo = geo.results[0].geometry;
+      result.components = (geo.results[0].address_components || []).map(comp => comp.long_name);
+      return result;
+    })
+  ); 
+}
+
+//
+// simple geolocation function to get lat/long from address
+// add context.$http and context.config 
+export function geoadmin(address, context) {
+  const url = context.config.API_SERVER + '/v1/geoadmin?address=' + address;
+  return context.$http.get(url, { withCredentials: false })
+}
 
 // FIXME test utility class and replace class by exported functions
 export class Utils {
@@ -123,6 +181,19 @@ export class Utils {
 }
 
 //
+// simple hash function with SDBM algo (also used by the backend)
+export function hachacha(str) {
+  const hash = Array.from(str).reduce((hash:bigint, char:string) => {
+    return (hash << BigInt(6)) + BigInt(char.charCodeAt(0)) + (hash << BigInt(16)) - hash ;
+  }, BigInt(0)) as bigint;
+  // return 8 bytes!
+  return (hash & BigInt("0xffffffffffffffff")).toString(16);  
+}
+
+
+
+
+//
 // useful simple crypto
 export class XorCipher {
   constructor() {
@@ -143,16 +214,41 @@ export class XorCipher {
   }
 
   private xor_encrypt(key, data:string) {
+    key = hachacha(key); // add more entropy 
     return data.split('').map((c, i)=> {
       return c.charCodeAt(0) ^ this.keyCharAt(key, i);
     });
   }
 
   private xor_decrypt(key, data:string) {
+    key = hachacha(key); // add more entropy 
     return data.split('').map((c:any, i)=>{
       return String.fromCharCode( c ^ this.keyCharAt(key, i) );
     }).join("");
   }
 }
 
+//
+// streamed geolocation
+// Create an Observable that will start listening to browser geolocation updates
+// when a consumer subscribes.
+export const GeolocationPositionStream = new Observable((observer) => {
+  let watchId: number;
 
+  // The geolocation API (if it exists) provides values to publish
+  if ('geolocation' in navigator) {
+    watchId = navigator.geolocation.watchPosition(
+      (position: GeolocationPosition) => observer.next(position),
+      (error: GeolocationPositionError) => observer.error(error)
+    );
+  } else {
+    observer.error('Geolocation not available');
+  }
+
+  // When the consumer unsubscribes, stop listening to geolocation changes.
+  return {
+    unsubscribe() {
+      navigator.geolocation.clearWatch(watchId);
+    }
+  };
+});

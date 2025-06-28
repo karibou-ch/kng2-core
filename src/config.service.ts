@@ -1,7 +1,7 @@
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Injectable, Inject } from '@angular/core';
 
-import { Config, config } from './config';
+import { Config, config, configCors } from './config';
 import { DepositAddress } from './user.service';
 
 
@@ -15,7 +15,7 @@ import { map, tap, retryWhen, delay, take, distinctUntilChanged, concatMap } fro
 @Injectable()
 export class ConfigService {
 
-  public static defaultConfig = {
+  public static defaultConfig = new Config({
     isAvailable: true,
     API_SERVER: 'http://localhost:4000',
 
@@ -32,12 +32,12 @@ export class ConfigService {
     shared: {
     },
     loader: [],
-    preloadOrders: 12,
+    preloadOrders: 5,
     loginPath: ['/admin', '/account'],
     readonlyPath: ['/wallet/create'],
     avoidShopUIIn: ['/admin', '/login', '/signup', '/content']
 
-  };
+  });
 
   private headers: HttpHeaders;
   public config: Observable<Config>;
@@ -52,7 +52,7 @@ export class ConfigService {
     // Use dynamic server settings
     if (!customConfig.API_SERVER) {
       // customConfig.API_SERVER = ('//api.' + window.location.hostname);
-      customConfig.API_SERVER = ('//' + window.location.hostname + '/api');
+      customConfig.API_SERVER = ('https://' + window.location.hostname + '/api');
     }
 
 
@@ -69,7 +69,7 @@ export class ConfigService {
     });
     //
     // ReplaySubject IFF disctinct config
-    this.config$ = new ReplaySubject<Config>(1);    
+    this.config$ = new ReplaySubject<Config>(1);
     this.config$.pipe(distinctUntilChanged((prev, curr) => {
       const ps = prev.shared;
       const cs = curr.shared;
@@ -83,7 +83,7 @@ export class ConfigService {
       if(cs.hub && ps.hub && cs.hub.updated !== ps.hub.updated){
         return true;
       }
-      return false;        
+      return false;
     }));
   }
 
@@ -93,11 +93,10 @@ export class ConfigService {
     hub && (params.hub = hub);
     this.config = this.http.get<any>(ConfigService.defaultConfig.API_SERVER + '/v1/config', {
       headers: this.headers,
-      withCredentials: true,
       params: (params)
     }).pipe(
       retryWhen(errors => errors.pipe(
-        delay(1000), 
+        delay(1000),
         concatMap((err, index) => index === 3 ? throwError(err) : of(null)))
       ),
       map((shared: any) => {
@@ -111,6 +110,11 @@ export class ConfigService {
         if (localHasHub &&
            !sharedHasHUB) {
             return config;
+        }
+        //
+        // reset hub config
+        if(shared.hub){
+          config.shared.hub = shared.hub;
         }
         Object.assign(config, ConfigService.defaultConfig);
         Object.assign(config.shared, shared);
@@ -135,18 +139,7 @@ export class ConfigService {
           });
 
 
-          const initDeposit = deposit => new DepositAddress(
-            deposit.name,
-            deposit.streetAddress || deposit.streetAdress,
-            deposit.floor,
-            deposit.region,
-            deposit.postalCode,
-            deposit.note,
-            deposit.geo,
-            deposit.weight,
-            deposit.active,
-            deposit.fees
-          );
+          const initDeposit = deposit => new DepositAddress(deposit);
 
           //
           // deposits
@@ -204,18 +197,7 @@ export class ConfigService {
 
           //
           // deposit
-          config.shared.hub.deposits = (config.shared.hub.deposits || []).map(deposit => new DepositAddress(
-            deposit.name,
-            deposit.streetAddress || deposit.streetAdress,
-            deposit.floor,
-            deposit.region,
-            deposit.postalCode,
-            deposit.note,
-            deposit.geo,
-            deposit.weight,
-            deposit.active,
-            deposit.fees
-          ));
+          config.shared.hub.deposits = (config.shared.hub.deposits || []).map(deposit => new DepositAddress(deposit));
         }
         //
         // restore HUB associated before the save
@@ -223,7 +205,7 @@ export class ConfigService {
           config.shared.hub = hub;
         }
 
-        config.shared.faq == config.shared.faq || [];        
+        config.shared.faq == config.shared.faq || [];
         config.shared.faq_title = config.shared.faq_title || {en:"",fr:""};
 
         return config;
@@ -241,16 +223,18 @@ export class ConfigService {
   // - https://medium.com/@feloy/deploying-an-i18n-angular-app-with-angular-cli-fc788f17e358 (build locale targets)
   //   +--> https://github.com/ngx-translate/core/issues/495 (plan to integrate runtime lang switch and keep AOT compliant)
   set locale(lang: string) {
+    const baseLocale = lang.split('-')[0];
     try {
-      localStorage.setItem('kng2-locale', lang);
+      localStorage.setItem('kng2-locale', baseLocale);
     } catch (e) {}
-    this.http.get(config.API_SERVER + '/v1/config?lang=' + lang);
   }
 
   get locale() {
     // FIXME default locale should not be hardcoded!
     try {
-      return localStorage.getItem('kng2-locale') || navigator.language || navigator['userLanguage'] || 'fr';
+      const locale = localStorage.getItem('kng2-locale') || navigator.language || navigator['userLanguage'] || 'fr';
+      const baseLocale = locale.split('-')[0];
+      return baseLocale;
     } catch (e) {}
     return 'fr';
   }

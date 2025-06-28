@@ -1,5 +1,5 @@
 //
-// module 
+// module
 export { Kng2CoreModule } from './kng2-core.module';
 
 //
@@ -7,6 +7,9 @@ export { Kng2CoreModule } from './kng2-core.module';
 export { ConfigService } from './config.service';
 
 export { AnalyticsService, Metrics } from './metrics.service';
+
+export { Assistant,
+         AssistantService } from './assistant.service';
 
 export { CartAction,
          CartConfig,
@@ -36,8 +39,7 @@ export { LoaderService,
          UserResolve } from './loader.service';
 
 export { Order,
-         OrderShipping,
-         OrderItem } from './order/order';
+         OrderItem, OrderAddress } from './order/order';
 export { OrderService, OrderCustomerInvoices } from './order/order.service';
 
 export { Photo,
@@ -63,7 +65,9 @@ export { User,
          UserCard,
          UserAddress,
          DepositAddress,
-         UserService } from './user.service';
+         ShippingAddress,
+         UserService,
+         CustomerChurn } from './user.service';
 
 export { EnumCancelReason,
          EnumFinancialStatus,
@@ -73,7 +77,7 @@ export { EnumCancelReason,
        } from './order/order.enum';
 
 
-export { Utils } from './util';
+export * from './util';
 //
 // directives & pipes
 export { MarkdownDirective } from './util.markdown.directive';
@@ -84,8 +88,8 @@ export { OrderPortionPipe, OrderBasepricePipe, OrderBasepricePipeEx } from './or
 
 //
 // export variable instance
-export { Config, 
-         ConfigKeyStoreEnum, 
+export { Config,
+         ConfigKeyStoreEnum,
          ConfigMenu,
          config } from './config';
 

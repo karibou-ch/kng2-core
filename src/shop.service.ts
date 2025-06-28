@@ -8,6 +8,8 @@ import { Utils } from './util';
 
 import { ReplaySubject ,  Observable, BehaviorSubject, from } from 'rxjs';
 import { map, tap, catchError } from 'rxjs/operators';
+import { AnalyticsService } from './metrics.service';
+import { configCors } from './config';
 
 export class Shop {
   // tslint:disable-next-line: variable-name
@@ -204,6 +206,7 @@ export class Shop {
     Object.assign(this, Utils.merge(defaultShop, json));
     this.account.tva = this.account.tva || {};
     this.available.weekdays = this.available.weekdays || [];
+    this.address = this.address || {geo: {lat: 0, lng: 0}} as any;
   }
 
 }
@@ -232,7 +235,8 @@ export class ShopService {
       'Content-Type': 'application/json',
       'Cache-Control' : 'no-cache',
       'Pragma' : 'no-cache',
-      'ngsw-bypass':'true'
+      'ngsw-bypass':'true',
+      'k-dbg': AnalyticsService.FBP
     });
     //
     // 1 means to keep the last value
@@ -278,7 +282,7 @@ export class ShopService {
     filter.rnd = Date.now();
     return this.http.get<Shop[]>(this.config.API_SERVER + '/v1/shops', {
       headers: this.headers,
-      withCredentials: true,
+      withCredentials: (configCors()),
       params: filter,
     }).pipe(
       catchError(err => from([])),
@@ -292,7 +296,7 @@ export class ShopService {
   findByCatalog(cat, filter): Observable<Shop[]> {
     return this.http.get<Shop[]>(this.config.API_SERVER + '/v1/shops/category/' + cat, {
       headers: this.headers,
-      withCredentials: true
+      withCredentials: (configCors())
     }).pipe(
       map(shops => shops.map(this.updateCache.bind(this)) as Shop[]),
       tap(shops => {
@@ -306,7 +310,7 @@ export class ShopService {
   get(urlpath): Observable<Shop> {
     return this.http.get<Shop>(this.config.API_SERVER + '/v1/shops/' + urlpath, {
       headers: this.headers,
-      withCredentials: true
+      withCredentials: (configCors())
     }).pipe(
       map(shop => this.updateCache(shop, true))
     );
@@ -317,7 +321,7 @@ export class ShopService {
   publish(shop: Shop): Observable<Shop> {
     return this.http.get<Shop>(this.config.API_SERVER + '/v1/shops/' + shop.urlpath + '/status', {
       headers: this.headers,
-      withCredentials: true
+      withCredentials: (configCors())
     }).pipe(
       map(shop => this.updateCache(shop, true))
     );
@@ -331,7 +335,7 @@ export class ShopService {
         content: content
       }, {
         headers: this.headers,
-        withCredentials: true
+        withCredentials: (configCors())
       });
     }
 
@@ -339,7 +343,7 @@ export class ShopService {
     delete shop['__v'];
     return this.http.post<Shop>(this.config.API_SERVER + '/v1/shops/' + shop.urlpath, shop, {
       headers: this.headers,
-      withCredentials: true
+      withCredentials: (configCors())
     }).pipe(
       map(shop => this.updateCache(shop, true))
     );
@@ -351,7 +355,7 @@ export class ShopService {
   create(shop: Shop): Observable<Shop> {
     return this.http.post<Shop>(this.config.API_SERVER + '/v1/shops', shop, {
       headers: this.headers,
-      withCredentials: true
+      withCredentials: (configCors())
     }).pipe(
       map(shop => this.updateCache(shop, true))
     );
@@ -364,7 +368,7 @@ export class ShopService {
     const passwordJson = { "password": password };
     return this.http.put<Shop>(this.config.API_SERVER + '/v1/shops/' + shop.urlpath, passwordJson, {
       headers: this.headers,
-      withCredentials: true,
+      withCredentials: (configCors()),
     }).pipe(
       map(shop => this.deleteCache(shop, true))
     );

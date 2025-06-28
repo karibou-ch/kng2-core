@@ -1,12 +1,11 @@
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { config } from './config';
 import { ConfigService } from './config.service';
 
-import { Utils } from './util';
-
 import { Observable ,  ReplaySubject ,  of ,  throwError as _throw } from 'rxjs';
-import { map, tap, retryWhen, delay, take } from 'rxjs/operators';
+import { map, tap } from 'rxjs/operators';
+import { AnalyticsService } from './metrics.service';
+import { configCors } from './config';
 
 
 @Injectable()
@@ -25,9 +24,10 @@ export class ProductService {
             'Content-Type': 'application/json',
             'Cache-Control' : 'no-cache',
             'Pragma' : 'no-cache',
-            'ngsw-bypass':'true'
+            'ngsw-bypass':'true',
+            'k-dbg': AnalyticsService.FBP
         });
-      
+
         this.cache = new Cache();
         //
         // 1 means to keep the last value
@@ -57,16 +57,20 @@ export class ProductService {
         return incache;
     }
 
+    cacheToList() {
+        return Array.from(this.cache.map.values());
+    }
+
     dotNotation(product: Product) {
         const notationObj = {};
         function recurrent(obj, current?) {
             for(var key in obj) {
                 var value = obj[key];
-                var newKey = (current ? current + "." + key : key); 
+                var newKey = (current ? current + "." + key : key);
                 if(value && typeof value === "object") {
-                recurrent(value, newKey);  
+                recurrent(value, newKey);
                 } else {
-                    notationObj[newKey] = value;  
+                    notationObj[newKey] = value;
                 }
             }
             return notationObj;
@@ -74,11 +78,17 @@ export class ProductService {
         return recurrent(product);
     }
 
-    
-
-    //
-    // REST api wrapper
-    //
+    autocomplete(text: string, params?: any): Observable<string[]> {
+      params = params || {};
+      params.q = text;
+      return this.http.get<string[]>(this.config.API_SERVER + '/v1/products/autocomplete', {
+          params,
+          headers: this.headers,
+          withCredentials: (configCors())
+      }).pipe(
+          map(suggest => suggest)
+      );
+    }
 
     search(text: string, params?: any): Observable<Product[]> {
         params = params || {};
@@ -86,7 +96,7 @@ export class ProductService {
         return this.http.get<Product[]>(this.config.API_SERVER + '/v1/products/search', {
             params,
             headers: this.headers,
-            withCredentials: true
+            withCredentials:true
         }).pipe(
             map(products => products)
         );
@@ -94,12 +104,12 @@ export class ProductService {
 
     select(params?: any): Observable<Product[]> {
         params = params || {};
-        params.device = Utils.deviceID();
+        params.when
 
         return this.http.get<Product[]>(this.config.API_SERVER + '/v1/products', {
             params,
             headers: this.headers,
-            withCredentials: true
+            withCredentials:true
         }).pipe(
             map(products => products.map(this.updateCache.bind(this)))
         );
@@ -108,7 +118,7 @@ export class ProductService {
     findByLocationCategoryAndDetail(category, detail): Observable<Product[]> {
         return this.http.get<Product[]>(this.config.API_SERVER + '/v1/products/location/' + location + '/category/' + category + '/details/' + detail, {
             headers: this.headers,
-            withCredentials: true
+            withCredentials:true
         }).pipe(
             map(products => products.map(this.updateCache.bind(this)))
         );
@@ -117,7 +127,7 @@ export class ProductService {
     findByCategoryAndDetail(category, detail): Observable<Product[]> {
         return this.http.get<Product[]>(this.config.API_SERVER + '/v1/products/category/' + category + '/details/' + detail, {
             headers: this.headers,
-            withCredentials: true
+            withCredentials:true
         }).pipe(
             map(products => products.map(this.updateCache.bind(this)))
         );
@@ -126,7 +136,7 @@ export class ProductService {
     findByLocationAndCategory(location, category): Observable<Product[]> {
         return this.http.get<Product[]>(this.config.API_SERVER + '/v1/products/location/' + location + '/category/' + category, {
             headers: this.headers,
-            withCredentials: true
+            withCredentials:true
         }).pipe(
             map(products => products.map(this.updateCache.bind(this)))
         );
@@ -137,7 +147,7 @@ export class ProductService {
         return this.http.get<Product[]>(this.config.API_SERVER + '/v1/products/love', {
             params,
             headers: this.headers,
-            withCredentials: true
+            withCredentials:true
         }).pipe(
             map(products => products.map(this.updateCache.bind(this)))
         );
@@ -147,7 +157,7 @@ export class ProductService {
         return this.http.get<Product[]>(this.config.API_SERVER + '/v1/products/details/' + details, {
             params,
             headers: this.headers,
-            withCredentials: true
+            withCredentials:true
         }).pipe(
             map(products => products.map(this.updateCache.bind(this)))
         );
@@ -157,7 +167,7 @@ export class ProductService {
         return this.http.get<Product[]>(this.config.API_SERVER + '/v1/products/attributes/' + attribute, {
             params,
             headers: this.headers,
-            withCredentials: true
+            withCredentials:true
         }).pipe(
             map(products => products.map(this.updateCache.bind(this)))
         );
@@ -166,7 +176,7 @@ export class ProductService {
     findByLocation(location): Observable<Product[]> {
         return this.http.get<Product[]>(this.config.API_SERVER + '/v1/products/location/' + location, {
             headers: this.headers,
-            withCredentials: true
+            withCredentials:true
         }).pipe(
             map(products => products.map(this.updateCache.bind(this)))
         );
@@ -174,11 +184,10 @@ export class ProductService {
 
     findByCategory(category: string, params?: any): Observable<Product[]> {
         params = params || {};
-        params.device = Utils.deviceID();
         return this.http.get<Product[]>(this.config.API_SERVER + '/v1/products/category/' + category, {
             params,
             headers: this.headers,
-            withCredentials: true
+            withCredentials:true
         }).pipe(
             map(products => products.map(this.updateCache.bind(this)))
         );
@@ -193,7 +202,7 @@ export class ProductService {
     history(sku): Observable<any> {
         return this.http.get<Product>(this.config.API_SERVER + '/v1/products/history/' + sku, {
             headers: this.headers,
-            withCredentials: true
+            withCredentials:true
         });
     }
 
@@ -203,12 +212,12 @@ export class ProductService {
         let cached: Observable<Product>;
 
         // check if in the cache
-        if (this.cache.map.get(sku)) {
+        if (this.cache.map.has(sku)) {
             return of(this.cache.map.get(sku));
         }
         return this.http.get<Product>(this.config.API_SERVER + '/v1/products/' + sku, {
             headers: this.headers,
-            withCredentials: true
+            withCredentials:true
         }).pipe(
             map(product => this.updateCache(product)),
             tap(this.product$.next.bind(this.product$))
@@ -219,8 +228,8 @@ export class ProductService {
       let passwordJson = {'password': password};
       return this.http.put<Product>(this.config.API_SERVER + '/v1/products/' + sku, passwordJson, {
         headers: this.headers,
-        withCredentials: true
-      }).pipe(
+        withCredentials:true
+    }).pipe(
         map(product => this.deleteCache(sku)),
         tap(this.product$.next.bind(this.product$))
       );
@@ -231,7 +240,7 @@ export class ProductService {
         // FIXME creattion code is not correct
         return this.http.post<Product>(this.config.API_SERVER + '/v1/shops/' + shopowner + '/products/', prod, {
             headers: this.headers,
-            withCredentials: true
+            withCredentials:true
         }).pipe(
             map(product => this.updateCache(product)),
             tap(this.product$.next.bind(this.product$))
@@ -242,7 +251,7 @@ export class ProductService {
         delete prod['__v'];
         return this.http.post<Product>(this.config.API_SERVER + '/v1/products/' + prod.sku, prod, {
             headers: this.headers,
-            withCredentials: true
+            withCredentials:true
         }).pipe(
             map(product => this.updateCache(product)),
             tap(this.product$.next.bind(this.product$))
@@ -295,6 +304,7 @@ export class Product {
             shelflife: {},
             vendor: {},
             quantity: {},
+            bundle: [],
             belong: {
                 weight: 0
             },
@@ -323,6 +333,13 @@ export class Product {
     created: Date;
     categories: any;
     vendor: any;
+    bundle?:[{
+      title:string;
+      note:string;
+      vendor:string;
+      price:number;
+      active?:boolean;
+    }];
     faq?: [{
         q: string;
         a: string;
@@ -355,9 +372,11 @@ export class Product {
         available: boolean;
         home: boolean;
         boost: boolean;
-        customized: boolean;        
-        subscription: boolean;     
-        business:boolean;   
+        customized: boolean;
+        bundle: boolean;
+        subscription: boolean;
+        business:boolean;
+        timelimit: number;
     };
     details: {
         keywords: string;
@@ -371,6 +390,7 @@ export class Product {
         grta: boolean;
         bio: boolean;
         local: boolean;
+        nitrite: boolean;
         natural: boolean;
         homemade: boolean;
         handmade: boolean;
@@ -406,13 +426,13 @@ export class Product {
       delta = delta||0.15; //                 ~   --part--    --unit--
       let m = (this.pricing.part||'').match(/(~)?([0-9.,]+) ?([a-zA-Z]+)/);
       if(!m) {
-        return {part:0,unit:'',offset:0,isWeight:false}; 
+        return {part:0,unit:'',offset:0,isWeight:false};
       }
       // [0]
       // [1] => variant ?
       // [2] => part
       // [3] => unit
-      const part = parseFloat(m[2]); 
+      const part = parseFloat(m[2]);
       const unit = (m[3]).toLowerCase();
       const offset = (!m[1])? 0:this.round1cts(part * delta);
       const isWeight = ['g','gr','k','kg','kilo'].indexOf(unit)>-1;
@@ -428,10 +448,10 @@ export class Product {
     //   if (value <= 50) {
     //     return Math.round(value);
     //   }
-      return parseFloat((Math.round(value*100)/100).toFixed(2));      
+      return parseFloat((Math.round(value*100)/100).toFixed(2));
     }
-    
-          
+
+
 
     getPrice() {
         if (this.attributes.discount && this.pricing.discount>=0) {

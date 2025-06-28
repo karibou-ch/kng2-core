@@ -14,35 +14,10 @@ import { Utils } from '../util';
 
 //
 // get global configuration
-import { config, Config } from '../config';
+import { config } from '../config';
 
-import { UserAddress, User } from '../user.service';
+import { User } from '../user.service';
 
-
-//
-// Define order shipping
-export class OrderShipping extends UserAddress {
-  when: Date;
-  //
-  // hours is used as key for the schedule Map, key can be a string
-  hours: number|string;
-
-  constructor(address: UserAddress, when: Date, hours: number|string) {
-    super(
-      address.name,
-      address.streetAdress,
-      address.floor,
-      address.region,
-      address.postalCode,
-      address.note,
-      address.primary,
-      address.geo
-    );
-    this.when = new Date(when);
-    this.hours = hours;
-  }
-
-}
 
 //
 // Define an item of this order
@@ -51,6 +26,7 @@ export interface OrderItem {
   title: string;
   hub: string;
   category: string;
+  bundle: boolean|"true"|"false";
 
   //
   // for subscription
@@ -77,6 +53,7 @@ export interface OrderItem {
   // customer note
   note?: string;
   audio?: string;
+  audioType?:string;
 
   //
   // product variation is not yet implemented
@@ -86,7 +63,7 @@ export interface OrderItem {
 
   /* where is the product now? */
   fulfillment: {
-    refunded?: boolean;
+    refunded?: boolean|"true"|"false";
     request: string; // string|EnumOrderIssue;
     issue: string; // string|EnumOrderIssue;
     status: string; // string|EnumFulfillments;
@@ -99,19 +76,45 @@ export interface OrderItem {
   vendor: string;
 }
 
+export interface Customer {
+    id:number;
+    displayName?: string;
+    phone: string;
+    email: string;
+    plan: string;
+    orders: number;
+    errors: number;
+    latestErrors: number;
+    rating: number;
+    profile: string;
+}
+
+export interface OrderAddress{
+  type:'order'|string,
+  parent: number,
+  when: Date,
+  hours: number,
+  name: string,
+  note?: string,
+  streetAdress: string,
+  floor: string,
+  postalCode: string,
+  region: string,
+  geo?: { // geo is not mandatory
+    lat: number,
+    lng: number
+  },
+  shipped?: boolean|"true"|"false",
+  shopper?: string,
+  shopper_time?: string,
+  priority?: number,
+  position?: number,
+  deposit?: boolean|"true"|"false",
+  bags?: number,
+  estimated?: number
+}
 
 export class Order {
-
-  /* default values */
-  private defaultOrder = {
-    customer: {},
-    payment: {},
-    fulfillments: {},
-    cancel: {},
-    items: [],
-    vendors: [],
-    shipping: {}
-  };
 
   /** HUB identifier */
   hub: string;
@@ -122,8 +125,6 @@ export class Order {
   /* compute a rank for the set of orders to be shipped together */
   rank: number;
 
-  /* customer email */
-  email: string;
   created: Date;
   closed?: Date;
 
@@ -131,7 +132,9 @@ export class Order {
   score: number;
 
   /* full customer details */
-  customer: any;
+  customer: any|Customer;
+  /* DEPRECTATED customer email */
+  //email?: string;
 
   /* order canceled reason and dates */
   cancel?: {
@@ -182,8 +185,10 @@ export class Order {
       lat: number,
       lng: number
     },
-    collected: boolean,
+    collected: boolean|"true"|"false",
     collected_timestamp: Date,
+    gift_timestamp:Date,
+
     //
     // you can see values only when uid is order.owner, shop.owner, or admin
     // amount & threshold & finalAmount & are saved for security reason
@@ -194,28 +199,7 @@ export class Order {
     }
   }];
 
-  shipping: {
-    parent: number,
-    when: Date,
-    hours: number,
-    name: string,
-    note?: string,
-    streetAdress: string,
-    floor: string,
-    postalCode: string,
-    region: string,
-    geo?: { // geo is not mandatory
-      lat: number,
-      lng: number
-    },
-    shipped?: boolean,
-    shopper?: string,
-    shopper_time?: string,
-    priority?: number,
-    position?: number,
-    bags?: number,
-    estimated?: number
-  };
+  shipping: OrderAddress;
 
   //
   // errors[] => [] for items
@@ -223,26 +207,65 @@ export class Order {
   errors?: any[] | any;
 
   constructor(json?: any) {
-    Object.assign(this, this.defaultOrder, json || {});
+    Order.fromJSON(this, json);
+  }
+
+  static fromJSON(dest:Order, json: any) {
+    /* default values */
+    const defaultOrder = {
+      customer: {},
+      payment: {},
+      fulfillments: {},
+      cancel: {},
+      items: [],
+      vendors: [],
+      shipping: {}
+    };
+
+    Object.assign(dest, defaultOrder, json || {});
+    if(!json) return;
 
     //
     // case of Order errors
-    if (this.errors) {
+    if (dest.errors) {
       return;
     }
+    const phoneNumber = dest.customer.phoneNumbers || [];
+    dest.customer.phone = dest.customer.phone|| phoneNumber[0]?.number||'';
+    if(!dest.customer.email) {
+      dest.customer.email = json.email;
+    }
 
-    this.shipping.when = new Date(this.shipping.when);
-    this.created = new Date(this.created);
-    this.closed = this.closed?new Date(this.closed):undefined;
+    dest.shipping.when = new Date(dest.shipping.when);
+    dest.created = new Date(dest.created);
+    dest.closed = dest.closed?new Date(dest.closed):undefined;
+
+    // boolean stuffs
+    dest.shipping.deposit = (String(dest.shipping.deposit) == 'true');
+    dest.shipping.shipped = (String(dest.shipping.shipped) == 'true');
+
+
+    dest.vendors.forEach((vendor) => {
+      vendor.collected = (String(vendor.collected) == 'true');
+    });
+
+    dest.items.forEach((item) => {
+      item.bundle = (String(item.bundle) == 'true');
+      item.fulfillment.refunded = (String(item.fulfillment.refunded) == 'true');
+      item.frequency = (String(item.frequency) == 'false') ? undefined : item.frequency;
+    });
+
 
     //
     // Normalized HUB
-    this.hub = this.hub['_id'] || this.hub;
+    dest.hub = dest.hub['_id'] || dest.hub;
 
     //
     // default order position
-    this.shipping.position = this.shipping.position || parseInt(this.shipping.postalCode, 10) * 10;
+    dest.shipping.position = dest.shipping.position || parseInt(dest.shipping.postalCode, 10) * 10;
+    return dest;
   }
+
 
 
   //
@@ -299,7 +322,7 @@ export class Order {
   // a full week of available shipping days
   // limit to nb days (default is <7)
   static fullWeekShippingDays(hub?:any) {
-    const currentHub   = (hub)? hub:config.shared.hub;
+    const currentHub  = (hub)? hub:config.shared.hub;
 
     let next = config.potentialShippingWeek(hub),
         lst:any[] = [],
@@ -307,8 +330,9 @@ export class Order {
 
     //
     // default date limit is defined by
-    let limit = config.shared.order.uncapturedTimeLimit;
-    limit = limit && today.plusDays(limit + 0);
+    let limit = currentHub.uncapturedTimeLimit || 7;
+
+    limit = today.plusDays(limit + 0).getTime();
 
     function format(lst) {
       //
@@ -320,7 +344,7 @@ export class Order {
       //
       // limit length of a week
       return lst.filter(function (date) {
-        return (!limit || date < limit);
+        return (!limit || date.getTime() < limit);
       });
 
     }

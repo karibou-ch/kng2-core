@@ -3,7 +3,7 @@ import { Injectable } from '@angular/core';
 import { ConfigService } from '../config.service';
 
 import { Observable , of, ReplaySubject, throwError } from 'rxjs';
-import { map, tap, catchError } from 'rxjs/operators';
+import { map, tap, catchError, shareReplay, debounceTime } from 'rxjs/operators';
 
 import {
   EnumCancelReason,
@@ -11,9 +11,10 @@ import {
   EnumOrderIssue
 } from './order.enum';
 
-import { Order, OrderItem, OrderShipping } from './order';
-import { UserCard } from '../user.service';
+import { Order, OrderItem } from './order';
+import { ShippingAddress, UserCard } from '../user.service';
 import { CartItem } from '../cart.service';
+import { AnalyticsService } from '../metrics.service';
 
 
 export interface OrderCustomerInvoices {
@@ -28,17 +29,9 @@ export interface OrderCustomerInvoices {
 
 @Injectable()
 export class OrderService {
-
+  private ordersSrc$: ReplaySubject<Order[]>;
   public order$: ReplaySubject<Order>;
-  public orders$ : ReplaySubject<Order[]>;
-
-
-  private defaultOrder = {
-    name: '',
-    weight: 0,
-    description: '',
-    group: ''
-  };
+  public orders$ : Observable<Order[]>;
 
   // TODO make observable content !!
   // TODO orders depends on user and shops
@@ -56,14 +49,16 @@ export class OrderService {
       'Content-Type': 'application/json',
       'Cache-Control' : 'no-cache',
       'Pragma' : 'no-cache',
-      'ngsw-bypass':'true'
+      'ngsw-bypass':'true',
+      'k-dbg': AnalyticsService.FBP
     });
     this.cache = {
       list: [], map: new Map()
     };
 
     this.order$ = new ReplaySubject(1);
-    this.orders$ = new ReplaySubject<Order[]>();
+    this.ordersSrc$ = new ReplaySubject<Order[]>();
+    this.orders$ = this.ordersSrc$.pipe(debounceTime(100),shareReplay(1));
 
   }
 
@@ -87,23 +82,25 @@ export class OrderService {
     }
     // FIXME check if new Order(...) is mandatory at this point ???
     const incache = this.cache.map.get(order.oid);
+
     incache.vendors = [] as any;
     incache.shipping = {} as any;
     incache.payment = {} as any;
-    order.shipping.when = new Date(order.shipping.when);
-    order.created = new Date(order.created);
-    order.closed = order.closed?new Date(order.closed):undefined;
+    Order.fromJSON(incache, order);
 
     //
-    // update only modified items 
-    incache.items.forEach(item =>  {
-      const updated = order.items.find(elem => elem.sku == item.sku);
-      if(!updated) {
-        return;
-      }
-      Object.assign(item,updated);
-    });
-    order.items = incache.items;
+    // update only modified items (for admin only)
+    // DEPRECATED
+    if(order.items && order.items.length) {
+      incache.items.forEach(item =>  {
+        const updated = order.items.find(elem => elem.sku == item.sku && item.vendor == elem.vendor);
+        if(!updated) {
+          return;
+        }
+        Object.assign(item,updated);
+      });
+      order.items = incache.items;
+    }
     return Object.assign(incache, (order));
   }
 
@@ -127,11 +124,21 @@ export class OrderService {
 
   }
 
+
+  // find one order by oid
+  get(oid: number): Observable<Order> {
+    return this.http.get<Order>(this.config.API_SERVER + '/v1/orders/' + oid, {
+      headers: this.headers,
+      withCredentials: true
+    }).pipe(
+      map(order => this.updateCache(order))
+    );
+  }
   //
   // create a new order
   // role:client
   // app.post('/v1/orders', auth.ensureUserValid, orders.ensureValidAlias, queued(orders.create));
-  create(hub: string, shipping: OrderShipping, items: CartItem[]|any[], payment: UserCard): Observable<Order> {
+  create(hub: string, shipping: ShippingAddress, items: CartItem[]|any[], payment: UserCard): Observable<Order> {
     // backend.$order.save({shipping:shipping,items:items,payment:payment}, function() {
     return this.http.post<Order>(this.config.API_SERVER + '/v1/orders', { hub, shipping, items, payment }, {
       headers: this.headers,
@@ -243,7 +250,7 @@ export class OrderService {
       headers: this.headers,
       withCredentials: true
     }).pipe(
-      // FIXME retryWhen dont throw Error after the 3 
+      // FIXME retryWhen dont throw Error after the 3
       // retryWhen(errors => errors.pipe(delay(1000), take(3), concatMap(err => throwError(err)))),
       map(order => this.updateCache(order)),
       tap(order => this.order$.next(order))
@@ -337,7 +344,6 @@ export class OrderService {
 
   // update shopper
   // role:logistic
-  // app.post('/v1/orders/:oid/shipper', auth.ensureLogisticOrAdmin, orders.updateShippingShopper);
   updateShippingPriority(order: Order, priority: number, position: number) {
     const params = {
       priority,
@@ -366,7 +372,7 @@ export class OrderService {
     );
   }
 
-  updateInvoices(oids:number[], amount?: number){    
+  updateInvoices(oids:number[], amount?: number){
     return this.http.post<Order>(this.config.API_SERVER + '/v1/orders/invoices/update', {  oids, amount }, {
       headers: this.headers,
       withCredentials: true
@@ -393,7 +399,7 @@ export class OrderService {
       params: {skus},
       headers: this.headers,
       withCredentials: true
-    }).pipe(catchError(err => of([])));    
+    }).pipe(catchError(err => of([])));
   }
 
   // find all orders by user
@@ -415,7 +421,7 @@ export class OrderService {
         return throwError(err)
       }),
       tap(orders => {
-        this.orders$.next(orders);
+        this.ordersSrc$.next(orders);
       })
     );
   }
@@ -432,7 +438,7 @@ export class OrderService {
     }).pipe(
       map(orders => orders.map(this.updateCache.bind(this)) as Order[]),
       tap(orders => {
-        this.orders$.next(orders);
+        this.ordersSrc$.next(orders);
       })
     );
   }

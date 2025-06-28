@@ -14,43 +14,59 @@ import { catchError, map, tap } from 'rxjs/operators';
 //
 import { config } from './config';
 import { Shop } from './shop.service';
-import { Utils, XorCipher } from './util';
+import { XorCipher } from './util';
+import { AnalyticsService } from './metrics.service';
 
+//
+// FIXME: Refactor UserAddress, DepositAddress, and other AlienAddress for better usability
 export class UserAddress {
 
   constructor(
-    name?: string,
-    street?: string,
-    floor?: string,
-    region?: string,
-    postalCode?: string,
-    note?: string,
-    primary?: boolean,
-    geo?: any
+    content
   ) {
-    this.name = name;
-    this.streetAdress = street;
-    this.floor = floor;
-    this.region = region;
-    this.postalCode = postalCode;
-    this.note = note;
-    this.primary = primary;
-    this.geo = geo || {lat: 0, lng: 0};
+    // for security
+    content = content ||{};
+    this.name = content.name||'';
+    this.streetAdress = content.street||content.streetAdress||content.streetAddress||'';
+    this.streetAddress = this.streetAdress;
+
+    this.floor = content.floor||'';
+    this.region = content.region||'';
+    this.postalCode = content.postalCode||'';
+    this.note = content.note||'';
+    this.primary = content.primary;
+    this.geo = content.geo || {lat: 0, lng: 0};
   }
   id?: string;
   name: string;
   note: string;
+  phone?:string;
   floor: string;
   streetAdress: string;
+  streetAddress?: string;
   region: string;
   postalCode: string;
-  primary: boolean;
+  primary?: boolean;
+  type: string|"deposit"|"customer" = 'customer';
   geo: {
     lat: number;
     lng: number;
   };
 
-  static isEqual(source:UserAddress, address: UserAddress): boolean {
+  //
+  // the heavy international api
+  // https://github.com/catamphetamine/libphonenumber-js
+  static normalizePhone(phone: string): string {
+    let normalizedNumber = phone.replace(/\D/g, '');
+
+    // If the number starts with '00', replace it with '+'
+    if (normalizedNumber.startsWith('00')) {
+      normalizedNumber = '+' + normalizedNumber.slice(2);
+    }
+    return normalizedNumber;
+  }
+
+  static isEqual(source:UserAddress|DepositAddress|ShippingAddress, address: UserAddress|DepositAddress|ShippingAddress): boolean {
     if(!source||!address) {
       return false;
     }
@@ -63,35 +79,58 @@ export class UserAddress {
            source.postalCode == address.postalCode;
   }
 
-  static from(content: any) {
+  static from(content: any) :UserAddress|DepositAddress|ShippingAddress {
     content = content || {};
-    const geo = content.geo;
-    return new UserAddress(content.name,content.streetAdress,content.floor,content.region,content.postalCode,content.note,false,geo);
+    if(content.when){
+      return new ShippingAddress(content);
+    }else if(content.weight>=0 && content.fees>=-1) {
+      return new DepositAddress(content);
+    }else {
+      return new UserAddress(content);
+    }
   }
 
 }
+export class ShippingAddress extends UserAddress {
+  constructor(content, when?, hours?){
+    content = content ||{};
+    super(content)
+    this.type = 'order';
+    // copy as alias
+    this.streetAddress = this.streetAdress;
+    this.shipped = content.shipped == true;
+    this.deposit = content.deposit == true;
+    this.when = new Date(when||content.when);
+    this.hours = hours||content.hours;
 
+  }
+  when: Date;
+  hours: number;
+  type:'order'|string;
+  parent?: number;
+  shopper?: string;
+  shopper_time?: string;
+  priority?: number;
+  position?: number;
+  shipped?: boolean|"true"|"false";
+  deposit?: boolean|"true"|"false";
+  bags?: number;
+  estimated?: number;
+}
 
 export class DepositAddress extends UserAddress {
   weight: number;
   active: boolean;
   fees: number;
-  constructor(
-    name?: string,
-    street?: string,
-    floor?: string,
-    region?: string,
-    postalCode?: string,
-    note?: string,
-    geo?: any,
-    weight?: number,
-    active?: boolean,
-    fees?: number
-  ) {
-    super(name, street, floor, region, postalCode, note, false, geo);
-    this.weight = weight || 0;
-    this.fees = fees || 0;
-    this.active = active || false;
+  deposit: boolean;
+  constructor(content) {
+    content = content ||{};
+    super(content);
+    this.weight = content.weight || 0;
+    this.fees = content.fees || 0;
+    this.active = (content.active == true);
+    this.type = 'deposit';
+    this.deposit = true;
   }
 }
 
@@ -163,6 +202,7 @@ export class UserCard {
 
 export class User {
 
+  selected: boolean;
   deleted: boolean;
   id: number;
 
@@ -172,7 +212,8 @@ export class User {
   // tslint:disable-next-line: variable-name
   identity:{
     connect_id?: string;
-    connect_state?: boolean;    
+    connect_state?: boolean;
+    authlink?: string;
   };
 
   email: {
@@ -191,10 +232,14 @@ export class User {
   tags: string[];
   url: string;
 
+  //
+  // phone (DEPRECATED phoneNumbers)
   phoneNumbers: [{
     number: string;
     what: string;
   }];
+
+  phone: string;
 
 
   addresses: UserAddress[];
@@ -234,6 +279,8 @@ export class User {
 
   orders: {
     avg: number;
+    funnel: string;
+    profile: string;
     last1Month: number;
     last3Month: number;
     last6Month: number;
@@ -241,12 +288,12 @@ export class User {
     errors: number;
     count: number;
     latest: Date;
+    lastMail: Date;
     refunds: number;
     updated: Date;
     rating: number;
     latestErrors: number;
     hubs: any;
-    funnel: string;
   };
 
   hubs?: string[];
@@ -279,8 +326,12 @@ export class User {
       payments: [],
       balance:0,
       logistic: {postalCode: []},
+      plan:{
+        name:'customer'
+      },
       orders: {
         hubs:{},
+        profile:'',
         count: 0,
         rating: -1,
         avg: 0,
@@ -295,6 +346,13 @@ export class User {
     if(email && email.indexOf('@')>-1) {
       this.email.address = email;
     }
+
+    //
+    // phone (DEPRECATED phoneNumbers)
+    if(!this.phone && this.phoneNumbers && this.phoneNumbers.length) {
+      this.phone = this.phoneNumbers[0].number;
+    }
+
     if(json && json.balance) {
       this.balance = parseFloat(json.balance||'0');
     }
@@ -310,16 +368,7 @@ export class User {
     this.created = new Date(this.created);
 
     this.payments = this.payments.map(payment => new UserCard(payment));
-    this.addresses = this.addresses.map(add => new UserAddress(
-      add.name,
-      add.streetAdress,
-      add.floor,
-      add.region,
-      add.postalCode,
-      add.note,
-      add.primary,
-      add.geo
-    ));
+    this.addresses = this.addresses.map(add => new UserAddress(add));
     this.context = this.context || {};
 
   }
@@ -371,37 +420,32 @@ export class User {
   }
 
   isPremium(json?) {
-    const orders = (json && json.last1Month) ? json : this.orders;
-    const shared = {
-      new : config.shared.order.new || {},
-      recurrent: config.shared.order.recurrent || {}
-    };
+    // if(!this.isAuthenticated()) {
+    //   return false;
+    // }
 
-    const newclient = {
-      avg: shared.new.avg || 180,
-      last6Month: shared.new.last6Month || 1
-    };
+    // if(this.hasRole('admin')){
+    //   return true;
+    // }
+    const user = json || this;
 
-    const recurrent = {
-      last1Month: shared.recurrent.last1Month || 3,
-      last6Month: shared.recurrent.last6Month || 5,
-      avg: shared.recurrent.avg || 70
-    };
-
-    if (orders.avg > newclient.avg && orders.last6Month >= newclient.last6Month) {
-      return true;
+    if(!user.plan) {
+      return false;
     }
 
-
-    if (orders.last1Month >= recurrent.last1Month || orders.last6Month >= recurrent.last6Month) {
-      return (orders.avg > recurrent.avg);
+    if([user.plan.name,user.orders.profile].indexOf('premium')>-1) {
+      return true;
+    }
+    if(user.plan.name == 'shareholder') {
+      return true;
     }
 
     return false;
   }
 
   isReady() {
-    return (this.email && this.email.status === true);
+    // && this.email.status === true
+    return (this.email && this.email.address);
   }
 
   hasRole(role) {
@@ -455,7 +499,7 @@ export class User {
 
     //
     // return an empty
-    return new UserAddress();
+    return new UserAddress({});
   }
 
   populateAdresseName() {
@@ -504,6 +548,11 @@ export class User {
 
 }
 
+export interface CustomerChurn {
+  churn:any[];
+  users:User[];
+}
+
 class Cache {
     list: User[];
     map: Map<number, User>;
@@ -518,18 +567,33 @@ export class UserService {
 
   mixer:XorCipher;
 
+  //
+  // initial code for auth by token or magic authlink
+  auth:{
+    token: string;
+    authlink: string;
+    defaultEmail: string;
+  }
+
+
   constructor(
     @Inject('KNG2_OPTIONS') private customConfig: any,
     public http: HttpClient
   ) {
 
+    //
+    // FIXME: remove this mixer, it's not secure enough
     this.mixer = new XorCipher();
-
+    this.auth = {
+      token: '',
+      authlink: '',
+      defaultEmail: ''
+    };
     //
     // Use dynamic server settings
     if (!customConfig.API_SERVER) {
       // customConfig.API_SERVER = ('//api.' + window.location.hostname);
-      customConfig.API_SERVER = ('//' + window.location.hostname + '/api');
+      customConfig.API_SERVER = ('https://' + window.location.hostname + '/api');
     }
     // FIXME remove this hugly config propagation
     Object.assign(config, customConfig);
@@ -538,19 +602,26 @@ export class UserService {
       'Content-Type': 'application/json',
       'Cache-Control' : 'no-cache',
       'Pragma' : 'no-cache',
-      'ngsw-bypass':'true'
+      'ngsw-bypass':'true',
+      'k-dbg': AnalyticsService.FBP
     });
     this.user$ = new ReplaySubject<User>(1);
     this.currentUser = new User();
 
     try{
-      const isMail=(val) => (val||'').indexOf('@')>-1 && val;
+      const isMail=(val) => {
+        if (!val) return false;
+        const $email = /^[^@]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+        return $email.test(val) && val;
+      };
       // get marker as helper for the next login
       const value = localStorage.getItem('kng-auth');
-
+      if(isMail(value)) {
+        this.auth.defaultEmail = value;
+        this.currentUser.email.address = value;
+      }
       //const address = this.mixer.decode(config.shared.key,value);
       //this.currentUser.email.address = isMail(address)||value;
-      this.currentUser.email.address = value;
     }catch(err) {}
 
   }
@@ -588,8 +659,58 @@ export class UserService {
       return incache;
   }
 
-  // token
-  // https://github.com/neroniaky/angular2-token
+  //
+  // token & magic link
+  // FIXME: make this a real service with specs (current version is for testing purpose)
+  digestMagicAuth(){
+    try{
+      const token = /token=([^&]*)/gm.exec(window.location.href);
+      if(token && token.length>1){
+        this.auth.token = token[1];
+      }
+      const authlink = /authlink=([^&]*)/gm.exec(window.location.href);
+      if(authlink && authlink.length>1){
+        this.auth.authlink = authlink[1];
+      }
+
+    }catch(e){}
+  }
+
+  getMagicAuthToken(){
+    //
+    // check existance on token
+    if (!this.auth.token && !this.auth.authlink) {
+      return {
+        email: this.auth.defaultEmail,
+        password: '',
+        magic: false
+      };
+    }
+    if(this.auth.authlink){
+      return {
+        email: this.auth.defaultEmail,
+        password: this.auth.authlink,
+        magic: true
+      };
+    }
+
+    // decode token
+    let defaultPassword = '';
+    try{
+      const fields = atob(this.auth.token).split('::');
+      if (fields.length === 2) {
+        this.auth.defaultEmail = fields[0];
+        defaultPassword = fields[1];
+      }
+    }catch(e) {}
+
+    return {
+      email: this.auth.defaultEmail,
+      password: defaultPassword,
+      magic: false
+    };
+  }
+
 
   //
   // How to build Angular apps using Observable Data Services
@@ -644,7 +765,7 @@ export class UserService {
     }
 
     return this.http.get<User>(this.config.API_SERVER + '/v1/users/me', {
-      params: {device: Utils.deviceID(), tls: Date.now() + ''},
+      params: {tls: Date.now() + ''},
       headers: this.headers,
       withCredentials: true
     }).pipe(
@@ -657,6 +778,12 @@ export class UserService {
     );
   }
 
+  createOrUpdateAuthLink(id:number,options:any): Observable<any> {
+    return this.http.post<any>(this.config.API_SERVER + '/v1/users/' + id + '/autolink', options, {
+      headers: this.headers,
+      withCredentials: true
+    });
+  }
   applyCode(code:string): Observable<User> {
     return this.http.get<User>(this.config.API_SERVER + '/v1/users/redeem/'+code, {
       params: {tls: Date.now() + ''},
@@ -701,77 +828,117 @@ export class UserService {
   }
 
 
-  customerOblivious(filter?: any): Observable<User[]> {
+  customerOblivious(filter?: any): Observable<CustomerChurn> {
     filter = filter || {};
 
-    return this.http.get<User[]>(this.config.API_SERVER + '/v1/stats/customers/oblivious', {
+    return this.http.get<CustomerChurn>(this.config.API_SERVER + '/v1/stats/customers/oblivious', {
       params: filter,
       headers: this.headers,
       withCredentials: true
     }).pipe(
-      map(users => users.map(user => new User(user)))
-    );
-  }  
-
-  customerNew(filter?: any): Observable<User[]> {
-    filter = filter || {};
-
-    return this.http.get<User[]>(this.config.API_SERVER + '/v1/stats/customers/new', {
-      params: filter,
-      headers: this.headers,
-      withCredentials: true
-    }).pipe(
-      map(users => users.map(user => new User(user)))
+      map(churn => {
+        return {
+          churn:churn.churn||[],
+          users:churn.users.map(user => new User(user))
+        }
+      })
     );
   }
 
-  customerEarly(filter?: any): Observable<User[]> {
+  customerNew(filter?: any): Observable<CustomerChurn> {
     filter = filter || {};
 
-    return this.http.get<User[]>(this.config.API_SERVER + '/v1/stats/customers/early', {
+    return this.http.get<CustomerChurn>(this.config.API_SERVER + '/v1/stats/customers/new', {
       params: filter,
       headers: this.headers,
       withCredentials: true
     }).pipe(
-      map(users => users.map(user => new User(user)))
+      map(churn => {
+        return {
+          churn:churn.churn||[],
+          users:churn.users.map(user => new User(user))
+        }
+      })
     );
   }
 
-  customerRecurrent(filter?: any): Observable<User[]> {
+  customerOccasional(filter?: any): Observable<CustomerChurn> {
     filter = filter || {};
 
-    return this.http.get<User[]>(this.config.API_SERVER + '/v1/stats/customers/recurrent', {
+    return this.http.get<CustomerChurn>(this.config.API_SERVER + '/v1/stats/customers/early', {
       params: filter,
       headers: this.headers,
       withCredentials: true
     }).pipe(
-      map(users => users.map(user => new User(user)))
+      map(churn => {
+        return {
+          churn:churn.churn||[],
+          users:churn.users.map(user => new User(user))
+        }
+      })
     );
   }
 
-  customerPremium(filter?: any): Observable<User[]> {
+  customerRecurrent(filter?: any): Observable<CustomerChurn> {
     filter = filter || {};
 
-    return this.http.get<User[]>(this.config.API_SERVER + '/v1/stats/customers/premium', {
+    return this.http.get<CustomerChurn>(this.config.API_SERVER + '/v1/stats/customers/recurrent', {
       params: filter,
       headers: this.headers,
       withCredentials: true
     }).pipe(
-      map(users => users.map(user => new User(user)))
+      map(churn => {
+        return {
+          churn:churn.churn||[],
+          users:churn.users.map(user => new User(user))
+        }
+      })
     );
-  }  
+  }
 
-  customerQuit(filter?: any): Observable<User[]> {
+  customerPremium(filter?: any): Observable<CustomerChurn> {
     filter = filter || {};
 
-    return this.http.get<User[]>(this.config.API_SERVER + '/v1/stats/customers/quit', {
+    return this.http.get<CustomerChurn>(this.config.API_SERVER + '/v1/stats/customers/premium', {
       params: filter,
       headers: this.headers,
       withCredentials: true
     }).pipe(
-      map(users => users.map(user => new User(user)))
+      map(churn => {
+        return {
+          churn:churn.churn||[],
+          users:churn.users.map(user => new User(user))
+        }
+      })
     );
-  }  
+  }
+
+  customerQuit(filter?: any): Observable<CustomerChurn> {
+    filter = filter || {};
+
+    return this.http.get<CustomerChurn>(this.config.API_SERVER + '/v1/stats/customers/quit', {
+      params: filter,
+      headers: this.headers,
+      withCredentials: true
+    }).pipe(
+      map(churn => {
+        return {
+          churn:churn.churn||[],
+          users:churn.users.map(user => new User(user))
+        }
+      })
+    );
+  }
+
+  customerChurn(filter?: any): Observable<any> {
+    filter = filter || {};
+
+    return this.http.get<any[]>(this.config.API_SERVER + '/v1/stats/customers/churn', {
+      params: filter,
+      headers: this.headers,
+      withCredentials: true
+    });
+  }
 
   // Reçoit un statut de requête http
   // app.get ('/v1/validate/:uid/:email', emails.validate);
@@ -834,7 +1001,7 @@ export class UserService {
       catchError(err => of(new User())),
       map(user => Object.assign(this.currentUser, new User({},this.currentUser.email.address))),
       tap(user => {
-        console.log('user.logout()', user);
+        // console.log('user.logout()', user);
         return this.user$.next(user);
       })
     );
@@ -860,8 +1027,10 @@ export class UserService {
       withCredentials: true
     });
   }
-  // TODO voir lignes commentées (updateGeoCode etc.) + Broadcast
-  // app.post('/login', queued(auth.login_post));
+
+
+  //
+  // FIXME: make this a real service with specs (current version is not secure)
   login(data): Observable<User> {
     return this.http.post<User>(this.config.API_SERVER + '/login', data, {
       headers: this.headers,
@@ -1019,7 +1188,7 @@ export class UserService {
       tap(user => this.user$.next(user))
     );
   }
-  
+
 
   // app.post('/v1/users/:id/payment/:alias/delete', users.ensureMeOrAdmin,users.deletePayment);
   deletePaymentMethod(alias, uid): Observable<User> {

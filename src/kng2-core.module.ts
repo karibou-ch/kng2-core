@@ -4,6 +4,7 @@ import { HttpClientModule } from '@angular/common/http';
 
 import { IsAuthenticated, IsAdmin } from './is-authenticated.service';
 
+import { AssistantService } from './assistant.service';
 import { CartService } from './cart.service';
 import { CategoryService } from './category.service';
 import { DocumentService } from './document.service';
@@ -63,13 +64,6 @@ export class Kng2CoreModule {
   //https://angular-2-training-book.rangle.io/handout/modules/feature-modules.html
   public static forRoot(options:any): ModuleWithProviders<Kng2CoreModule> {
 
-    // try{
-    //   let server=localStorage.getItem(ConfigKeyStoreEnum[ConfigKeyStoreEnum.KIO2_SERVER]);
-    //   options.API_SERVER=server||options.API_SERVER;
-    // }catch(e){
-    //   console.log('--- localStorage',e);
-    // }
-
     return {
       ngModule: Kng2CoreModule,
       providers: [
@@ -77,10 +71,11 @@ export class Kng2CoreModule {
           provide:"KNG2_OPTIONS",
           useValue: options || {}
         },
+        AssistantService,
         AnalyticsService,
+        ConfigService,
         CartService,
         CategoryService,
-        ConfigService,
         DocumentService,
         IsAuthenticated,
         IsAdmin,

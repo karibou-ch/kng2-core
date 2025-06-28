@@ -1,7 +1,7 @@
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 
-import { config } from './config';
+import { config, configCors } from './config';
 
 
 import { Observable } from 'rxjs';
@@ -112,6 +112,7 @@ export class ReportOrders {
     count: number;
     amount: number;
     vendor: string;
+    tva:number;
   }];
 
   from: Date;
@@ -120,6 +121,8 @@ export class ReportOrders {
   discount: number;
   amount: number;
   items: number;
+  serviceamount: number;
+  shippingamount: number;
   orders: number[];
 }
 
@@ -155,7 +158,7 @@ export class ReportingService {
     return this.config = this.http.get<ReportOrders>(config.API_SERVER + '/v1/orders/invoices/shops/' + month + '/' + year, {
       params,
       headers: this.headers,
-      withCredentials: true,
+      withCredentials: (configCors()),
     }).pipe(
       map(json => new ReportOrders(json))
     );
@@ -172,7 +175,7 @@ export class ReportingService {
     return this.config = this.http.get<ReportOrders>(config.API_SERVER + '/v1/orders/invoices/shopper/' + month + '/' + year, {
       params,
       headers: this.headers,
-      withCredentials: true,
+      withCredentials: (configCors()),
     }).pipe(
       map(json => new ReportShopper(json))
     );
@@ -182,7 +185,7 @@ export class ReportingService {
   getCustomers(): Observable<ReportCustomer[]> {
     return this.config = this.http.get<ReportCustomer[]>(config.API_SERVER + '/v1/stats/customers', {
       headers: this.headers,
-      withCredentials: true,
+      withCredentials: (configCors()),
     }).pipe(
       map(json => json)
     );
@@ -194,7 +197,7 @@ export class ReportingService {
     month = month || '-';
     return this.config = this.http.get<ReportIssues[]>(config.API_SERVER + '/v1/stats/orders/issues/'  + month + '/' + year, {
       headers: this.headers,
-      withCredentials: true,
+      withCredentials: (configCors()),
     }).pipe(
       map(json => json)
     );

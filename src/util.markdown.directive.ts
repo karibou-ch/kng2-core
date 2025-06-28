@@ -1,18 +1,8 @@
-import { AfterViewInit, Directive, Input, ElementRef, Component, ViewEncapsulation } from '@angular/core';
+import { AfterViewInit, Input, ElementRef, Component, ViewEncapsulation } from '@angular/core';
 
-import { Utils } from './util';
 // import { Prism } from 'prism';
 // import 'prism/themes/prism-okaidia.css!css';
 
-const CDNJS_SHOWDOWN = window['CDNJS_SHOWDOWN'] || 'https://cdnjs.cloudflare.com/ajax/libs/showdown/1.9.0/showdown.min.js';
-
-// Showdown typescript
-// https://github.com/DefinitelyTyped/DefinitelyTyped/blob/7ba0c54fa401f1ccc969b4c6923ed0c636a86002/types/showdown/index.d.ts
-// declare namespace Showdown {
-//   export interface Converter{
-//     makeHtml(content:string);
-//   }
-// }
 
 //
 // original script
