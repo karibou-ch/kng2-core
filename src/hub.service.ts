@@ -52,6 +52,12 @@ export class Hub {
     colormix:string
   };
 
+  pageOptions:{
+    themas:boolean;
+    minimal:boolean;
+    maxcat:number;
+  };
+
   //
   // HUB dedicated settings
 
@@ -135,6 +141,10 @@ export class Hub {
     //   signature:String,
     //   subject:String
     // },
+    customLink: {
+      url: string;
+      label: { en: string, de: string, fr: string };
+    },
     content:[{
       h: { en: string, de: string, fr: string };
       t: { en: string, de: string, fr: string };
@@ -178,6 +188,9 @@ export class Hub {
   /* HUB fees added to the product price  */
   serviceFees: number;
 
+  reservedAmount: number;
+
+
   /* order is in timeout if payment status != 'paid' and created<15m (timeoutAndNotPaid)*/
   timeoutAndNotPaid: number;
 
@@ -187,7 +200,7 @@ export class Hub {
 
   //
   // stripe uncaptured charges expire in 7 days
-  // https://support.stripe.com/questions/does-stripe-support-authorize-and-capture 
+  // https://support.stripe.com/questions/does-stripe-support-authorize-and-capture
   uncapturedTimeLimit: number;
 
   /* order date range between day1 to day2 max 11:00. Lapse time = timelimit */

@@ -26,10 +26,11 @@ export class UserAddress {
   ) {
     // for security
     content = content ||{};
+    this.type = 'customer';
     this.name = content.name||'';
     this.streetAdress = content.street||content.streetAdress||content.streetAddress||'';
     this.streetAddress = this.streetAdress;
-
+    this.phone = content.phone||'';
     this.floor = content.floor||'';
     this.region = content.region||'';
     this.postalCode = content.postalCode||'';
@@ -47,10 +48,11 @@ export class UserAddress {
   region: string;
   postalCode: string;
   primary?: boolean;
-  type: string|"deposit"|"customer" = 'customer';
+  type: string|"deposit"|"customer"|"order" = 'customer';
   geo: {
     lat: number;
     lng: number;
+    zoom?: number;
   };
 
   //
@@ -89,8 +91,10 @@ export class UserAddress {
       return new UserAddress(content);
     }
   }
-
 }
+
+//
+// used for shipping address with Order instance
 export class ShippingAddress extends UserAddress {
   constructor(content, when?, hours?){
     content = content ||{};
@@ -126,10 +130,10 @@ export class DepositAddress extends UserAddress {
   constructor(content) {
     content = content ||{};
     super(content);
+    this.type = 'deposit';
     this.weight = content.weight || 0;
     this.fees = content.fees || 0;
     this.active = (content.active == true);
-    this.type = 'deposit';
     this.deposit = true;
   }
 }
