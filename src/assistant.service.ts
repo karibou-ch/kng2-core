@@ -95,7 +95,7 @@ export class AssistantService {
   }
 
 
-//  
+//
 // DEPRECATED
 //   chatToCart(recipe: string):Observable<CartModel|{}> {
 //     return this.$http.post<CartModel>(this.defaultConfig.API_SERVER + '/v1/assistant/recipe',{recipe}, {
@@ -128,7 +128,7 @@ export class AssistantService {
       headers:{
         "Content-Type": "application/json",
         "k-dbg": AnalyticsService.FBP,
-        'ngsw-bypass':'true'        
+        'ngsw-bypass':'true'
       }
     };
     if(configCors()) {
@@ -153,15 +153,15 @@ export class AssistantService {
         if(configCors()) {
           xhr.withCredentials = true;
         }
-        xhr.setRequestHeader('ngsw-bypass','true');  
-        xhr.setRequestHeader("k-dbg", AnalyticsService.FBP);  
-        xhr.setRequestHeader('Content-Type', 'application/json'); 
+        xhr.setRequestHeader('ngsw-bypass','true');
+        xhr.setRequestHeader("k-dbg", AnalyticsService.FBP);
+        xhr.setRequestHeader('Content-Type', 'application/json');
         xhr.setRequestHeader('Accept', 'text/event-stream');
         xhr.setRequestHeader('Cache-Control', 'no-cache');
-        // we must make use of this on the server side if we're working with Android - because they don't trigger 
+        // we must make use of this on the server side if we're working with Android - because they don't trigger
         // readychange until the server connection is closed
         xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
-  
+
         //
         // decode json data
         // => /(${anchor}:)[^{]*(.*?\})/gi
@@ -171,21 +171,21 @@ export class AssistantService {
         const skuBlock = /{{([\d,]*?)}}|\[([\d,]*?)\]/ig;
         let responseText = '';
         let fullcontent = '';
-  
+
         let lastIndex = 0;
         xhr.onprogress = () => {
           const index = xhr.responseText.length;
           if (lastIndex == index){
-            return; 
+            return;
           }
 
 
-          responseText = xhr.responseText; 
+          responseText = xhr.responseText;
           const text =  responseText.substring(lastIndex).replace(skuBlock,'');
           const json = jsonEx.exec(text);
           let tool = {};
           if(json && json[2]) {
-            try{ tool = JSON.parse(`${json[2]}`); }catch(err) {}          
+            try{ tool = JSON.parse(`${json[2]}`); }catch(err) {}
           }
 
           lastIndex = index;
@@ -214,10 +214,10 @@ export class AssistantService {
         xhr.ontimeout = function() {
           observer.error(new TypeError('Network request timed out'));
           observer.complete();
-        }    
+        }
 
         xhr.send(options.body);
-  
+
       }catch(err) {
         console.log('---- err',err);
         observer.error(err);
@@ -235,8 +235,12 @@ export class AssistantService {
   }
 
 
-  message(content:string, subject?:string): Observable<any> {
-    return this.$http.post<any>(this.defaultConfig.API_SERVER + '/v1/assistant/message',{content, subject}, {
+  message(content:string, subject?:string, audioContext?: {audioUrl?: string, transcription?: string, cartUrl?: string}): Observable<any> {
+    const payload: any = {content, subject};
+    if (audioContext) {
+      Object.assign(payload, audioContext);
+    }
+    return this.$http.post<any>(this.defaultConfig.API_SERVER + '/v1/assistant/message', payload, {
       headers: this.headers,
       withCredentials: (configCors())
     })

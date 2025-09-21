@@ -12,6 +12,7 @@ import { map, catchError, switchMap, debounceTime, tap } from 'rxjs/operators';
 import { ConfigService } from './config.service';
 import './es5';
 import { AnalyticsService } from './metrics.service';
+import { CalendarService } from './calendar.service';
 
 //
 // on cart action
@@ -422,7 +423,8 @@ export class CartService {
   public subscription$: ReplaySubject<CartSubscription[]>;
 
   constructor(
-    private $http: HttpClient
+    private $http: HttpClient,
+    private $calendar: CalendarService
   ) {
     this.headers = new HttpHeaders({
       'Content-Type': 'application/json',
@@ -1014,11 +1016,13 @@ export class CartService {
   getShippingDayForMultipleHUBs() {
     const hubsDate = [];
     this.defaultConfig.shared.hubs.forEach(hub => {
-      hubsDate.push(Order.fullWeekShippingDays(hub));
+      // ✅ MIGRATION: Utiliser CalendarService au lieu d'Order
+      hubsDate.push(this.$calendar.getValidShippingDatesForHub(hub, { days: 7 }));
     });
 
     if(hubsDate.length==0){
-      return Order.fullWeekShippingDays(this.currentHub);
+      // ✅ MIGRATION: Utiliser CalendarService au lieu d'Order
+      return this.$calendar.getValidShippingDatesForHub(this.currentHub, { days: 7 });
     }
 
     if(hubsDate.length==1){
@@ -1035,7 +1039,8 @@ export class CartService {
 
   getCurrentShippingDay() {
     if(!this.cache.currentShippingDay) {
-      return Order.nextShippingDay();
+      // ✅ MIGRATION: Utiliser CalendarService au lieu d'Order
+      return this.$calendar.nextShippingDay(this.defaultConfig.shared.hub, this.currentUser);
     }
     return this.cache.currentShippingDay;
   }
@@ -1050,6 +1055,7 @@ export class CartService {
   getCurrentPaymentMethod() {
     return this.cache.payment;
   }
+
 
   //
   // TODO should be refactored (distance between real shop settings and cart values)!!
@@ -1164,8 +1170,9 @@ export class CartService {
     }
     //
     // IFF next shipping day is Null (eg. hollidays)=> currentShippingDay
-    const nextShippingDay = Order.nextShippingDay(this.currentUser);
-    const currentShippingDay = config.potentialShippingWeek(this.defaultConfig.shared.hub)[0];
+    // ✅ MIGRATION: Utiliser CalendarService au lieu d'Order et config
+    const nextShippingDay = this.$calendar.nextShippingDay(this.defaultConfig.shared.hub, this.currentUser);
+    const currentShippingDay = this.$calendar.potentialShippingWeek(this.defaultConfig.shared.hub)[0];
     this.cache.currentShippingDay = new Date(nextShippingDay || currentShippingDay);
 
     this.cache.updated = new Date('1990-12-01T00:00:00');
@@ -1184,14 +1191,16 @@ export class CartService {
       // check shipping date or get the next one
       // FIXME default shipping time is hardcoded
       const day = new Date(fromLocal.currentShippingDay || nextShippingDay || currentShippingDay);
-      const hours = this.defaultConfig.getDefaultTimeByDay(day);
+      // ✅ MIGRATION: Utiliser CalendarService au lieu de defaultConfig
+      const hours = this.$calendar.getDefaultTimeByDay(day, this.defaultConfig.shared.hub);
       this.setShippingDay(day,hours);
 
       //
       // get state from pending order
       if(this.currentPendingOrder){
         const day = new Date(this.currentPendingOrder.shipping.when);
-        const hours = this.defaultConfig.getDefaultTimeByDay(day);
+        // ✅ MIGRATION: Utiliser CalendarService au lieu de defaultConfig
+      const hours = this.$calendar.getDefaultTimeByDay(day, this.defaultConfig.shared.hub);
         this.setShippingDay(day,hours);
       }
 
@@ -1199,7 +1208,8 @@ export class CartService {
       // if selected shipping date is before the next one => reset the default date
       if (this.cache.currentShippingDay < nextShippingDay) {
         const day = nextShippingDay;
-        const hours = this.defaultConfig.getDefaultTimeByDay(day);
+        // ✅ MIGRATION: Utiliser CalendarService au lieu de defaultConfig
+      const hours = this.$calendar.getDefaultTimeByDay(day, this.defaultConfig.shared.hub);
         this.setShippingDay(day,hours);
       }
 
@@ -1640,10 +1650,12 @@ export class CartService {
     if(!this.currentPendingOrder && order){
       this.currentPendingOrder = order;
       const day = new Date(this.currentPendingOrder.shipping.when);
-      const hours = this.defaultConfig.getDefaultTimeByDay(day);
+      // ✅ MIGRATION: Utiliser CalendarService au lieu de defaultConfig
+      const hours = this.$calendar.getDefaultTimeByDay(day, this.defaultConfig.shared.hub);
       //
       // verify if the day is available on current HUB
-      const days = config.potentialShippingWeek(config.shared.hub);
+      // ✅ MIGRATION: Utiliser CalendarService au lieu de config
+      const days = this.$calendar.potentialShippingWeek(config.shared.hub);
       if(days.some(one => one.equalsDate(day))) {
         this.cache.currentShippingDay = day;
         this.cache.currentShippingTime = hours;

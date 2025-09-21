@@ -59,12 +59,22 @@ export class UserAddress {
   // the heavy international api
   // https://github.com/catamphetamine/libphonenumber-js
   static normalizePhone(phone: string): string {
-    let normalizedNumber = phone.replace(/\D/g, '');
+    if (!phone) return '';
 
-    // If the number starts with '00', replace it with '+'
+    // Remove all non-digits except leading '+'
+    // Regex explanation: (?!^\+) = negative lookahead to preserve leading +
+    let normalizedNumber = phone.replace(/(?!^\+)\D/g, '');
+
+    // Convert 00 international prefix to +
     if (normalizedNumber.startsWith('00')) {
       normalizedNumber = '+' + normalizedNumber.slice(2);
     }
+
+    // Swiss mobile numbers: add +41 if starts with 07/08/09
+    if (/^0[789]/.test(normalizedNumber)) {
+      normalizedNumber = '+41' + normalizedNumber.slice(1);
+    }
+
     return normalizedNumber;
   }
 
@@ -149,6 +159,7 @@ export class UserCard {
       this.number = this.number||this.last4;
     }
     this.updated = new Date(this.updated);
+    this.default = (this.default == true);
   }
 
   id?: string;
@@ -162,6 +173,7 @@ export class UserCard {
   provider: string;
   updated: Date;
   error: string;
+  default?: boolean; // karibou-wallet compatibility
 
   //
   // display expiry
@@ -266,6 +278,9 @@ export class User {
   /* payments methods */
   payments: UserCard[];
   balance: number;
+
+  /* default payment method ID (karibou-wallet integration) */
+  private _default_payment_method?: string;
 
   plan:{
     name:string;

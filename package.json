@@ -1,9 +1,11 @@
 {
   "name": "kng2-core",
-  "version": "5.1.0",
+  "version": "6.0.0",
   "description": "The module goal mainly provide a kickstart kit to make every new idea/motivation web application/ionic declinaison for karibou.ch without friction!",
   "scripts": {
     "ng": "ng",
+    "predeploy": "npm version patch --no-git-tag-version",
+    "deploy": "npm run predeploy && npm run build",
     "start": "ng serve",
     "build": "ng build",
     "test": "ng test",
@@ -29,7 +31,7 @@
   },
   "devDependencies": {
     "@angular-devkit/build-angular": "~12.2.18",
-    "@angular-devkit/build-ng-packagr": "~0.1002.0",
+    "@angular-devkit/build-ng-packagr": "~12.2.18",
     "@angular/cli": "~12.2.18",
     "@angular/common": "~12.2.17",
     "@angular/compiler": "~12.2.17",
@@ -43,7 +45,7 @@
     "@types/jasmine": "~3.3.8",
     "@types/jasminewd2": "~2.0.3",
     "@types/node": "~8.9.4",
-    "codelyzer": "^5.0.0",
+    "codelyzer": "^6.0.0",
     "jasmine-core": "~3.4.0",
     "jasmine-spec-reporter": "~4.2.1",
     "karma": "~6.4.1",

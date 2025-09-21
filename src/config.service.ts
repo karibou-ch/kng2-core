@@ -205,6 +205,7 @@ export class ConfigService {
           config.shared.hub = hub;
         }
 
+        config.shared.hub.home.customLink = config.shared.hub.home.customLink || {};
         config.shared.faq == config.shared.faq || [];
         config.shared.faq_title = config.shared.faq_title || {en:"",fr:""};
 

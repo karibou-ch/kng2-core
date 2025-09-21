@@ -5,13 +5,14 @@ import { HttpClientModule } from '@angular/common/http';
 import { IsAuthenticated, IsAdmin } from './is-authenticated.service';
 
 import { AssistantService } from './assistant.service';
+import { CalendarService } from './calendar.service';
 import { CartService } from './cart.service';
 import { CategoryService } from './category.service';
 import { DocumentService } from './document.service';
 import { ProductService } from './product.service';
 import { ConfigService } from './config.service';
 import { LoaderService,
-         LoaderResolve, 
+         LoaderResolve,
          UserResolve} from './loader.service';
 import { OrderService } from './order/order.service';
 import { UserService } from './user.service';
@@ -42,20 +43,20 @@ import { OneClickDirective } from './util.one-click.directive';
     HttpClientModule
   ],
   declarations: [
-    bgSrcDirective, 
-    ConfirmDeleteDirective, 
+    bgSrcDirective,
+    ConfirmDeleteDirective,
     MarkdownDirective,
     OneClickDirective,
-    OrderPortionPipe, 
+    OrderPortionPipe,
     OrderBasepricePipeEx,
     OrderBasepricePipe
   ],
   exports: [
-    bgSrcDirective, 
-    ConfirmDeleteDirective, 
+    bgSrcDirective,
+    ConfirmDeleteDirective,
     MarkdownDirective,
     OneClickDirective,
-    OrderPortionPipe, 
+    OrderPortionPipe,
     OrderBasepricePipeEx,
     OrderBasepricePipe,
   ]
@@ -73,6 +74,7 @@ export class Kng2CoreModule {
         },
         AssistantService,
         AnalyticsService,
+        CalendarService,
         ConfigService,
         CartService,
         CategoryService,
@@ -91,5 +93,5 @@ export class Kng2CoreModule {
         UserResolve
       ]
     };
-  }  
+  }
 }

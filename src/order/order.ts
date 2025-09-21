@@ -268,11 +268,6 @@ export class Order {
 
 
 
-  //
-  // the current shipping day is short date for the placed orders
-  static currentShippingDay() {
-    return (new Date()).dayToDates(config.shared.hub.weekdays)[0];
-  }
 
   //
   // the next shipping day

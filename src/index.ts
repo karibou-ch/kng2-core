@@ -6,6 +6,8 @@ export { Kng2CoreModule } from './kng2-core.module';
 // services
 export { ConfigService } from './config.service';
 
+export { CalendarService, ProductOrderTiming } from './calendar.service';
+
 export { AnalyticsService, Metrics } from './metrics.service';
 
 export { Assistant,
@@ -36,7 +38,9 @@ export { IsAuthenticated, IsAdmin } from './is-authenticated.service';
 
 export { LoaderService,
          LoaderResolve,
-         UserResolve } from './loader.service';
+         UserResolve,
+         LoaderData,
+         LoaderCoreData } from './loader.service';
 
 export { Order,
          OrderItem, OrderAddress } from './order/order';
