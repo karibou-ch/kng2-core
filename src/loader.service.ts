@@ -155,13 +155,56 @@ export class LoaderService {
 
   update(): Observable<Partial<LoaderCoreData>> {
     return merge(
-      this.$config.config$.pipe(map(config => ({ config }))),
-      this.$user.user$.pipe(
-        map(user => ({ user }))
+      this.$config.config$.pipe(
+        map(config => ({ config })),
+        tap(({ config }) => {
+          // ✅ SYNC: Mettre à jour latestCoreData.config
+          if (this.latestCoreData) {
+            this.latestCoreData.config = config;
+            this.latestCoreData.timestamp = Date.now();
+          }
+        })
       ),
-      this.$cart.cart$.pipe(map(state => ({ state }))),
-      this.$shop.shops$.pipe(map(shops => ({ shops }))),
-      this.$order.orders$.pipe(map(orders => ({ orders }))),
+      this.$user.user$.pipe(
+        map(user => ({ user })),
+        tap(({ user }) => {
+          // ✅ SYNC: Mettre à jour latestCoreData.user
+          if (this.latestCoreData) {
+            this.latestCoreData.user = user;
+            this.latestCoreData.timestamp = Date.now();
+          }
+        })
+      ),
+      this.$cart.cart$.pipe(
+        map(state => ({ state })),
+        tap(({ state }) => {
+          // ✅ SYNC: Mettre à jour latestCoreData.state
+          if (this.latestCoreData) {
+            this.latestCoreData.state = state;
+            this.latestCoreData.timestamp = Date.now();
+          }
+        })
+      ),
+      this.$shop.shops$.pipe(
+        map(shops => ({ shops })),
+        tap(({ shops }) => {
+          // ✅ SYNC: Mettre à jour latestCoreData.shops
+          if (this.latestCoreData) {
+            this.latestCoreData.shops = shops;
+            this.latestCoreData.timestamp = Date.now();
+          }
+        })
+      ),
+      this.$order.orders$.pipe(
+        map(orders => ({ orders })),
+        tap(({ orders }) => {
+          // ✅ SYNC: Mettre à jour latestCoreData.orders
+          if (this.latestCoreData) {
+            this.latestCoreData.orders = orders;
+            this.latestCoreData.timestamp = Date.now();
+          }
+        })
+      ),
     );
   }
 
@@ -241,6 +284,8 @@ export class LoaderService {
     if (this.preload.categories || force) {
       this.$category.select().subscribe(); // Trigger reload
       loaders.push(this.$category.categories$.pipe(
+        filter(categories => categories !== null), // ✅ CLEF: Attendre que les données soient chargées
+        take(1), // ✅ Prendre seulement la première émission réelle
         catchError(err => {
           return of([]); // ✅ Continue avec categories vides
         })
@@ -254,6 +299,8 @@ export class LoaderService {
       const query = hubSlug ? {hub: hubSlug} : {};
       this.$shop.query(query).subscribe(); // Trigger reload (hub-specific ou tous)
       loaders.push(this.$shop.shops$.pipe(
+        filter(shops => shops !== null), // ✅ CLEF: Attendre que les données soient chargées
+        take(1), // ✅ Prendre seulement la première émission réelle
         catchError(err => {
           return of([]); // ✅ Continue avec shops vides
         })

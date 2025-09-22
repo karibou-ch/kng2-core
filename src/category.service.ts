@@ -17,8 +17,8 @@ export class Category {
       weight:0,
       child:[]
     }
-  
-    Object.assign(this, Utils.merge(defaultCategory,json||{}));          
+
+    Object.assign(this, Utils.merge(defaultCategory,json||{}));
   }
   deleted:boolean;
   _id:string;
