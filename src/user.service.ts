@@ -205,7 +205,9 @@ export class UserCard {
     const date = this.expiryToDate();
     now.setDate(1);
     now.setHours(0, 0, 0, 1);
-    return date > now;
+    // ✅ FIXED: Use >= instead of > to allow cards valid until end of current month
+    // Bug: if today is Nov 1st and card expires Nov 2024, comparison was "Nov 1 > Nov 1" = false
+    return date >= now;
   }
 
   static isEqual(source: UserCard, payment: UserCard) {
