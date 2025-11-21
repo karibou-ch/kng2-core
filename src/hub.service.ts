@@ -190,6 +190,9 @@ export class Hub {
 
   reservedAmount: number;
 
+  /* accept last minute orders (0 for disabled)*/
+  /* last minute order time limit in hours   */
+  acceptLastMinuteOrder: number;
 
   /* order is in timeout if payment status != 'paid' and created<15m (timeoutAndNotPaid)*/
   timeoutAndNotPaid: number;
