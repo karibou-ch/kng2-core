@@ -115,19 +115,21 @@ export class ShippingAddress extends UserAddress {
     this.shipped = content.shipped == true;
     this.deposit = content.deposit == true;
     this.when = new Date(when||content.when);
-    this.hours = hours||content.hours;
+    this.hours = (typeof hours === 'number') ? hours : content.hours;
+    this.lastMinute = content.lastMinute == true;
 
   }
   when: Date;
   hours: number;
+  lastMinute: boolean;
   type:'order'|string;
   parent?: number;
   shopper?: string;
   shopper_time?: string;
   priority?: number;
   position?: number;
-  shipped?: boolean|"true"|"false";
-  deposit?: boolean|"true"|"false";
+  shipped?: boolean; // ✅ Parsé dans constructeur ligne 115
+  deposit?: boolean; // ✅ Parsé dans constructeur ligne 116
   bags?: number;
   estimated?: number;
 }

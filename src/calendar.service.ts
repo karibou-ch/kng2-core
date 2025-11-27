@@ -303,7 +303,6 @@ export class CalendarService {
    * @returns Tableau des dates de livraison disponibles
    */
   fullWeekShippingDays(hub?: any, limit?: number, user?: any): Date[] {
-  console.warn
 
     const targetHub = hub || this.getDefaultHub();
 
@@ -413,15 +412,19 @@ export class CalendarService {
 
   /**
    * Vérifier si un jour spécifique est disponible pour la livraison
+   * ✅ OPTION LASTMINUTE : Ajoute validation heure limite
    *
    * @param hub Hub de livraison
    * @param date Date à vérifier
+   * @param options { lastMinute?: boolean, now?: Date }
    * @returns true si le jour est disponible
    */
-  isShippingDayAvailable(hub: Hub, date: Date): boolean {
+  isShippingDayAvailable(hub: Hub, date: Date, options: { lastMinute?: boolean; now?: Date } = {}): boolean {
     if (!hub || !date || isNaN(date.getTime())) {
       return false;
     }
+
+    const { lastMinute = false, now = new Date() } = options;
 
     // Vérifier si le jour est dans les weekdays du hub
     // ✅ FRONTEND HUB-CENTRIC: date est déjà en timezone Hub
@@ -433,6 +436,27 @@ export class CalendarService {
     if (hub.noshipping?.length) {
       for (const noshipping of hub.noshipping) {
         if (date.in && date.in(noshipping.from, noshipping.to)) {
+          return false;
+        }
+      }
+    }
+
+    // ✅ VALIDATION LASTMINUTE : Vérifier heure limite
+    if (lastMinute) {
+      // Hub doit activer
+      if (!hub.acceptLastMinuteOrder || hub.acceptLastMinuteOrder <= 0) {
+        return false;
+      }
+
+      // Heure actuelle < limite
+      const nowHub = this.toHubTime(now, hub);
+      if (nowHub.getHours() >= hub.acceptLastMinuteOrder) {
+        return false;
+      }
+
+      // Date doit être aujourd'hui (utilise toYYYYMMDD)
+      if (date.toYYYYMMDD && now.toYYYYMMDD) {
+        if (date.toYYYYMMDD() !== now.toYYYYMMDD()) {
           return false;
         }
       }
@@ -637,6 +661,35 @@ export class CalendarService {
       return (dayHub.getDay() === 6) ? 12 : 16;
     }
     return targetHub.shippingtimes[dayHub.getDay()] || 16;
+  }
+
+  /**
+   * Vérifie si la commande last-minute est disponible (version simplifiée)
+   * ✅ SYNCHRONISÉ avec backend calendar.js
+   * Délègue à isShippingDayAvailable avec option lastMinute
+   *
+   * @param hub Hub optionnel
+   * @param options { now?: Date }
+   * @returns {{ available: boolean, when?: Date, hours?: number }}
+   */
+  isLastMinuteAvailable(hub?: Hub, options: { now?: Date } = {}): { available: boolean; when?: Date; hours?: number } {
+    const targetHub = hub || this.getDefaultHub();
+    const now = options.now || new Date();
+
+    // Normaliser date à midi UTC
+    const when = new Date(now);
+    when.setUTCHours(12, 0, 0, 0);
+
+    // ✅ Déléguer validation à isShippingDayAvailable
+    const available = this.isShippingDayAvailable(targetHub, when, { lastMinute: true, now });
+
+    if (!available) {
+      return { available: false };
+    }
+
+    // Retour simple
+    const hours = this.getDefaultTimeByDay(when, targetHub);
+    return { available: true, when, hours };
   }
 
   /**

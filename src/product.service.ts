@@ -366,6 +366,7 @@ export class Product {
         comment: string;
     };
     attributes: {
+        lastMinute: boolean;
         discount: boolean;
         weight: number;
         comment: boolean;

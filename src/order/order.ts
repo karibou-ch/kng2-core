@@ -26,7 +26,7 @@ export interface OrderItem {
   title: string;
   hub: string;
   category: string;
-  bundle: boolean|"true"|"false";
+  bundle: boolean;
 
   //
   // for subscription
@@ -63,7 +63,7 @@ export interface OrderItem {
 
   /* where is the product now? */
   fulfillment: {
-    refunded?: boolean|"true"|"false";
+    refunded?: boolean;
     request: string; // string|EnumOrderIssue;
     issue: string; // string|EnumOrderIssue;
     status: string; // string|EnumFulfillments;
@@ -93,6 +93,7 @@ export interface OrderAddress{
   type:'order'|string,
   parent: number,
   when: Date,
+  lastMinute?: boolean, // ✅ Flag commande jour même
   hours: number,
   name: string,
   note?: string,
@@ -104,12 +105,12 @@ export interface OrderAddress{
     lat: number,
     lng: number
   },
-  shipped?: boolean|"true"|"false",
+  shipped?: boolean,
   shopper?: string,
   shopper_time?: string,
   priority?: number,
   position?: number,
-  deposit?: boolean|"true"|"false",
+  deposit?: boolean,
   bags?: number,
   estimated?: number
 }
@@ -185,7 +186,7 @@ export class Order {
       lat: number,
       lng: number
     },
-    collected: boolean|"true"|"false",
+    collected: boolean,
     collected_timestamp: Date,
     gift_timestamp:Date,
 
@@ -243,6 +244,7 @@ export class Order {
     // boolean stuffs
     dest.shipping.deposit = (String(dest.shipping.deposit) == 'true');
     dest.shipping.shipped = (String(dest.shipping.shipped) == 'true');
+    dest.shipping.lastMinute = (String(dest.shipping.lastMinute) == 'true'); // ✅ Normaliser lastMinute
 
 
     dest.vendors.forEach((vendor) => {
