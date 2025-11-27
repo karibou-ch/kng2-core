@@ -66,6 +66,7 @@ export class CartItem {
   active: boolean; // subscription
   timestamp: Date;
   timelimit?: number;
+  lastMinute?: boolean; // ✅ Flag produit lastMinute
 
   displayName?: string;
   email?: string;
@@ -124,6 +125,7 @@ export class CartItem {
       thumb: product.photo.url,
       price: product.getPrice(),
       timelimit: product.attributes.timelimit||0,
+      lastMinute: product.attributes.lastMinute||false, // ✅ Copier flag lastMinute
       finalprice: product.getPrice(),
       category: {
         slug: product.categories.slug,
@@ -192,11 +194,13 @@ export class CartItem {
 // get a list of Items in regard of the context
 // - forSubscription ==> item with frequency
 // - onSubscription ==> item with active subscription (default none)
+// - lastMinute ==> filter only lastMinute items
 //
 export interface CartItemsContext {
   address?:DepositAddress | UserAddress,
   forSubscription?:boolean| undefined,
   onSubscription?:boolean,
+  lastMinute?:boolean,
   hub?: string
 }
 
@@ -373,6 +377,7 @@ class CartContext extends CartModel {
   payment: UserCard;
   currentShippingDay: Date;
   currentShippingTime: number;
+  currentShippingLastMinute?: boolean;
   subscriptionsContent: CartSubscription[];
   shared?: CartModel;
   uuid?: string;
@@ -382,6 +387,8 @@ class CartContext extends CartModel {
     super();
     this.address = new DepositAddress({});
     this.payment = new UserCard();
+    // ✅ FIXED: lastMinute TOUJOURS false par défaut
+    this.currentShippingLastMinute = false;
   }
 }
 
@@ -980,11 +987,19 @@ export class CartService {
   // by default all items without active subscription
   // forSubscription => only for "week" or "month" item
   // onSubscription => include active items
+  // lastMinute => only items available for last minute (non-destructive filter)
   getItems(ctx:CartItemsContext) {
     const onsubs =ctx.onSubscription ? this.cache.items.filter(item => item.active): [];
-    const items = (this.cache.items||[])
-    return items.filter(item =>  (!ctx.hub||item.hub == ctx.hub))
-                .filter(item =>  (ctx.forSubscription==undefined)||(ctx.forSubscription==!!item.frequency)).concat(onsubs);
+    let items = (this.cache.items||[])
+    items = items.filter(item =>  (!ctx.hub||item.hub == ctx.hub))
+                 .filter(item =>  (ctx.forSubscription==undefined)||(ctx.forSubscription==!!item.frequency)).concat(onsubs);
+
+    // ✅ FILTRE LASTMINUTE : Non-destructeur, filtre uniquement si demandé
+    if (ctx.lastMinute) {
+      items = items.filter(item => item.lastMinute === true);
+    }
+
+    return items;
   }
 
   getName(){
@@ -1046,6 +1061,21 @@ export class CartService {
   }
   getCurrentShippingTime() {
     return this.cache.currentShippingTime;
+  }
+
+  isCurrentShippingLastMinute() {
+    return !!this.cache.currentShippingLastMinute;
+  }
+
+  selectLastMinuteShipping(now: Date = new Date()) {
+    const hub = this.defaultConfig.shared.hub;
+    const availability = this.$calendar.isLastMinuteAvailable(hub, { now });
+    if (!availability.available) {
+      throw new Error('Last minute shipping is not available');
+    }
+    const when =  now;
+    const hours = availability.hours || this.$calendar.getDefaultTimeByDay(when, hub);
+    this.setShippingDay(when, hours, { lastMinute: true });
   }
 
   getCurrentShippingTimePrice() {
@@ -1174,6 +1204,8 @@ export class CartService {
     const nextShippingDay = this.$calendar.nextShippingDay(this.defaultConfig.shared.hub, this.currentUser);
     const currentShippingDay = this.$calendar.potentialShippingWeek(this.defaultConfig.shared.hub)[0];
     this.cache.currentShippingDay = new Date(nextShippingDay || currentShippingDay);
+    // ✅ FIXED: lastMinute JAMAIS activé par défaut au load
+    this.cache.currentShippingLastMinute = false;
 
     this.cache.updated = new Date('1990-12-01T00:00:00');
     this.cache.uuid = shared;
@@ -1193,15 +1225,19 @@ export class CartService {
       const day = new Date(fromLocal.currentShippingDay || nextShippingDay || currentShippingDay);
       // ✅ MIGRATION: Utiliser CalendarService au lieu de defaultConfig
       const hours = this.$calendar.getDefaultTimeByDay(day, this.defaultConfig.shared.hub);
-      this.setShippingDay(day,hours);
+      // ✅ FIXED: NE JAMAIS charger lastMinute depuis localStorage
+      // lastMinute est une exception temporaire qui doit être activée manuellement
+      this.setShippingDay(day, hours, { lastMinute: false });
 
       //
       // get state from pending order
       if(this.currentPendingOrder){
         const day = new Date(this.currentPendingOrder.shipping.when);
         // ✅ MIGRATION: Utiliser CalendarService au lieu de defaultConfig
-      const hours = this.$calendar.getDefaultTimeByDay(day, this.defaultConfig.shared.hub);
-        this.setShippingDay(day,hours);
+        const hours = this.$calendar.getDefaultTimeByDay(day, this.defaultConfig.shared.hub);
+        // ✅ FIXED: NE JAMAIS charger lastMinute depuis pending order
+        // Si c'était lastMinute hier, ce n'est plus valide aujourd'hui
+        this.setShippingDay(day, hours, { lastMinute: false });
       }
 
       //
@@ -1209,7 +1245,7 @@ export class CartService {
       if (this.cache.currentShippingDay < nextShippingDay) {
         const day = nextShippingDay;
         // ✅ MIGRATION: Utiliser CalendarService au lieu de defaultConfig
-      const hours = this.$calendar.getDefaultTimeByDay(day, this.defaultConfig.shared.hub);
+        const hours = this.$calendar.getDefaultTimeByDay(day, this.defaultConfig.shared.hub);
         this.setShippingDay(day,hours);
       }
 
@@ -1585,16 +1621,20 @@ export class CartService {
     this.save({ action: CartAction.CART_PAYMENT });
   }
 
-  setShippingDay(newDate: Date, hours: number) {
+  setShippingDay(newDate: Date, hours: number, options: { lastMinute?: boolean } = {}) {
+    const lastMinute = !!options.lastMinute;
     if (newDate.equalsDate(this.cache.currentShippingDay) &&
-        this.cache.currentShippingTime == hours) {
+        this.cache.currentShippingTime == hours &&
+        !!this.cache.currentShippingLastMinute === lastMinute) {
       return;
     }
     this.cache.currentShippingDay = newDate;
     this.cache.currentShippingTime = hours;
+    this.cache.currentShippingLastMinute = lastMinute;
     const data = {
       currentShippingDay:newDate,
-      currentShippingTime:hours
+      currentShippingTime:hours,
+      currentShippingLastMinute:lastMinute
     }
     this.save({ action: CartAction.CART_SHIPPING, data});
   }
@@ -1659,6 +1699,8 @@ export class CartService {
       if(days.some(one => one.equalsDate(day))) {
         this.cache.currentShippingDay = day;
         this.cache.currentShippingTime = hours;
+        // ✅ FIXED: lastMinute JAMAIS activé depuis pending order
+        this.cache.currentShippingLastMinute = false;
       }
     }
 
