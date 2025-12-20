@@ -708,7 +708,7 @@ export class CalendarService {
     }
 
     const {
-      days = targetHub.uncapturedTimeLimit || 6,
+      days = (targetHub.uncapturedTimeLimit || 6),
       user = null,
       currentRanks = null,
       config = null,
@@ -717,7 +717,7 @@ export class CalendarService {
     } = options;
 
     // ✅ COMPAT: Handle null days like the old function
-    const effectiveDays = (days === null) ? (targetHub.uncapturedTimeLimit || 6) : days;
+    const effectiveDays = days;
 
     const result = [];
 
