@@ -61,6 +61,7 @@ export class CartItem {
   }
   shared?: boolean;
   deleted?: boolean;
+  selected?: boolean;
   bundle?: boolean|"true"|"false";
   frequency?: CartItemFrequency|string|boolean; // subscription
   active: boolean; // subscription
@@ -217,7 +218,11 @@ export interface CartSubscriptionProductItem{
   hub: string,
   part: string,
   variant?:string,
-  error?:string
+  error?:string,
+  deleted?: boolean,
+  audio?: string,
+  selected?: boolean,
+  updated?: boolean
 }
 
 export interface CartSubscriptionServiceItem{
