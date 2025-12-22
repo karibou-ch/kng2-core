@@ -1,0 +1,153 @@
+# Règles et Conventions kng2-core
+
+## 1. Objectif du Projet
+
+`kng2-core` est une bibliothèque Angular partagée qui fournit les services, modèles et utilitaires communs pour les applications Karibou.ch (karibou-seed, kio2-admin, etc.).
+
+* Vérifier la racine du projet `~/nodejs/karibou.ch/kng2-core` avant un git ou la création de fichiers.
+
+## 2. Structure du Projet
+
+```
+kng2-core/
+├── src/                    # Sources TypeScript
+│   ├── index.ts            # Point d'entrée principal (exports)
+│   ├── kng2-core.module.ts # Module Angular principal
+│   ├── *.service.ts        # Services (CartService, UserService, etc.)
+│   ├── config.ts           # Configuration et modèles
+│   └── order/              # Sous-module commandes
+├── dist/                   # Builds versionnés (ignoré par git)
+│   ├── v12/                # Build Angular 12
+│   ├── v15/                # Build Angular 15
+│   └── v16/                # Build Angular 16 (futur)
+├── ng-package.json         # Configuration ng-packagr
+├── tsconfig.lib.json       # Config TypeScript pour build
+└── angular.json            # Configuration Angular CLI
+```
+
+## 3. Système de Builds Versionnés
+
+### 3.1. Principe
+
+Le projet utilise des **branches git** pour gérer les différentes versions Angular :
+
+| Branche | Version Angular | Output Build |
+|---------|-----------------|--------------|
+| `master` / `oe-v15` | Angular 15 | `dist/v15/` |
+| `oe-v12` | Angular 12 | `dist/v12/` |
+| `oe-v16` | Angular 16 | `dist/v16/` |
+
+### 3.2. Configuration par Branche
+
+Chaque branche doit avoir son `ng-package.json` avec le bon `dest` :
+
+```json
+// ng-package.json sur branche oe-v15
+{
+  "dest": "./dist/v15"
+}
+
+// ng-package.json sur branche oe-v12
+{
+  "dest": "./dist/v12"
+}
+```
+
+### 3.3. Pourquoi des Sous-Dossiers Séparés ?
+
+**⚠️ CRITIQUE** : `ng-packagr` nettoie le dossier `dest` avant chaque build.
+
+| Configuration | Comportement |
+|---------------|--------------|
+| `dest: "./dist"` | ❌ **Efface TOUT** `dist/` → perd les autres versions |
+| `dest: "./dist/v15"` | ✅ **Efface seulement** `dist/v15/` → préserve les autres |
+
+### 3.4. Workflow de Build Multi-Versions
+
+```bash
+# 1. Build version 15 (branche principale)
+git checkout master      # ou oe-v15
+npm run build            # → dist/v15/
+
+# 2. Build version 12 (ancienne version)
+git checkout oe-v12
+npm run build            # → dist/v12/
+                         # → dist/v15/ ✅ PRÉSERVÉ !
+
+# 3. Revenir sur master
+git checkout master
+
+# Résultat : dist/ contient v12/ ET v15/
+```
+
+### 3.5. Consommation par les Applications Clientes
+
+Les applications consomment la version appropriée via `package.json` :
+
+```json
+// karibou-seed/package.json (Angular 15)
+{
+  "dependencies": {
+    "kng2-core": "file:../kng2-core/dist/v15"
+  }
+}
+
+// kio2-admin avec Angular 12
+{
+  "dependencies": {
+    "kng2-core": "file:../kng2-core/dist/v12"
+  }
+}
+```
+
+### 3.6. Fichiers à Modifier par Branche
+
+Lors de la création d'une nouvelle branche de version :
+
+1. **`ng-package.json`** :
+   ```json
+   {
+     "dest": "./dist/vXX"
+   }
+   ```
+
+2. **`package.json`** :
+   ```json
+   {
+     "version": "XX.0.0",
+     "peerDependencies": {
+       "@angular/common": ">=XX.0.0 <YY.0.0",
+       "@angular/core": ">=XX.0.0 <YY.0.0"
+     }
+   }
+   ```
+
+3. **`tsconfig.json`** (paths pour tests locaux) :
+   ```json
+   {
+     "paths": {
+       "kng2-core": ["dist/vXX/kng2-core"],
+       "kng2-core/*": ["dist/vXX/kng2-core/*"]
+     }
+   }
+   ```
+
+## 4. Persistence du Dossier dist/
+
+Le dossier `dist/` est dans `.gitignore` :
+- ✅ **Persiste** entre les checkouts de branches
+- ✅ **N'est pas versionné** dans git
+- ✅ Permet la **coexistence** de plusieurs builds
+
+## 5. Conventions de Code
+
+- **Services** : Suffixe `.service.ts`, injection via constructeur
+- **Modèles** : Interfaces dans `config.ts` ou fichiers dédiés
+- **Exports** : Tout doit être exporté via `src/index.ts`
+- **Tests** : Suffixe `.spec.ts`, même dossier que le fichier testé
+
+## 6. CalendarService - API Centralisée
+
+Voir la documentation complète dans les règles du projet karibou-api pour l'API Calendar.
+
+Le `CalendarService` dans kng2-core doit être synchronisé avec `app/calendar.js` du backend.
