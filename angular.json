@@ -34,7 +34,7 @@
             "karmaConfig": "./karma.conf.js"
           }
         }
+          }
+        }
       }
-    }
-  }
 }
