@@ -523,6 +523,40 @@ export class CartService {
     )
   }
 
+  /**
+   * Réinitialise le cycle de facturation (Admin only)
+   * 
+   * @param subscription - L'abonnement à modifier
+   * @param toDate - 'now' pour immédiat, ou une Date future (utilise trial_end) - REQUIRED
+   * 
+   * COMPORTEMENT STRIPE (trial_end pour date future) :
+   * > "Adding a trial → Stripe sets the anchor date to the end of the trial"
+   * 
+   * @see https://stripe.com/docs/billing/subscriptions/billing-cycle#changing
+   */
+  subscriptionResetBillingCycle(subscription: CartSubscription, toDate: Date | 'now'): Observable<CartSubscription> {
+    const body = {
+      toDate: toDate === 'now' ? 'now' : toDate.toISOString()
+    };
+    
+    return this.$http.post<CartSubscription>(this.defaultConfig.API_SERVER + `/v1/cart/subscription/${subscription.id}/reset-billing`, body, {
+      headers: this.headers,
+      withCredentials: (configCors())
+    }).pipe(
+      tap(subscription=> {
+        //
+        // server subscription values
+        this.cache.subscriptionsContent = this.cache.subscriptionsContent || [];
+        const indexSub = this.cache.subscriptionsContent.findIndex(sub => sub.id == subscription.id);
+        if (indexSub >= 0) {
+          Object.assign(this.cache.subscriptionsContent[indexSub], subscription);
+        }
+        this.subscription$.next(this.cache.subscriptionsContent);
+        return subscription;
+      })
+    )
+  }
+
   subscriptionCancel(subscription:CartSubscription): Observable<CartSubscription> {
     return this.$http.post<CartSubscription>(this.defaultConfig.API_SERVER + `/v1/cart/subscription/${subscription.id}/cancel`, {}, {
       headers: this.headers,
