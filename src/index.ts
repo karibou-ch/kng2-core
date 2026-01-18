@@ -11,7 +11,13 @@ export { CalendarService, ProductOrderTiming } from './calendar.service';
 export { AnalyticsService, Metrics } from './metrics.service';
 
 export { Assistant,
-         AssistantService } from './assistant.service';
+         AssistantService,
+         AssistantState,
+         AssistantStep,
+         AssistantMessage,
+         ClientDiscussion,
+         Usage,
+         parseSteps } from './assistant.service';
 
 export { CartAction,
          CartConfig,
