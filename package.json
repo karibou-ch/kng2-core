@@ -1,11 +1,11 @@
 {
   "name": "kng2-core",
-  "version": "12.0.0",
+  "version": "12.0.4",
   "description": "The module goal mainly provide a kickstart kit to make every new idea/motivation web application/ionic declinaison for karibou.ch without friction!",
   "scripts": {
     "ng": "ng",
     "predeploy": "npm version patch --no-git-tag-version",
-    "deploy": "npm run predeploy && npm run build",
+    "deploy": "npm run build && npm publish ./dist/v12",
     "start": "ng serve",
     "build": "ng build",
     "test": "ng test",
