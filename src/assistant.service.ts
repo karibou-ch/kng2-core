@@ -1,4 +1,4 @@
-import { HttpClient, HttpErrorResponse, HttpHeaders, HttpRequest, HttpEventType } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse, HttpHeaders } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Config, config, configCors } from './config';
 
@@ -202,7 +202,37 @@ export class AssistantService {
    */
   sendPrompt(prompt: string, options?: { agent?: string, ragname?: string, thinking?: boolean }) {
     this.promptEventSubject.next(prompt);
-    return this.chat({ q: prompt, agent: options?.agent, ragname: options?.ragname, thinking: options?.thinking });
+    return this.chatWithPrompt(prompt, options);
+  }
+
+  /**
+   * ✅ Chat API avec signature originale (to-migrate-here/kng-assistant-ai.service.ts)
+   * Permet la migration progressive vers la nouvelle API
+   */
+  chatWithPrompt(prompt: string, options?: { runAgent?: string, ragname?: string, thinking?: boolean, hub?: string }): Observable<any> {
+    const { runAgent, ragname, thinking, hub } = options || {};
+    prompt = (prompt || '').trim();
+
+    // Validation comme dans l'original
+    const isShort = ['continue', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'c', 'help', 'ci', 'cc', 'cm', 'cs', 'edgar', 'help'].indexOf(prompt) > -1;
+    if (!isShort && (prompt.length < 3 || typeof prompt !== 'string')) {
+      return of('');
+    }
+
+    // ✅ Convertir vers le format params de chat()
+    const params: any = {
+      q: prompt,
+      agent: runAgent,
+      hub: hub,
+      thinking: thinking
+    };
+
+    // FIXME: ragname n'est pas encore supporté par le backend karibou
+    // if (ragname) {
+    //   params.ragname = ragname;
+    // }
+
+    return this.chat(params);
   }
 
   /**
@@ -227,14 +257,22 @@ export class AssistantService {
           });
         }
 
-        // Update StateGraph discussion if response has messages
+        // Update discussion$
         if (res.messages) {
           this.discussionSubject.next(res);
-          const state: Partial<AssistantState> = {
+
+          // ✅ IMPORTANT: Mettre à jour state$ SANS status pour le réinitialiser
+          // Ceci arrête la boucle: state$.status devient undefined, donc !== 'end'
+          const responseAgent = res.agent;
+          const finalAgent = responseAgent || opts?.agent || this.state.agent;
+          this.stateSubject.next({
             usage: res.usage || this.defaultUsage,
-            agent: res.agent || opts.agent || this.state.agent,
-          };
-          this.stateSubject.next({ ...this.state, ...state });
+            agent: finalAgent,
+            // NOTE: Ne PAS inclure status ici! Le laisser undefined arrête la boucle.
+            status: 'init', // Réinitialiser à 'init' après history
+            content: undefined,
+            steps: undefined
+          });
         } else {
           // Legacy format: array of messages
           this.assistants$.next(res);
@@ -253,6 +291,7 @@ export class AssistantService {
 
   /**
    * ✅ Delete a message from history
+   * Endpoint: POST /v1/assistant/history/:agent/:discussion/:id
    */
   historyDel(messageId: string, agent?: string): Observable<any> {
     if (!messageId) {
@@ -260,7 +299,8 @@ export class AssistantService {
     }
 
     const agentParam = agent || 'current';
-    return this.$http.post(this.defaultConfig.API_SERVER + `/v1/assistant/history/none/${messageId}`, {}, {
+    const discussion = this.discussionSubject.value?.id || 'none';
+    return this.$http.post(this.defaultConfig.API_SERVER + `/v1/assistant/history/${agentParam}/${discussion}/${messageId}`, {}, {
       headers: this.headers,
       withCredentials: (configCors())
     }).pipe(
@@ -268,7 +308,6 @@ export class AssistantService {
         this.discussionSubject.next(res);
       }),
       catchError((err: HttpErrorResponse) => {
-        // FIXME: Add notify() method for error display
         console.error('historyDel error:', err);
         return of(err);
       })
@@ -368,220 +407,195 @@ export class AssistantService {
 
   /**
    * ✅ Update existing temporary assistant message
+   * IMPORTANT: Doit émettre via discussionSubject.next() pour notifier les subscribers
    */
   private updateTemporaryAssistantMessage(content: string, steps?: AssistantStep[]) {
     const currentDiscussion = this.discussionSubject.value;
-    const messages = currentDiscussion.messages;
+    const messages = [...currentDiscussion.messages]; // Créer une copie pour immutabilité
 
     const assistantMsgIndex = messages.findIndex(msg =>
-      msg.role === 'assistant' && msg.id.startsWith('temp-assistant-')
+      msg.role === 'assistant' && msg.id?.startsWith('temp-assistant-')
     );
 
     if (assistantMsgIndex !== -1) {
-      const existingMessage = messages[assistantMsgIndex];
-      existingMessage.content = content;
-      if (steps) {
-        existingMessage.steps = steps;
-      }
+      // Créer un nouveau message avec le contenu mis à jour (immutabilité)
+      messages[assistantMsgIndex] = {
+        ...messages[assistantMsgIndex],
+        content: content,
+        ...(steps && { steps })
+      };
+
+      // ✅ Émettre la discussion mise à jour pour notifier l'UI
+      this.discussionSubject.next({
+        ...currentDiscussion,
+        messages
+      });
     }
   }
 
-  //
-  // REST api wrapper with streaming support
-  chat(params: any): Observable<any> {
-    const options: any = {
-      credentials: 'include',
-      method: 'post',
-      cache: "no-cache",
-      headers: {
-        "Content-Type": "application/json",
-        "k-dbg": AnalyticsService.FBP,
-        'ngsw-bypass': 'true'
-      }
-    };
-    if (configCors()) {
-      options.mode = 'cors';
-    }
-    if (params.body) {
-      options.body = JSON.stringify(params.body)
-      delete params.body;
-    }
-
-    //
-    // force no-cache
-    params.rnd = Date.now();
-    const query = new URLSearchParams(params || {});
-
-    // ✅ Add temporary user message
-    const prompt = params.q || params.query || '';
+  /**
+   * ✅ Chat API - Wrapper principal pour envoyer une question
+   * Migré depuis to-migrate-here/kng-assistant-ai.service.ts
+   *
+   * @param params - { q: string, agent?: string, hub?: string, thinking?: boolean, ragname?: string }
+   */
+  chat(params: { q: string, agent?: string, hub?: string, thinking?: boolean, ragname?: string }): Observable<string> {
+    const prompt = (params.q || '').trim();
     const agent = params.agent || 'current';
-    if (prompt) {
-      this.addTemporaryUserMessage(prompt, agent);
+
+    // Validation des prompts courts
+    const isShort = ['continue','1','2','3','4','5','6','7','8','9','c','help','ci','cc','cm','cs','edgar','help'].indexOf(prompt) > -1;
+    if (!isShort && (prompt.length < 3 || typeof prompt !== 'string')) {
+      return of('');
+    }
+
+    // Construire le body pour le stream
+    const requestBody: any = {
+      query: prompt,
+      agent: agent,
+      thinking: params.thinking || false,
+      hub: params.hub
+    };
+    if (params.ragname) {
+      requestBody.ragname = params.ragname;
+    }
+
+    // URL avec agent parameter
+    const streamUrl = this.defaultConfig.API_SERVER + `/v1/assistant/thread`;
+
+    return this.stream(streamUrl, requestBody);
+  }
+
+  /**
+   * ✅ Stream API - Gère le streaming SSE avec XHR
+   * Note: Angular HttpClient ne supporte pas le streaming de texte progressif,
+   * on utilise XHR pour avoir accès à responseText pendant le téléchargement.
+   */
+  private stream(url: string, body: any): Observable<string> {
+    return new Observable<string>(observer$ => {
+      // ✅ Create temporary user message and update state
+      const agentParam = body.agent || 'current';
+      this.addTemporaryUserMessage(body.query, agentParam);
+
       this.updateState({
         status: 'prompt',
-        content: prompt,
-        agent: agent,
-        thinking: params.thinking || false
+        content: body.query,
+        agent: body.agent || this.stateSubject.value.agent,
+        thinking: body.thinking || false
       });
-    }
 
-    return new Observable<any>(observer => {
       const xhr = new XMLHttpRequest();
-      let messageCreated = false;
+      let lastIndex = 0;
       let stepsAccum: AssistantStep[] = [];
       let contentAccum = '';
+      let messageCreated = false;
 
-      try {
-        xhr.open('POST', this.defaultConfig.API_SERVER + '/v1/assistant/thread?' + query.toString(), true);
-        //
-        // remove it for no CORS
-        if (configCors()) {
-          xhr.withCredentials = true;
-        }
-        xhr.setRequestHeader('ngsw-bypass', 'true');
-        xhr.setRequestHeader("k-dbg", AnalyticsService.FBP);
-        xhr.setRequestHeader('Content-Type', 'application/json');
-        xhr.setRequestHeader('Accept', 'text/event-stream');
-        xhr.setRequestHeader('Cache-Control', 'no-cache');
-        // we must make use of this on the server side if we're working with Android - because they don't trigger
-        // readychange until the server connection is closed
-        xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+      xhr.open('POST', url, true);
+      xhr.setRequestHeader('Content-Type', 'application/json');
+      xhr.setRequestHeader('Accept', 'text/event-stream');
+      xhr.setRequestHeader('Cache-Control', 'no-cache');
+      xhr.setRequestHeader('ngsw-bypass', 'true');
+      xhr.setRequestHeader('k-dbg', AnalyticsService.FBP);
 
-        //
-        // decode json data
-        // => /(${anchor}:)[^{]*(.*?\})/gi
-        const anchor = params.anchor || 'zqyw';
-        const jsonEx = new RegExp(`(${anchor}:)(.*)`, "gim");
-        //const skuBlock = /{{(.*?)}}/ig;
-        const skuBlock = /{{([\d,]*?)}}|\[([\d,]*?)\]/ig;
-        let responseText = '';
-        let fullcontent = '';
-
-        let lastIndex = 0;
-        xhr.onprogress = () => {
-          const index = xhr.responseText.length;
-          if (lastIndex == index) {
-            return;
-          }
-
-          // ✅ Create temp assistant message on first chunk
-          if (!messageCreated) {
-            this.createTemporaryAssistantMessage();
-            messageCreated = true;
-          }
-
-          responseText = xhr.responseText;
-          const text = responseText.substring(lastIndex).replace(skuBlock, '');
-          const json = jsonEx.exec(text);
-          let tool = {};
-          if (json && json[2]) {
-            try { tool = JSON.parse(`${json[2]}`); } catch (err) { }
-          }
-
-          lastIndex = index;
-          fullcontent += text;
-
-          // ✅ Parse steps incrementally
-          const chunkSteps = parseSteps(text);
-          if (chunkSteps.length) {
-            stepsAccum = [...stepsAccum, ...chunkSteps];
-            this.updateState({
-              status: 'running',
-              steps: stepsAccum,
-              agent: agent
-            });
-          }
-
-          // ✅ Update content and temp message
-          const cleanedText = this.cleanText(text);
-          if (cleanedText && cleanedText.trim()) {
-            contentAccum += cleanedText;
-            this.updateState({
-              status: 'running',
-              content: contentAccum,
-              agent: agent
-            });
-            this.updateTemporaryAssistantMessage(contentAccum, stepsAccum);
-          }
-
-          observer.next({ text: text.replace(jsonEx, ''), tool }); // Envoyer le chunk au subscriber
-        };
-
-        xhr.onload = () => {
-          // xhr.responseText;
-          const skus = responseText.match(skuBlock);
-          let tool = {};
-
-          //
-          // our template content
-          if (skus && skus.length) {
-            tool = skus.map(match => match.replace(/{{|}}/g, '').split(',')).flat().map(sku => (+sku)).filter(sku => sku);
-          }
-
-          // ✅ Update state to end
-          this.updateState({
-            status: 'end',
-            agent: agent,
-            content: undefined,
-            steps: undefined
-          });
-
-          //observer.next({text:fullcontent,tool});
-          observer.complete();
-        };
-
-        xhr.onerror = () => {
-          this.updateState({
-            status: 'error',
-            error: 'network',
-            agent: agent,
-            content: undefined,
-            steps: undefined
-          });
-          observer.error(new TypeError('Network request error'));
-          observer.complete();
-        }
-        xhr.ontimeout = () => {
-          this.updateState({
-            status: 'error',
-            error: 'timeout',
-            agent: agent,
-            content: undefined,
-            steps: undefined
-          });
-          observer.error(new TypeError('Network request timed out'));
-          observer.complete();
-        }
-
-        xhr.send(options.body);
-
-      } catch (err) {
-        console.log('---- err', err);
-        this.updateState({
-          status: 'error',
-          error: 'exception',
-          agent: agent
-        });
-        observer.error(err);
-        observer.complete();
+      if (configCors()) {
+        xhr.withCredentials = true;
       }
 
-      return {
-        abort() {
-          xhr.abort();
-        },
-        unsubscribe() {
+      // ✅ Streaming progressif via onprogress
+      xhr.onprogress = () => {
+        const index = xhr.responseText.length;
+        if (lastIndex === index) {
+          return;
         }
+
+        // Create temp assistant message on first chunk
+        if (!messageCreated) {
+          this.createTemporaryAssistantMessage();
+          messageCreated = true;
+        }
+
+        const textChunk = xhr.responseText.substring(lastIndex);
+        lastIndex = index;
+
+        // ✅ Parse steps incrementally
+        const chunkSteps = parseSteps(textChunk);
+        if (chunkSteps.length) {
+          stepsAccum = [...stepsAccum, ...chunkSteps];
+          this.updateState({
+            status: 'running',
+            steps: stepsAccum,
+            agent: body.agent
+          });
+        }
+
+        // ✅ Update content and temp message
+        const cleanedChunk = this.cleanText(textChunk);
+        if (cleanedChunk && cleanedChunk.trim()) {
+          contentAccum += cleanedChunk;
+          this.updateState({
+            status: 'running',
+            content: contentAccum,
+            agent: body.agent
+          });
+          this.updateTemporaryAssistantMessage(contentAccum, stepsAccum);
+        }
+
+        observer$.next(cleanedChunk);
+      };
+
+      xhr.onload = () => {
+        // ✅ Stream completed
+        this.updateState({
+          status: 'end',
+          agent: body.agent || this.stateSubject.value.agent,
+          content: undefined,
+          steps: undefined
+        });
+        observer$.complete();
+      };
+
+      xhr.onerror = () => {
+        this.updateState({
+          status: 'error',
+          error: 'network',
+          agent: body.agent || this.stateSubject.value.agent,
+          content: undefined,
+          steps: undefined
+        });
+        observer$.error(new TypeError('Network request error'));
+      };
+
+      xhr.ontimeout = () => {
+        this.updateState({
+          status: 'error',
+          error: 'timeout',
+          agent: body.agent || this.stateSubject.value.agent,
+          content: undefined,
+          steps: undefined
+        });
+        observer$.error(new TypeError('Network request timed out'));
+      };
+
+      // ✅ Send request with JSON body
+      xhr.send(JSON.stringify(body));
+
+      // ✅ Cleanup function
+      return () => {
+        xhr.abort();
       };
     });
   }
 
   /**
-   * ✅ Whisper transcription API
+   * ✅ Whisper transcription API - Async version
+   * Migré depuis to-migrate-here/kng-assistant-ai.service.ts
+   *
+   * @param state - { blob?: Blob, chunk?: Blob, type?: string, silent?: boolean, previousText?: string }
+   * @returns Promise<string> - La transcription
    */
-  whisper(state: { blob?: Blob, chunk?: Blob, type?: string, silent?: boolean, previousText?: string }): Observable<string> {
+  async whisper(state: { blob?: Blob, chunk?: Blob, type?: string, silent?: boolean, previousText?: string }): Promise<string> {
     if ((!state?.blob && !state?.chunk) || state.silent) {
-      return of('');
+      return '';
     }
 
     const formData = new FormData();
@@ -589,33 +603,52 @@ export class AssistantService {
     formData.append('type', state.type || 'prompt');
     formData.append('file', 'audio.wav');
 
+    // ✅ Ajouter la transcription précédente comme contexte pour Whisper
     if (state.previousText) {
       formData.append('previousText', state.previousText);
     }
 
-    // FIXME: Backend endpoint should be /v1/assistant/transcribe
-    return this.$http.post<{ transcription: string }>(this.defaultConfig.API_SERVER + '/v1/assistant/transcribe', formData, {
-      withCredentials: (configCors())
-    }).pipe(
-      map(resp => {
-        const transcription = resp.transcription || '';
-        this.transcriptionsSubject.next(transcription);
-        return transcription;
-      }),
-      catchError((err: HttpErrorResponse) => {
-        // FIXME: Add notify() method for error display with proper error messages
-        console.error('whisper error:', err);
-        let errorMessage = 'Erreur lors de la transcription audio';
-        if (err.status === 413) {
-          errorMessage = err.error?.message || 'Le fichier audio est trop volumineux';
-        } else if (err.status === 400) {
-          errorMessage = err.error?.error || err.error?.message || 'Format audio non supporté';
-        } else if (err.status === 0) {
-          errorMessage = 'Erreur de connexion au serveur';
-        }
-        return throwError(new Error(errorMessage));
-      })
-    );
+    try {
+      const resp = await this.$http.post<{ transcription: string }>(
+        this.defaultConfig.API_SERVER + '/v1/assistant/transcribe',
+        formData,
+        { withCredentials: configCors() }
+      ).toPromise();
+
+      const transcription = resp?.transcription || '';
+      this.transcriptionsSubject.next(transcription);
+      return transcription;
+
+    } catch (error: any) {
+      console.error('❌ Erreur transcription:', error);
+
+      // ✅ Extraire le message d'erreur du serveur
+      let errorMessage = 'Erreur lors de la transcription audio';
+      let errorIcon = 'exclamation-triangle';
+
+      if (error.status === 413) {
+        // Erreur 413 - Fichier trop volumineux
+        errorMessage = error.error?.message || 'Le fichier audio est trop volumineux';
+        const limit = error.error?.limit || '10MB';
+        errorMessage += ` (limite: ${limit})`;
+        errorIcon = 'exclamation-octagon';
+      } else if (error.status === 400) {
+        // Erreur 400 - Format non supporté ou autre erreur
+        errorMessage = error.error?.error || error.error?.message || 'Format audio non supporté';
+      } else if (error.status === 0) {
+        // Erreur réseau
+        errorMessage = 'Erreur de connexion au serveur';
+      } else {
+        // Autres erreurs
+        errorMessage = error.error?.message || error.message || errorMessage;
+      }
+
+      // ✅ Afficher la notification à l'utilisateur
+      this.notify(errorMessage, 'danger', errorIcon, 10000);
+
+      // Propager l'erreur pour que les composants puissent réagir
+      throw new Error(errorMessage);
+    }
   }
 
   /**
@@ -641,17 +674,24 @@ export class AssistantService {
     })
   }
 
-  // FIXME: Add notify() method for UI notifications
-  // notify(message: string, variant = 'primary', icon = 'info-circle', duration = 9000) {
-  //   // Implementation depends on UI library (Shoelace, Material, etc.)
-  //   // For Shoelace:
-  //   // const alert = Object.assign(document.createElement('sl-alert'), {
-  //   //   variant,
-  //   //   closable: true,
-  //   //   duration: duration,
-  //   //   innerHTML: `<sl-icon name="${icon}" slot="icon"></sl-icon>${message}`
-  //   // });
-  //   // document.body.append(alert);
-  //   // return alert.toast();
-  // }
+  /**
+   * ✅ Notify method - stub pour compatibilité avec l'original
+   * FIXME: Implémenter avec Web Awesome alerts quand disponible
+   */
+  notify(message: string, variant = 'primary', icon = 'info-circle', duration = 9000) {
+    // Pour l'instant, juste log en console
+    const prefix = variant === 'danger' ? '❌' : variant === 'warning' ? '⚠️' : 'ℹ️';
+    console.log(`${prefix} [AssistantService] ${message}`);
+
+    // FIXME: Implémenter avec Web Awesome ou autre UI library
+    // Exemple pour Web Awesome:
+    // const alert = Object.assign(document.createElement('wa-alert'), {
+    //   variant,
+    //   closable: true,
+    //   duration: duration,
+    //   innerHTML: `<wa-icon name="${icon}" slot="icon"></wa-icon>${message}`
+    // });
+    // document.body.append(alert);
+    // return alert.toast();
+  }
 }
