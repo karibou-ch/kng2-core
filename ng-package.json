@@ -4,5 +4,5 @@
   "lib": {
     "entryFile": "src/index.ts"
   },
-  "dest": "./dist/v12"
+  "dest": "./dist/v15"
 }
