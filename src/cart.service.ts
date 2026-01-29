@@ -525,20 +525,20 @@ export class CartService {
 
   /**
    * Réinitialise le cycle de facturation (Admin only)
-   * 
+   *
    * @param subscription - L'abonnement à modifier
    * @param toDate - 'now' pour immédiat, ou une Date future (utilise trial_end) - REQUIRED
-   * 
+   *
    * COMPORTEMENT STRIPE (trial_end pour date future) :
    * > "Adding a trial → Stripe sets the anchor date to the end of the trial"
-   * 
+   *
    * @see https://stripe.com/docs/billing/subscriptions/billing-cycle#changing
    */
   subscriptionResetBillingCycle(subscription: CartSubscription, toDate: Date | 'now'): Observable<CartSubscription> {
     const body = {
       toDate: toDate === 'now' ? 'now' : toDate.toISOString()
     };
-    
+
     return this.$http.post<CartSubscription>(this.defaultConfig.API_SERVER + `/v1/cart/subscription/${subscription.id}/reset-billing`, body, {
       headers: this.headers,
       withCredentials: (configCors())
@@ -809,15 +809,17 @@ export class CartService {
   // FIXME, it should be done by the server
   clearAfterOrder(hub:string, order?:Order,contract?:CartSubscription) {
     //
-    // protect active items from subscriptions
+    // For regular orders: keep items from other hubs and items without frequency (subscription items)
     if(order){
       this.cache.items = this.cache.items.filter(item => item.hub != hub && !item.frequency);
     }
 
     //
-    // protect active items from subscriptions
+    // For contracts/subscriptions: clear ALL items from this hub
+    // Note: items used for subscription don't have frequency set in cache
+    // (frequency is only set during API payload preparation in checkout)
     if(contract) {
-      this.cache.items = this.cache.items.filter(item => item.hub != hub && !item.frequency && !item.frequency);
+      this.cache.items = this.cache.items.filter(item => item.hub != hub);
     }
     if(order && order.oid) {
       this.currentPendingOrder = order || this.currentPendingOrder;
