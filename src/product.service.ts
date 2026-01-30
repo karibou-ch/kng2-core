@@ -98,7 +98,7 @@ export class ProductService {
             headers: this.headers,
             withCredentials:true
         }).pipe(
-            map(products => products)
+          map(products => products.map(this.updateCache.bind(this)))
         );
     }
 

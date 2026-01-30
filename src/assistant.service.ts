@@ -19,6 +19,7 @@ export interface AssistantStep {
   tool?: string;
   status?: 'pending' | 'running' | 'completed' | 'error';
   result?: any;
+  data?: any;  // Données structurées (ex: pushProducts envoie data.type='products')
 }
 
 /**
@@ -42,6 +43,7 @@ export interface AssistantState {
   steps?: AssistantStep[];
   error?: string;
   thinking?: boolean;
+  data?: any;  // Données structurées envoyées par les tools (ex: pushProducts)
 }
 
 /**
@@ -521,10 +523,16 @@ export class AssistantService {
         const chunkSteps = parseSteps(textChunk);
         if (chunkSteps.length) {
           stepsAccum = [...stepsAccum, ...chunkSteps];
+
+          //
+          // ✅ Extraire data des steps (ex: pushProducts envoie data.type='products')
+          const stepWithData = chunkSteps.find((s: any) => s.data);
+
           this.updateState({
             status: 'running',
             steps: stepsAccum,
-            agent: body.agent
+            agent: body.agent,
+            data: stepWithData?.data  // Propager data au state
           });
         }
 
