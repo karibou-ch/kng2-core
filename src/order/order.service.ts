@@ -372,6 +372,41 @@ export class OrderService {
     );
   }
 
+  // move one order to another shipping day
+  // role:admin
+  move(order: Order, when: Date | string): Observable<Order> {
+    return this.http.post<Order>(this.config.API_SERVER + '/v1/orders/' + order.oid + '/move', { when }, {
+      headers: this.headers,
+      withCredentials: true
+    }).pipe(
+      map(order => this.updateCache(order)),
+      tap(order => this.order$.next(order))
+    );
+  }
+
+  // reassign an item to another vendor
+  // role:admin
+  updateItemVendor(order: Order, item: OrderItem, toVendor: string, title?: string, toSku?: number | string): Observable<Order> {
+    const params: any = {
+      sku: item.sku,
+      fromVendor: item.vendor,
+      toVendor
+    };
+    if (toSku !== undefined) {
+      params.toSku = toSku;
+    }
+    if (title !== undefined) {
+      params.title = title;
+    }
+    return this.http.post<Order>(this.config.API_SERVER + '/v1/orders/' + order.oid + '/items/vendor', params, {
+      headers: this.headers,
+      withCredentials: true
+    }).pipe(
+      map(order => this.updateCache(order)),
+      tap(order => this.order$.next(order))
+    );
+  }
+
   updateInvoices(oids:number[], amount?: number){
     return this.http.post<Order>(this.config.API_SERVER + '/v1/orders/invoices/update', {  oids, amount }, {
       headers: this.headers,
