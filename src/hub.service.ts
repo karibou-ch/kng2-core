@@ -13,12 +13,14 @@ import { ReplaySubject } from 'rxjs';
 import { map, tap, retryWhen, delay, take } from 'rxjs/operators';
 
 export class Hub {
+  hid: string;
   name: string;
   description: { en: string, fr: string, de: string};
 
   //
   // instance of HUB based on a list of slug alias
   slug: string;
+  alias: string[];
   updated: Date;
   logo: string;
   defaultTags: string;
