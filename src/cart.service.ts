@@ -47,6 +47,10 @@ export class CartState {
 // cart content
 export class CartItem {
 
+  // FIXME(CartItem constructor): Object.assign(this, item) est exécuté AVANT les conversions
+  // string→boolean (active, shared, bundle, discount). this.* garde les strings, pas les booleans.
+  // Les conversions sont appliquées sur `item` (l'original), pas sur `this`.
+  // Fix: appliquer les conversions sur `this` après l'assign, ou les faire avant Object.assign.
   constructor(item: any | CartItem) {
     // avoid UI artefact on loading
     item['selected'] = undefined;
@@ -279,13 +283,23 @@ export interface CartSubscriptionParams{
   activeForm:boolean;
 }
 
+export enum CartMode {
+  CUSTOMER = 'kng2-cart',
+  ADMIN    = 'kng2-admin-cart'
+}
+
 export interface CartSubscriptionData{
   dayOfWeek:number,
   frequency: CartItemFrequency|string,
   items:any[],
   shipping:DepositAddress | UserAddress,
-  payment:string,
-  hub:string
+  /** Payment method alias. Optional: omit to use customer default Stripe card */
+  payment?:string,
+  hub:string,
+  /** Admin only: create the subscription on behalf of this user ID */
+  customer?:string,
+  /** Optional future start date — maps to Stripe billing_cycle_anchor (trial period until that date) */
+  startDate?:string|Date
 }
 
 //
@@ -499,7 +513,9 @@ export class CartService {
         // server subscription values
         this.cache.subscriptionsContent = this.cache.subscriptionsContent || [];
         const indexSub = this.cache.subscriptionsContent.findIndex(sub => sub.id == subscription.id);
-        Object.assign(this.cache.subscriptionsContent[indexSub], subscription);
+        if(indexSub >= 0) {
+          Object.assign(this.cache.subscriptionsContent[indexSub], subscription);
+        }
         this.subscription$.next(this.cache.subscriptionsContent);
         return subscription;
       })
@@ -516,7 +532,9 @@ export class CartService {
         // server subscription values
         this.cache.subscriptionsContent = this.cache.subscriptionsContent || [];
         const indexSub = this.cache.subscriptionsContent.findIndex(sub => sub.id == subscription.id);
-        Object.assign(this.cache.subscriptionsContent[indexSub], subscription);
+        if(indexSub >= 0) {
+          Object.assign(this.cache.subscriptionsContent[indexSub], subscription);
+        }
         this.subscription$.next(this.cache.subscriptionsContent);
         return subscription;
       })
@@ -567,7 +585,9 @@ export class CartService {
         // server subscription values
         this.cache.subscriptionsContent = this.cache.subscriptionsContent || [];
         const indexSub = this.cache.subscriptionsContent.findIndex(sub => sub.id == subscription.id);
-        this.cache.subscriptionsContent.splice(indexSub, 1);
+        if(indexSub >= 0) {
+          this.cache.subscriptionsContent.splice(indexSub, 1);
+        }
         this.subscription$.next(this.cache.subscriptionsContent);
         return subscription;
       })
@@ -645,8 +665,11 @@ export class CartService {
       tap(subscription=> {
         //
         // server subscription values
+        this.cache.subscriptionsContent = this.cache.subscriptionsContent || [];
         const indexSub = this.cache.subscriptionsContent.findIndex(sub => sub.id == subscription.id);
-        Object.assign(this.cache.subscriptionsContent[indexSub], subscription);
+        if(indexSub >= 0) {
+          Object.assign(this.cache.subscriptionsContent[indexSub], subscription);
+        }
         this.subscription$.next(this.cache.subscriptionsContent);
         return subscription;
       })
@@ -661,8 +684,11 @@ export class CartService {
       tap(subscription=> {
         //
         // server subscription values
+        this.cache.subscriptionsContent = this.cache.subscriptionsContent || [];
         const indexSub = this.cache.subscriptionsContent.findIndex(sub => sub.id == subscription.id);
-        Object.assign(this.cache.subscriptionsContent[indexSub], subscription);
+        if(indexSub >= 0) {
+          Object.assign(this.cache.subscriptionsContent[indexSub], subscription);
+        }
         this.subscription$.next(this.cache.subscriptionsContent);
         return subscription;
       })
@@ -807,6 +833,10 @@ export class CartService {
 
   //
   // FIXME, it should be done by the server
+  // FIXME(clearAfterOrder): le filtre `item.hub != hub && !item.frequency` retire aussi les subscriptions
+  // des autres hubs. Si l'intention est "supprimer uniquement les items non-subscription du hub courant",
+  // la condition devrait être `item.hub != hub || !!item.frequency`.
+  // À vérifier selon le comportement souhaité pour les items subscription d'autres hubs.
   clearAfterOrder(hub:string, order?:Order,contract?:CartSubscription) {
     //
     // For regular orders: keep items from other hubs and items without frequency (subscription items)
@@ -1080,6 +1110,9 @@ export class CartService {
       return hubsDate[0];
     }
 
+    // FIXME(getShippingDayForMultipleHUBs): indexOf utilise === (référence objet) sur des Date.
+    // Deux Date représentant le même jour mais créées séparément ne matchent jamais → intersection toujours vide.
+    // Fix: `hubsDate[1].some(d => d.equalsDate(n))` à la place de indexOf.
     const intersection = hubsDate[0].filter(function(n) {
       return hubsDate[1].indexOf(n) !== -1;
     });
@@ -1247,7 +1280,7 @@ export class CartService {
     this.cache.uuid = shared;
 
     try {
-      const fromLocal = JSON.parse(localStorage.getItem('kng2-cart')) as CartContext;
+      const fromLocal = JSON.parse(localStorage.getItem(this.cartConfig.namespace)) as CartContext;
 
       // FIXME missing test
       if (!fromLocal) {
@@ -1427,8 +1460,9 @@ export class CartService {
       this.cart$.next({ action: CartAction.CART_LOADED });
     });
 
-    //
-    // TODO
+    // FIXME(CART_LOAD_ERROR): en cas d'erreur réseau, catchError retourne of(syncCart) et CART_LOADED
+    // est émis normalement. CART_LOAD_ERROR n'est jamais émis malgré sa définition dans CartAction.
+    // Les composants ne peuvent pas détecter un échec de chargement du panier.
     // this.cart$.next({ action: CartAction.CART_LOAD_ERROR });
   }
 
@@ -1441,7 +1475,7 @@ export class CartService {
     // FIXME same product on multiple hub  will not work
     const indexInCache = this.findIndexBySku(product.sku,product.hub,!!product.frequency);
     if(indexInCache == -1 ){
-      return this.save({ item:items[indexInCache], action: CartAction.ITEM_REMOVE });
+      return;
     }
 
     const item = items[indexInCache];
@@ -1493,6 +1527,9 @@ export class CartService {
   //
   // save with localStorage
   // save with api/user/cart
+  // FIXME(save memory leak): chaque appel à save() crée une souscription non référencée sans takeUntil.
+  // En mode rapid-add/remove, des souscriptions zombies s'accumulent.
+  // Fix: utiliser un Subject de destroy + takeUntil, ou une file d'attente (queue) pour sérialiser les saves.
   save(state: CartState) {
     state.server = [];
 
@@ -1523,11 +1560,9 @@ export class CartService {
         }
         // console.log('---DEBUG kng2-cart:saveLocal',this.cache);
         if(this.isReady){
-          const keep = this.cache.subscriptionsContent;
           const cached = Object.assign({},this.cache);
           cached.subscriptionsContent = [];
-          this.cache.subscriptionsContent = keep;
-          localStorage.setItem('kng2-cart', JSON.stringify(this.cache));
+          localStorage.setItem(this.cartConfig.namespace, JSON.stringify(cached));
         }
         observer.next(state);
       } catch (e) {
@@ -1678,8 +1713,8 @@ export class CartService {
   //
   // init cart context => load & merge available cart, with current one
   // - user latest orders (helper for complement)
-  setContext(config: Config, user: User, shops?: Shop[], orders?:Order[]) {
-
+  setContext(config: Config, user: User, shops?: Shop[], orders?:Order[], mode = CartMode.CUSTOMER) {
+    this.cartConfig.namespace = mode;
     this.currentShops = shops || this.currentShops || [];
     Object.assign(this.currentUser, user);
 
@@ -1710,9 +1745,11 @@ export class CartService {
     // setup default payment and address
     if(orders.length){
       const order = orders.find(order =>  order.payment && order.shipping);
-      const issuer = order.payment.issuer;
-      this.cache.payment = this.cache.payment || user.payments.find(payment => payment.issuer == issuer);
-      this.cache.address = this.cache.address || UserAddress.from(order.shipping);
+      if(order) {
+        const issuer = order.payment.issuer;
+        this.cache.payment = this.cache.payment || user.payments.find(payment => payment.issuer == issuer);
+        this.cache.address = this.cache.address || UserAddress.from(order.shipping);
+      }
     }
 
     // find the first pending order
