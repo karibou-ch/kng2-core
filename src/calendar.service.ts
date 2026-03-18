@@ -1139,4 +1139,79 @@ export class CalendarService {
 
     return result;
   }
+
+  /**
+   * Returns the first calendar date that matches `dayOfWeek` (0=Sun…6=Sat),
+   * starting from `startDate` (inclusive) or from tomorrow when omitted.
+   *
+   * This is the canonical proxy for "next occurrence of a weekday" used by admin
+   * subscription creation. All date arithmetic must go through CalendarService —
+   * never compute raw Date offsets in components.
+   *
+   * ## Hub constraints behaviour
+   *
+   * ### hub.weekdays
+   * By default the returned date must be in `hub.weekdays` (standard e-commerce).
+   * Pass `options.acceptAllWeekdays = true` for B2B contract products that can be
+   * delivered on any day regardless of the hub's normal delivery schedule.
+   *
+   * ### hub.noshipping (holidays / closures)
+   * `noshipping` periods are **always respected**, even for contract products.
+   * If the computed date falls inside a closure window the method advances to the
+   * first day AFTER the closure that still matches `dayOfWeek`.
+   * Rationale: a contractual delivery on a public holiday is either cancelled or
+   * postponed — never silently kept on a closed day.
+   *
+   * @param dayOfWeek  Target day-of-week (0 = Sunday … 6 = Saturday)
+   * @param startDate  Earliest eligible date (defaults to tomorrow in hub timezone)
+   * @param hub        Hub context for timezone normalisation and constraint checks
+   * @param options    `acceptAllWeekdays`: bypass hub.weekdays filter (contract use)
+   * @returns          First eligible date >= startDate whose getDay() === dayOfWeek
+   */
+  firstDeliveryDate(
+    dayOfWeek: number,
+    startDate?: Date,
+    hub?: any,
+    options: { acceptAllWeekdays?: boolean } = {}
+  ): Date {
+    const targetHub = hub || this.getDefaultHub();
+    const { acceptAllWeekdays = false } = options;
+
+    // Normalise reference point to hub timezone so getDay() comparisons are coherent
+    const base = this.toHubTime(startDate || new Date(), targetHub);
+    if (!startDate) {
+      base.setDate(base.getDate() + 1); // default: start from tomorrow
+    }
+    base.setHours(0, 0, 0, 0);
+
+    // Scan up to 14 days to handle noshipping windows that may span a full week
+    for (let i = 0; i < 14; i++) {
+      const dayMatches = base.getDay() === dayOfWeek;
+      const weekdayAllowed = acceptAllWeekdays ||
+        !targetHub?.weekdays ||
+        targetHub.weekdays.indexOf(base.getDay()) !== -1;
+
+      // Check noshipping — always enforced regardless of acceptAllWeekdays
+      const blocked = this.isInNoshippingPeriod(base, targetHub);
+
+      if (dayMatches && weekdayAllowed && !blocked) {
+        return new Date(base);
+      }
+      base.setDate(base.getDate() + 1);
+    }
+    // Fallback: return last candidate (should not happen in practice)
+    return new Date(base);
+  }
+
+  /** Returns true if `date` falls inside any noshipping closure window of the hub. */
+  private isInNoshippingPeriod(date: Date, hub?: any): boolean {
+    if (!hub?.noshipping?.length) { return false; }
+    return hub.noshipping.some((ns: any) => {
+      const from = new Date(ns.from);
+      const to   = new Date(ns.to);
+      from.setUTCHours(1, 0, 0, 0);
+      to.setUTCHours(1, 0, 0, 0);
+      return date >= from && date < to;
+    });
+  }
 }

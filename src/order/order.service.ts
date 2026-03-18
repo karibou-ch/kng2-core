@@ -138,9 +138,13 @@ export class OrderService {
   // create a new order
   // role:client
   // app.post('/v1/orders', auth.ensureUserValid, orders.ensureValidAlias, queued(orders.create));
-  create(hub: string, shipping: ShippingAddress, items: CartItem[]|any[], payment: UserCard): Observable<Order> {
+  create(hub: string, shipping: ShippingAddress, items: CartItem[]|any[], payment: UserCard | any, customer?: number | string): Observable<Order> {
     // backend.$order.save({shipping:shipping,items:items,payment:payment}, function() {
-    return this.http.post<Order>(this.config.API_SERVER + '/v1/orders', { hub, shipping, items, payment }, {
+    const payload: any = { hub, shipping, items, payment };
+    if (customer !== undefined && customer !== null) {
+      payload.customer = customer;
+    }
+    return this.http.post<Order>(this.config.API_SERVER + '/v1/orders', payload, {
       headers: this.headers,
       withCredentials: true
     }).pipe(
@@ -364,6 +368,41 @@ export class OrderService {
   // role:admin
   updateShippingPrice(order, amount) {
     return this.http.post<Order>(this.config.API_SERVER + '/v1/orders/' + order.oid + '/shipping', { amount }, {
+      headers: this.headers,
+      withCredentials: true
+    }).pipe(
+      map(order => this.updateCache(order)),
+      tap(order => this.order$.next(order))
+    );
+  }
+
+  // move one order to another shipping day
+  // role:admin
+  move(order: Order, when: Date | string): Observable<Order> {
+    return this.http.post<Order>(this.config.API_SERVER + '/v1/orders/' + order.oid + '/move', { when }, {
+      headers: this.headers,
+      withCredentials: true
+    }).pipe(
+      map(order => this.updateCache(order)),
+      tap(order => this.order$.next(order))
+    );
+  }
+
+  // reassign an item to another vendor
+  // role:admin
+  updateItemVendor(order: Order, item: OrderItem, toVendor: string, title?: string, toSku?: number | string): Observable<Order> {
+    const params: any = {
+      sku: item.sku,
+      fromVendor: item.vendor,
+      toVendor
+    };
+    if (toSku !== undefined) {
+      params.toSku = toSku;
+    }
+    if (title !== undefined) {
+      params.title = title;
+    }
+    return this.http.post<Order>(this.config.API_SERVER + '/v1/orders/' + order.oid + '/items/vendor', params, {
       headers: this.headers,
       withCredentials: true
     }).pipe(

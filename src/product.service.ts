@@ -325,6 +325,7 @@ export class Product {
         }
     }
     deleted: boolean;
+    type: 'item' | 'contract' | 'custom';
     title: string;
     variants: any[];
     sku: number;
