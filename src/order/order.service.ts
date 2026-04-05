@@ -138,7 +138,13 @@ export class OrderService {
   // create a new order
   // role:client
   // app.post('/v1/orders', auth.ensureUserValid, orders.ensureValidAlias, queued(orders.create));
-  create(hub: string, shipping: ShippingAddress, items: CartItem[]|any[], payment: UserCard | any, customer?: number | string): Observable<Order> {
+  create(
+    hub: string,
+    shipping: ShippingAddress,
+    items: CartItem[]|any[],
+    payment: UserCard | any,
+    customer?: number | string
+  ): Observable<Order> {
     // backend.$order.save({shipping:shipping,items:items,payment:payment}, function() {
     const payload: any = { hub, shipping, items, payment };
     if (customer !== undefined && customer !== null) {
