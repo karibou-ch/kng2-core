@@ -80,6 +80,7 @@ export interface Customer {
     id:number;
     displayName?: string;
     phone: string;
+    billNote?: string;
     email: string;
     plan: string;
     orders: number;
@@ -97,6 +98,7 @@ export interface OrderAddress{
   hours: number,
   name: string,
   note?: string,
+  phone?: string,
   streetAdress: string,
   floor: string,
   postalCode: string,
@@ -157,6 +159,7 @@ export class Order {
     subscription?: string;
     logs: string[],
     customer_credit:number; // paid from customer.balance
+    credit_note?:number; // explicit transaction credit note for invoices/PDF
     fees: {
       charge: number;
       shipping: number;

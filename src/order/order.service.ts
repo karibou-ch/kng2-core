@@ -1,4 +1,4 @@
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient, HttpEventType, HttpHeaders } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { ConfigService } from '../config.service';
 
@@ -124,6 +124,14 @@ export class OrderService {
 
   }
 
+  customerInvoicePdf(year: number, month: number): Observable<Blob> {
+    return this.http.get(this.config.API_SERVER + '/v1/orders/invoices/' + year + '/' + month + '.pdf', {
+      headers: this.headers,
+      withCredentials: true,
+      responseType: 'blob'
+    });
+  }
+
 
   // find one order by oid
   get(oid: number): Observable<Order> {
@@ -134,11 +142,135 @@ export class OrderService {
       map(order => this.updateCache(order))
     );
   }
+
+  waitForPaymentOrder(oid: string | number, intentId: string): Observable<Order> {
+    const orderId = parseInt(String(oid), 10);
+    const getOrder = () => this.get(orderId);
+
+    const endpoint = new URL(`${this.config.API_SERVER}/v1/orders/${orderId}/payment/heartbeat`, window.location.origin);
+    endpoint.searchParams.set('intent_id', intentId);
+
+    return new Observable<Order>(observer => {
+      let done = false;
+      let latestTextLength = 0;
+      let buffer = '';
+      let latestOrderSubscription: any = null;
+      let streamSubscription: any = null;
+
+      const close = () => {
+        if(done) {
+          return false;
+        }
+        done = true;
+        if(streamSubscription) {
+          streamSubscription.unsubscribe();
+        }
+        return true;
+      };
+
+      const resolveWithLatestOrder = () => {
+        if(!close()) {
+          return;
+        }
+        latestOrderSubscription = getOrder().subscribe(order => {
+          observer.next(order);
+          observer.complete();
+        }, error => observer.error(error));
+      };
+
+      const handlePayload = (payload: any) => {
+        if(done) {
+          return;
+        }
+        if(payload.status === 'error') {
+          if(close()) {
+            observer.error(payload.error);
+          }
+          return;
+        }
+        if(payload.status === 'prepaid' || payload.status === 'voided') {
+          resolveWithLatestOrder();
+        }
+      };
+
+      const handleEventBlock = (block: string) => {
+        const data = block.split('\n')
+          .filter(line => line.indexOf('data:') === 0)
+          .map(line => line.replace(/^data:\s?/, ''))
+          .join('\n');
+        if(!data) {
+          return;
+        }
+        let payload: any;
+        try {
+          payload = JSON.parse(data);
+        } catch(e) {
+          if(close()) {
+            observer.error(e);
+          }
+          return;
+        }
+        handlePayload(payload);
+      };
+
+      const appendText = (text: string) => {
+        buffer += text;
+        let eventEnd = buffer.indexOf('\n\n');
+        while(eventEnd > -1) {
+          const block = buffer.slice(0, eventEnd);
+          buffer = buffer.slice(eventEnd + 2);
+          handleEventBlock(block);
+          eventEnd = buffer.indexOf('\n\n');
+        }
+      };
+
+      streamSubscription = this.http.get(endpoint.toString(), {
+        headers: this.headers.set('Accept', 'text/event-stream'),
+        withCredentials: true,
+        observe: 'events',
+        reportProgress: true,
+        responseType: 'text'
+      }).subscribe((event: any) => {
+        if(done) {
+          return;
+        }
+        if(event.type === HttpEventType.DownloadProgress && event.partialText) {
+          const chunk = event.partialText.slice(latestTextLength);
+          latestTextLength = event.partialText.length;
+          appendText(chunk);
+        }
+        if(event.type === HttpEventType.Response && event.body) {
+          appendText(event.body.slice(latestTextLength));
+        }
+      }, error => {
+        if(close()) {
+          observer.error(error);
+        }
+      }, () => {
+        if(!done) {
+          resolveWithLatestOrder();
+        }
+      });
+
+      return () => {
+        if(latestOrderSubscription) {
+          latestOrderSubscription.unsubscribe();
+        }
+        close();
+      };
+    });
+  }
   //
   // create a new order
   // role:client
   // app.post('/v1/orders', auth.ensureUserValid, orders.ensureValidAlias, queued(orders.create));
-  create(hub: string, shipping: ShippingAddress, items: CartItem[]|any[], payment: UserCard | any, customer?: number | string): Observable<Order> {
+  create(
+    hub: string,
+    shipping: ShippingAddress,
+    items: CartItem[]|any[],
+    payment: UserCard | any,
+    customer?: number | string | { id?: number | string; billNote?: string }
+  ): Observable<Order> {
     // backend.$order.save({shipping:shipping,items:items,payment:payment}, function() {
     const payload: any = { hub, shipping, items, payment };
     if (customer !== undefined && customer !== null) {
