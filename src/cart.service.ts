@@ -38,6 +38,7 @@ export enum CartAction {
 export class CartState {
   item?: CartItem;
   order?: Order;
+  contract?: CartSubscription;
   action: CartAction;
   data?:any;
   server?: CartItem[];
@@ -854,7 +855,7 @@ export class CartService {
     if(order && order.oid) {
       this.currentPendingOrder = order || this.currentPendingOrder;
     }
-    this.save({ action: CartAction.CART_CLEARED, order });
+    this.save({ action: CartAction.CART_CLEARED, order, contract, data: { hub } });
   }
 
   broadcastState() {
@@ -1604,7 +1605,7 @@ export class CartService {
 
     //
     // FIXME assert currentHub existance
-    params.hub = this.currentHub;
+    params.hub = state.data && state.data.hub || this.currentHub;
 
     //
     // use a shared cart ?
