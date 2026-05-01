@@ -17,6 +17,42 @@ import { Shop } from './shop.service';
 import { XorCipher } from './util';
 import { AnalyticsService } from './metrics.service';
 
+export interface UserCouponCredit {
+  code: string;
+  name?: string;
+  note?: string;
+  amount: number;
+  amount_off: number;
+  currency: string;
+}
+
+//
+// the heavy international api
+// https://github.com/catamphetamine/libphonenumber-js
+export function normalizePhone(phone: string): string {
+  if (!phone) {
+    return '';
+  }
+
+  // Remove all non-digits plus keep '+'
+  // lookaheads (?!...) do not consume characters in the string;
+  // they simply check that what follows does not match the specified pattern.
+	let normalizedNumber = phone.replace(/(?!^\+)\D/g, '');
+
+  // If the number starts with '00', replace it with '+'
+  if (normalizedNumber.startsWith('00')) {
+    normalizedNumber = '+' + normalizedNumber.slice(2);
+  }
+
+  // Swiss local mobile numbers: add +41 for 07/08/09.
+  // TODO: make the country explicit in the caller before applying local rules.
+  if (/^0[789]/.test(normalizedNumber)) {
+    normalizedNumber = '+41' + normalizedNumber.slice(1);
+  }
+
+  return normalizedNumber;
+}
+
 //
 // FIXME: Refactor UserAddress, DepositAddress, and other AlienAddress for better usability
 export class UserAddress {
@@ -55,27 +91,8 @@ export class UserAddress {
     zoom?: number;
   };
 
-  //
-  // the heavy international api
-  // https://github.com/catamphetamine/libphonenumber-js
   static normalizePhone(phone: string): string {
-    if (!phone) return '';
-
-    // Remove all non-digits except leading '+'
-    // Regex explanation: (?!^\+) = negative lookahead to preserve leading +
-    let normalizedNumber = phone.replace(/(?!^\+)\D/g, '');
-
-    // Convert 00 international prefix to +
-    if (normalizedNumber.startsWith('00')) {
-      normalizedNumber = '+' + normalizedNumber.slice(2);
-    }
-
-    // Swiss mobile numbers: add +41 if starts with 07/08/09
-    if (/^0[789]/.test(normalizedNumber)) {
-      normalizedNumber = '+41' + normalizedNumber.slice(1);
-    }
-
-    return normalizedNumber;
+    return normalizePhone(phone);
   }
 
   static isEqual(source:UserAddress|DepositAddress|ShippingAddress, address: UserAddress|DepositAddress|ShippingAddress): boolean {
@@ -234,6 +251,7 @@ export class User {
     connect_id?: string;
     connect_state?: boolean;
     authlink?: string;
+    codelink?: string;
   };
 
   email: {
@@ -254,13 +272,10 @@ export class User {
 
   //
   // phone (DEPRECATED phoneNumbers)
-  phoneNumbers: [{
+  phoneNumbers: {
     number: string;
     what: string;
-  }];
-
-  phone: string;
-
+  }[];
 
   addresses: UserAddress[];
 
@@ -289,6 +304,7 @@ export class User {
   plan:{
     name:string;
     end:Date;
+    note:string;
     defaultShipping:number;
     maxInvoices:number
   };
@@ -370,12 +386,6 @@ export class User {
       this.email.address = email;
     }
 
-    //
-    // phone (DEPRECATED phoneNumbers)
-    if(!this.phone && this.phoneNumbers && this.phoneNumbers.length) {
-      this.phone = this.phoneNumbers[0].number;
-    }
-
     if(json && json.balance) {
       this.balance = parseFloat(json.balance||'0');
     }
@@ -394,6 +404,19 @@ export class User {
     this.addresses = this.addresses.map(add => new UserAddress(add));
     this.context = this.context || {};
 
+  }
+
+  get phone(): string {
+    return this.phoneNumbers && this.phoneNumbers.length ? this.phoneNumbers[0].number : '';
+  }
+
+  set phone(value: string) {
+    this.phoneNumbers = this.phoneNumbers || [];
+    if (!this.phoneNumbers.length) {
+      this.phoneNumbers.push({what: 'mobile', number: value || ''});
+      return;
+    }
+    this.phoneNumbers[0].number = value || '';
   }
 
   //
@@ -665,8 +688,10 @@ export class UserService {
     if (!this.cache.map.get(user.id)) {
       if(!this.currentUser.id||this.currentUser.id == user.id) {
         Object.assign(this.currentUser, new User(user));
+        this.cache.map.set(user.id, this.currentUser);
+        return this.cache.map.get(user.id);
       }
-      this.cache.map.set(user.id, this.currentUser);
+      this.cache.map.set(user.id, new User(user));
       return this.cache.map.get(user.id);
     }
     // Object.assign(this.currentUser, new User(user));
@@ -819,6 +844,14 @@ export class UserService {
       }),
       tap(user => this.user$.next(user))
     );
+  }
+
+  readCoupon(code:string): Observable<UserCouponCredit> {
+    return this.http.get<UserCouponCredit>(this.config.API_SERVER + '/v1/users/coupons/'+encodeURIComponent(code), {
+      params: {tls: Date.now() + ''},
+      headers: this.headers,
+      withCredentials: true
+    });
   }
 
 
@@ -1012,6 +1045,18 @@ export class UserService {
     }).pipe(
       map(user => this.updateCache(user)),
       tap(user => this.user$.next(user))
+    );
+  }
+
+  saveDelegated(user): Observable<User> {
+    // autofill the address name when available
+    user.populateAdresseName();
+    const delegated = Object.assign({}, user, { delegatedUser: user.id });
+    return this.http.post<User>(this.config.API_SERVER + '/v1/users/' + user.id, delegated, {
+      headers: this.headers,
+      withCredentials: true
+    }).pipe(
+      map(user => this.updateCache(user))
     );
   }
 

@@ -5,7 +5,7 @@
  * the normalization function works correctly for international usage.
  */
 
-import { UserAddress } from '../src/user.service';
+import { User, UserAddress } from '../src/user.service';
 
 describe('UserAddress.normalizePhone', () => {
 
@@ -76,5 +76,28 @@ describe('UserAddress.normalizePhone', () => {
   it('should handle letters and special characters', () => {
     expect(UserAddress.normalizePhone('+41 79 ABC 123 DEF 45 67')).toBe('+41791234567');
     expect(UserAddress.normalizePhone('079#123*45&67')).toBe('+41791234567');
+  });
+});
+
+describe('User.phone', () => {
+
+  it('should map to the first legacy phoneNumbers entry', () => {
+    const user = new User({
+      phoneNumbers: [{what: 'mobile', number: '0223456789'}]
+    });
+
+    expect(user.phone).toBe('0223456789');
+
+    user.phone = '+41763797868';
+    expect(user.phoneNumbers[0].number).toBe('+41763797868');
+  });
+
+  it('should create the legacy phoneNumbers entry when missing', () => {
+    const user = new User({phoneNumbers: []});
+
+    user.phone = '0791234567';
+
+    expect(user.phone).toBe('0791234567');
+    expect(user.phoneNumbers).toEqual([{what: 'mobile', number: '0791234567'}]);
   });
 });

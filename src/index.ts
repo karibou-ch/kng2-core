@@ -78,6 +78,8 @@ export { User,
          UserAddress,
          DepositAddress,
          ShippingAddress,
+         normalizePhone,
+         UserCouponCredit,
          UserService,
          CustomerChurn } from './user.service';
 
