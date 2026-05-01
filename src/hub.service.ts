@@ -67,6 +67,7 @@ export class Hub {
   status: {
     reason:{ en: string, fr: string, de: string},
     active: boolean;
+    private: boolean;
   };
 
   /* display message web maintenance (that mean that all shipping are off) */
@@ -270,7 +271,8 @@ export class HubService {
   }
 
   save(hub: Hub) {
-    return this.http.post<Hub>(this.config.API_SERVER + '/v1/hubs/' + hub.slug, hub, {
+    const slug = this.getHubSlug(hub);
+    return this.http.post<Hub>(this.config.API_SERVER + '/v1/hubs/' + slug, hub, {
       headers: this.headers,
       withCredentials: true
   }).pipe(
@@ -279,8 +281,19 @@ export class HubService {
   );
   }
 
+  create(hub: Hub) {
+    return this.http.post<Hub>(this.config.API_SERVER + '/v1/hubs', hub, {
+      headers: this.headers,
+      withCredentials: true
+    }).pipe(
+        // retryWhen(errors => errors.pipe(delay(1000), take(3))),
+        tap(hub => this.hub$.next.bind(hub))
+    );
+  }
+
   saveManager(hub: Hub) {
-    return this.http.post<Hub>(this.config.API_SERVER + '/v1/hubs/' + hub.slug + '/manage', hub, {
+    const slug = this.getHubSlug(hub);
+    return this.http.post<Hub>(this.config.API_SERVER + '/v1/hubs/' + slug + '/manage', hub, {
       headers: this.headers,
       withCredentials: true
     }).pipe(
@@ -290,13 +303,18 @@ export class HubService {
   }
 
   saveAdmin(hub: Hub) {
-    return this.http.post<Hub>(this.config.API_SERVER + '/v1/hubs/' + hub.slug + '/admin', hub, {
+    const slug = this.getHubSlug(hub);
+    return this.http.post<Hub>(this.config.API_SERVER + '/v1/hubs/' + slug + '/admin', hub, {
       headers: this.headers,
       withCredentials: true
     }).pipe(
         // retryWhen(errors => errors.pipe(delay(1000), take(3))),
         tap(hub => this.hub$.next.bind(hub))
     );
+  }
+
+  private getHubSlug(hub: Hub) {
+    return Array.isArray((hub as any).slug) ? (hub as any).slug[0] : hub.slug;
   }
 
 }
