@@ -832,17 +832,11 @@ export class CartService {
     this.cache.items.forEach(item => item.error = undefined);
   }
 
-  //
-  // FIXME, it should be done by the server
-  // FIXME(clearAfterOrder): le filtre `item.hub != hub && !item.frequency` retire aussi les subscriptions
-  // des autres hubs. Si l'intention est "supprimer uniquement les items non-subscription du hub courant",
-  // la condition devrait être `item.hub != hub || !!item.frequency`.
-  // À vérifier selon le comportement souhaité pour les items subscription d'autres hubs.
   clearAfterOrder(hub:string, order?:Order,contract?:CartSubscription) {
     //
-    // For regular orders: keep items from other hubs and items without frequency (subscription items)
+    // For regular orders: keep other hubs and subscription items.
     if(order){
-      this.cache.items = this.cache.items.filter(item => item.hub != hub && !item.frequency);
+      this.cache.items = this.cache.items.filter(item => item.hub != hub || !!item.frequency);
     }
 
     //

@@ -679,6 +679,7 @@ export class UserService {
   config: any;
   currentUser: User;
   private cache = new Cache();
+  private paymentCheckCache: { key: string; value: any; time: number } = null;
 
 
   private headers: HttpHeaders;
@@ -1185,11 +1186,19 @@ export class UserService {
    * payment methods
    */
   // app.post('/v1/users/:id/payment/:alias/check', users.ensureMeOrAdmin,users.checkPaymentMethod);
-  checkPaymentMethod(user, askIntent?: string, amount?:number): Observable<User> {
+  checkPaymentMethod(user, askIntent?: string, amount?:number, quoteKey?: string): Observable<User> {
     //
     // if payment list is empty, and also ask intent
-    if (!user.payments.length && !askIntent) {
+    if (!user.payments.length && !askIntent && !amount && !quoteKey) {
       return of(user);
+    }
+
+    const cacheKey = [user.id, askIntent || '-', amount || 0, quoteKey || '-'].join(':');
+    const cacheTtl = 5 * 60 * 1000;
+    if ((amount || quoteKey) && this.paymentCheckCache &&
+        this.paymentCheckCache.key == cacheKey &&
+        Date.now() - this.paymentCheckCache.time < cacheTtl) {
+      return of(this.applyPaymentCheck(user, this.paymentCheckCache.value));
     }
 
     const params: any = { };
@@ -1199,6 +1208,9 @@ export class UserService {
     if(amount) {
       params.amount = amount;
     }
+    if(quoteKey) {
+      params.quoteKey = quoteKey;
+    }
 
     return this.http.post<any>(this.config.API_SERVER + '/v1/users/' + user.id + '/payment/-/check', {}, {
       params,
@@ -1206,18 +1218,34 @@ export class UserService {
       withCredentials: true
     }).pipe(
       map(check => {
-        //
-        // store payment intent
-        if (check.intent) {
-          user.context = user.context || {};
-          user.context.intent = check.intent;
+        if(amount || quoteKey) {
+          this.paymentCheckCache = {
+            key: cacheKey,
+            value: check,
+            time: Date.now()
+          };
         }
-        user.payments.forEach((payment, i) => {
-          payment.error = check[payment.alias] && check[payment.alias].error;
-        });
-        return this.updateCache(user);
+        return this.applyPaymentCheck(user, check);
       })
     );
+  }
+
+  private applyPaymentCheck(user, check): User {
+    user.context = user.context || {};
+    //
+    // store setup intent for adding a card
+    if (check.intent) {
+      user.context.intent = check.intent;
+    }
+    //
+    // store wallet intent for Apple Pay / Google Pay checkout confirmation
+    if (check.walletIntent) {
+      user.context.walletIntent = check.walletIntent;
+    }
+    user.payments.forEach((payment, i) => {
+      payment.error = check[payment.alias] && check[payment.alias].error;
+    });
+    return this.updateCache(user);
   }
 
   // app.post('/v1/users/:id/payment', users.ensureMeOrAdmin,users.addPayment);

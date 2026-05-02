@@ -284,6 +284,19 @@ export class OrderService {
     );
   }
 
+  quoteCheckout(payload: {
+    hub: string,
+    shipping: ShippingAddress,
+    items: CartItem[]|any[],
+    payment: UserCard | any,
+    customer?: number | string | { id?: number | string; billNote?: string }
+  }): Observable<any> {
+    return this.http.post<any>(this.config.API_SERVER + '/v1/orders/quote', payload, {
+      headers: this.headers,
+      withCredentials: true
+    });
+  }
+
   //
   // mail [all|specified] vendors for orders
   // role:admin|shop
