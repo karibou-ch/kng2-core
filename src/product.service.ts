@@ -301,6 +301,7 @@ export class Product {
             recipes: [],
             pricing: {},
             categories: {},
+            constraints: [],
             shelflife: {},
             vendor: {},
             quantity: {},
@@ -333,6 +334,7 @@ export class Product {
     updated: Date;
     created: Date;
     categories: any;
+    constraints: string[];
     vendor: any;
     bundle?:[{
       title:string;
