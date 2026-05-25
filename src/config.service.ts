@@ -87,6 +87,23 @@ export class ConfigService {
     }));
   }
 
+  private normalizeServiceBlocks(shared:any) {
+    // FIXME migration services[]: conserver ces blocs tant que les clients les lisent directement.
+    // Ref: karibou-api/.cursor/rules/karibou-ch-TODO.mdc section 10.1
+    ['subscription', 'institution', 'business'].forEach(name => {
+      const service = shared[name] || {};
+      shared[name] = Object.assign({}, service, {
+        menu: service.menu || {},
+        t: service.t || {},
+        h: service.h || {},
+        p: service.p || {},
+        article: service.article || {},
+        image: service.image || '',
+        defaultUrl: (service.defaultUrl || '').trim()
+      });
+    });
+  }
+
 
   get(hub?: string): Observable<Config> {
     const params: any = { lang: this.locale };
@@ -109,6 +126,7 @@ export class ConfigService {
         const localHasHub = config.shared.hub && config.shared.hub.slug;
         if (localHasHub &&
            !sharedHasHUB) {
+            this.normalizeServiceBlocks(config.shared);
             return config;
         }
         //
@@ -151,6 +169,7 @@ export class ConfigService {
 
         config.shared.faq = config.shared.faq || [];
         config.shared.faq_title = config.shared.faq_title || {en:"",fr:""};
+        this.normalizeServiceBlocks(config.shared);
         return config;
       }),
       tap(config => {
@@ -208,6 +227,7 @@ export class ConfigService {
         config.shared.hub.home.customLink = config.shared.hub.home.customLink || {};
         config.shared.faq == config.shared.faq || [];
         config.shared.faq_title = config.shared.faq_title || {en:"",fr:""};
+        this.normalizeServiceBlocks(config.shared);
 
         return config;
       }),

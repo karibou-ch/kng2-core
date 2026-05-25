@@ -154,6 +154,25 @@ export interface ConfigMenu {
   active: boolean;
 }
 
+export interface ServiceI18n {
+  en?: string;
+  fr?: string;
+  de?: string;
+  [locale: string]: string | undefined;
+}
+
+export interface Service {
+  name?: string;
+  menu: ServiceI18n;
+  t: ServiceI18n;
+  h: ServiceI18n;
+  p: ServiceI18n;
+  article: ServiceI18n;
+  image?: string;
+  defaultUrl?: string;
+  actived?: boolean;
+}
+
 /**
  * shared:{
  *  keys:{

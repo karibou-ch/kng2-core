@@ -51,6 +51,7 @@ export class Hub {
     actionText: string,
     appbar:string,
     appbarText:string,
+    ink:string,
     colormix:string
   };
 

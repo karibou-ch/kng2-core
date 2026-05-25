@@ -105,5 +105,7 @@ export { OrderPortionPipe, OrderBasepricePipe, OrderBasepricePipeEx } from './or
 export { Config,
          ConfigKeyStoreEnum,
          ConfigMenu,
+         Service,
+         ServiceI18n,
          config } from './config';
 
