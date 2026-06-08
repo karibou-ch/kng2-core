@@ -1,7 +1,7 @@
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Injectable, Inject } from '@angular/core';
 
-import { Config, config, configCors } from './config';
+import { Config, ConfigShared, config, configCors } from './config';
 import { DepositAddress } from './user.service';
 
 
@@ -73,7 +73,7 @@ export class ConfigService {
     this.config$.pipe(distinctUntilChanged((prev, curr) => {
       const ps = prev.shared;
       const cs = curr.shared;
-      console.log(cs.timestamp,cs.hub && cs.hub.update)
+      console.log(cs.timestamp,cs.hub && cs.hub.updated)
       if(ps.timestamp !== cs.timestamp){
         return true;
       }
@@ -116,7 +116,7 @@ export class ConfigService {
         delay(1000),
         concatMap((err, index) => index === 3 ? throwError(err) : of(null)))
       ),
-      map((shared: any) => {
+      map((shared: ConfigShared) => {
         //
         // based on server timestamp, previous config is more recent
         // console.log('--DEBUG cfg local', config.shared.timestamp, config.shared.hub);

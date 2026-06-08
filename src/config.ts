@@ -4,6 +4,11 @@ export const configCors = () => {
   return (window.location.host.indexOf('localhost') == 0);
 }
 
+export interface ConfigShared {
+  hub?: Hub;
+  hubs?: Hub[];
+  [key: string]: any;
+}
 
 export class Config {
   constructor(cfg?) {
@@ -114,7 +119,8 @@ export class Config {
         return shipping.in(noshipping.from, noshipping.to);
       });
       if (find) {
-        shipping.message = find.reason;
+        const datedShipping = shipping as unknown as { message?: typeof find.reason };
+        datedShipping.message = find.reason;
       }
       return shipping;
     });

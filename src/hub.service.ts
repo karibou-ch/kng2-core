@@ -99,11 +99,11 @@ export class Hub {
 
   //
   // list of closed dates
-  noshipping: [{
+  noshipping: {
     reason: { en: string, fr: string, de: string };
     from: Date;
     to: Date;
-  }];
+  }[];
 
   siteName: {
     en: string;
@@ -146,8 +146,8 @@ export class Hub {
     //   subject:String
     // },
     customLink: {
-      url: string;
-      label: { en: string, de: string, fr: string };
+      url?: string;
+      label?: { en: string, de: string, fr: string };
     },
     content:[{
       h: { en: string, de: string, fr: string };
@@ -315,7 +315,7 @@ export class HubService {
   }
 
   private getHubSlug(hub: Hub) {
-    return Array.isArray((hub as any).slug) ? (hub as any).slug[0] : hub.slug;
+    return Array.isArray(hub.slug) ? hub.slug[0] : hub.slug;
   }
 
 }
