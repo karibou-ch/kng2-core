@@ -24,6 +24,20 @@ export interface UserCouponCredit {
   amount: number;
   amount_off: number;
   currency: string;
+  constraint?: string;
+}
+
+export interface UserCreateCouponPayload {
+  code: string;
+  amount: number;
+  constraint?: string;
+}
+
+export interface UserCreatePayload {
+  firstname: string;
+  lastname: string;
+  email: string;
+  mobile: string;
 }
 
 //
@@ -853,6 +867,22 @@ export class UserService {
       headers: this.headers,
       withCredentials: true
     });
+  }
+
+  createCoupon(payload: UserCreateCouponPayload): Observable<UserCouponCredit> {
+    return this.http.post<UserCouponCredit>(this.config.API_SERVER + '/v1/coupon', payload, {
+      headers: this.headers,
+      withCredentials: true
+    });
+  }
+
+  createUser(payload: UserCreatePayload): Observable<User> {
+    return this.http.post<User>(this.config.API_SERVER + '/v1/users', payload, {
+      headers: this.headers,
+      withCredentials: true
+    }).pipe(
+      map(user => this.updateCache(user))
+    );
   }
 
 
