@@ -23,6 +23,13 @@ export interface OrderCustomerInvoices {
   transfers:any[];
   paids:any[];
   invoices:any[];
+  totals:{
+    invoicesAmount:number;
+    transfersAmount:number;
+    paidsAmount:number;
+    refundsAmount:number;
+    qrbillAmount:number;
+  };
 }
 
 
