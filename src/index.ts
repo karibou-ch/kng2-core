@@ -64,7 +64,9 @@ export { Product,
 export { Shop,
          ShopService } from './shop.service';
 
-export { Hub,
+export { HubVendorAssortmentMode,
+         HubVendorAssortment,
+         Hub,
          HubService } from './hub.service';
 
 export { ReportOrders,

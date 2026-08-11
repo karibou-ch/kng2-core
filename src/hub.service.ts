@@ -12,6 +12,13 @@ import { Observable } from 'rxjs';
 import { ReplaySubject } from 'rxjs';
 import { map, tap, retryWhen, delay, take } from 'rxjs/operators';
 
+export type HubVendorAssortmentMode = 'constrained';
+
+export interface HubVendorAssortment {
+  vendor: string;
+  mode: HubVendorAssortmentMode;
+}
+
 export class Hub {
   hid: string;
   name: string;
@@ -229,6 +236,7 @@ export class Hub {
   // constraint HuB to a list of categories and vendors
   categories: string[];
   vendors: string[];
+  vendorAssortments?: HubVendorAssortment[];
 
 }
 
