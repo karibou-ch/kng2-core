@@ -459,6 +459,9 @@ export class AssistantService {
 
         let lastIndex = 0;
         xhr.onprogress = () => {
+          if (xhr.status < 200 || xhr.status >= 300) {
+            return;
+          }
           const index = xhr.responseText.length;
           if (lastIndex == index) {
             return;
@@ -508,6 +511,18 @@ export class AssistantService {
         };
 
         xhr.onload = () => {
+          if (xhr.status < 200 || xhr.status >= 300) {
+            const message = xhr.responseText || `Assistant request failed (${xhr.status})`;
+            this.updateState({
+              status: 'error',
+              error: message,
+              agent: agent,
+              content: undefined,
+              steps: undefined
+            });
+            observer.error(new Error(message));
+            return;
+          }
           // xhr.responseText;
           const skus = responseText.match(skuBlock);
           let tool = {};
@@ -630,7 +645,7 @@ export class AssistantService {
   /**
    * ✅ Send message via email
    */
-  message(content: string, subject?: string, audioContext?: { audioUrl?: string, transcription?: string, cartUrl?: string }): Observable<any> {
+  message(content: string, subject?: string, audioContext?: { audioUrl?: string, transcription?: string, cartUrl?: string, contact?: string }): Observable<any> {
     const payload: any = { content, subject };
     if (audioContext) {
       Object.assign(payload, audioContext);
