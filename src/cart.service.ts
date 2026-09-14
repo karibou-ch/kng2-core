@@ -849,11 +849,8 @@ export class CartService {
     if(order && order.oid) {
       this.currentPendingOrder = order || this.currentPendingOrder;
     }
+    // Local persist only: the server already cleared via clearAfterOrdered.
     this.save({ action: CartAction.CART_CLEARED, order, contract, data: { hub } });
-  }
-
-  broadcastState() {
-    this.save({ action: CartAction.CART_CLEARED });
   }
 
   //
@@ -1585,8 +1582,7 @@ export class CartService {
           CartAction.ITEM_ADD,
           CartAction.ITEM_UPDATE,
           CartAction.ITEM_REMOVE,
-          CartAction.ITEM_ALL,
-          CartAction.CART_CLEARED];
+          CartAction.ITEM_ALL];
     if (states.indexOf(state.action) === -1) {
       return of(state);
     }
@@ -1711,7 +1707,27 @@ export class CartService {
   setContext(config: Config, user: User, shops?: Shop[], orders?:Order[], mode = CartMode.CUSTOMER) {
     this.cartConfig.namespace = mode;
     this.currentShops = shops || this.currentShops || [];
+
+    const previousUserId = this.currentUser.id;
+    const wasAuthenticated = this.currentUser.isAuthenticated();
     Object.assign(this.currentUser, user);
+    const isAuthenticated = this.currentUser.isAuthenticated();
+    const switchedAccount = wasAuthenticated && isAuthenticated && previousUserId !== this.currentUser.id;
+    const loggedOut = wasAuthenticated && !isAuthenticated;
+    const loggedIn = !wasAuthenticated && isAuthenticated;
+
+    if (switchedAccount || loggedOut) {
+      this.cache.items = [];
+      this.cache.updated = new Date('1990-12-01T00:00:00');
+      this.cache.loaded = true;
+      delete this.cache.cid;
+      try {
+        localStorage.removeItem(this.cartConfig.namespace);
+      } catch (e) {}
+      this.load();
+    } else if (loggedIn) {
+      this.load();
+    }
 
 
     //
@@ -1805,6 +1821,7 @@ export class CartService {
       const items = this.cache.items.filter(item => item.sku == +sku);
       items.forEach(item => item.error = error[sku]);
     }
+    this.cart$.next({ action: CartAction.ITEM_UPDATE });
   }
 
 
