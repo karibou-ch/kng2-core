@@ -359,6 +359,8 @@ export class Product {
         part: string;
         tva: number;
         stock: number;
+        discountStock?: number;
+        endOfLife?: Date | string | null;
     };
     shelflife: {
         display: boolean;
@@ -457,15 +459,30 @@ export class Product {
 
 
 
+    // Sale price only if ALL of:
+    // - attributes.discount  → merchant toggle
+    // - pricing.discount > 0 → sale amount (0 is not a valid promo)
+    // - discountStock > 0    → remaining promo units (0 = exhausted, catalog price)
+    // Unset discountStock (old payloads) is treated as open promo.
+    // Bundle price wins over discount (same as backend Product.getPrice).
+    hasDiscountPrice(): boolean {
+        const units = this.pricing && this.pricing.discountStock;
+        return !!(this.attributes.discount && this.pricing.discount > 0 && (units == null || units > 0));
+    }
+
     getPrice() {
-        if (this.attributes.discount && this.pricing.discount>=0) {
-        return this.pricing.discount;
+        if (this.attributes.bundle && this.bundle && this.bundle.length) {
+            const price = this.bundle.reduce((acc, bundle) => acc + (bundle.price || 0), 0);
+            return this.round1cts(price);
+        }
+        if (this.hasDiscountPrice()) {
+            return this.pricing.discount;
         }
         return this.pricing.price;
     }
 
     isDiscount() {
-        return !!(this.attributes.discount && this.pricing.discount>=0);
+        return this.hasDiscountPrice();
     }
 
     isAvailableForOrder() {
