@@ -269,6 +269,11 @@ export interface CartSubscription {
     id:string,
     client_secret:string
   },
+  pendingSetupIntent?:{
+    id:string,
+    status:string,
+    client_secret:string
+  },
   shipping: ShippingAddress| DepositAddress | UserAddress,
   items: CartSubscriptionProductItem[],
   services: CartSubscriptionServiceItem[],
@@ -707,16 +712,9 @@ export class CartService {
 
 
   subscriptionSetParams(params:CartSubscriptionParams, quiet?:boolean) {
-    if(params.time>0) {
-      this.cache.currentShippingTime=params.time;
-    }
     this.cache.subscriptionParams = params;
-    const data = {
-      currentShippingTime:this.cache.currentShippingTime
-    }
-
     if(!quiet) {
-      this.save({ action: CartAction.CART_SUBSCRIPTION, data });
+      this.save({ action: CartAction.CART_SUBSCRIPTION });
     }
   }
 
