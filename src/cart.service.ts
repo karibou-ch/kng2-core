@@ -1326,9 +1326,14 @@ export class CartService {
       }
 
       //
-      // check existance on the current user (example when you switch account, cart should be sync )
-      if (!this.currentUser.addresses.some(address => UserAddress.isEqual(address,this.cache.address)) &&
-        !this.defaultConfig.shared.hub.deposits.some(address => UserAddress.isEqual(address,this.cache.address))) {
+      // A saved cart address only selects which account address to load.
+      if (fromLocal.address) {
+        this.cache.address = UserAddress.from(fromLocal.address);
+      }
+      const account = this.accountAddress(this.cache.address);
+      if (account) {
+        this.cache.address = UserAddress.from(account);
+      } else if (this.cache.address && this.cache.address.streetAdress) {
         this.cache.address = new UserAddress({});
       }
 
@@ -1633,39 +1638,43 @@ export class CartService {
 
 
   //
+  // Same place (street, name, floor, postal code) is the same address,
+  // even when the phone or the note changed. The stored record is the account one.
+  private accountAddress(address: UserAddress|DepositAddress): UserAddress|DepositAddress|undefined {
+    if(!address || !address.streetAdress) {
+      return undefined;
+    }
+    const saved = (this.currentUser.addresses || []).find(savedAddress => UserAddress.isEqual(savedAddress, address));
+    if(saved) {
+      return saved;
+    }
+    const deposits = (this.defaultConfig.shared && this.defaultConfig.shared.hub && this.defaultConfig.shared.hub.deposits) || [];
+    return deposits.find(deposit => UserAddress.isEqual(address, deposit) && deposit.fees >= 0);
+  }
+
+  //
   // set default user address
   setShippingAddress(address: UserAddress|DepositAddress) {
-    //
-    // reset cache address
-    if(!address) {
+    if(!address || !address.streetAdress) {
       this.cache.address = new UserAddress({});
       return;
     }
 
-    if(UserAddress.isEqual(address,this.cache.address)) {
+    const account = this.accountAddress(address);
+    //
+    // deposit from HUB a can not be set on HUB b
+    if(!account && address['fees']>=0) {
+      this.cache.address = new UserAddress({});
+      return;
+    }
+
+    const next = account ? UserAddress.from(account) : address;
+    if(UserAddress.isEqual(next, this.cache.address)) {
+      this.cache.address = next;
       return true;
     }
 
-    //
-    // check if deposit
-    const deposit = this.defaultConfig.shared.hub.deposits.find(add => {
-      return UserAddress.isEqual(address,add) && add.fees >= 0;
-    });
-
-    //
-    // deposit from HUB a can not be set on HUB b
-    if(!deposit && address['fees']>=0) {
-      address = new UserAddress({});
-    }
-
-    //
-    // check if address exist before to save it
-    if(deposit && deposit.fees>=0) {
-      address = deposit;
-    }
-
-
-    this.cache.address = address;
+    this.cache.address = next;
     this.save({ action: CartAction.CART_ADDRESS });
     return true;
   }

@@ -8,7 +8,7 @@ import { ConfigService } from './config.service';
 
 import { sharedRoot } from './test-payload/config';
 import { items } from './test-payload/items';
-import { User } from './user.service';
+import { User, UserAddress } from './user.service';
 
 describe('CartService : localStorage', () => {
   let cfg;
@@ -145,6 +145,40 @@ describe('CartService : localStorage', () => {
 
   //
   //
+  it('keeps the account address fields when the place matches', inject([CartService], (cart: CartService) => {
+    const account = new User({
+      id: 1,
+      addresses: [{
+        name: 'lucie wild',
+        streetAdress: 'rue des bossons 86',
+        floor: '8',
+        postalCode: '1213',
+        region: 'Petit-Lancy',
+        phone: '+41763778579',
+        note: '8143'
+      }]
+    });
+    spyOn(cart, 'load');
+    cart.setContext({
+      shared: { hub: { slug: 'geneva', deposits: [] }, shipping: {}, hubs: [] }
+    } as any, account);
+
+    const applied = cart.setShippingAddress(UserAddress.from({
+      name: 'lucie wild',
+      streetAdress: 'rue des bossons 86',
+      floor: '8',
+      postalCode: '1213',
+      phone: '+41765263765',
+      when: new Date().toISOString()
+    }));
+
+    expect(applied).toBe(true);
+    const current = cart.getCurrentShippingAddress();
+    expect(current.phone).toBe('+41763778579');
+    expect(current.region).toBe('Petit-Lancy');
+    expect(current.note).toBe('8143');
+  }));
+
   // Test
   xit('items should be loaded from localStorage', inject([CartService, HttpTestingController], (cart: CartService, httpMock) => {
     expect(cart).toBeTruthy();
