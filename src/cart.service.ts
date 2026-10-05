@@ -488,6 +488,14 @@ export class CartService {
     })
   }
 
+  subscriptionGetOne(sid: string, customer: string): Observable<CartSubscription> {
+    return this.$http.get<CartSubscription>(this.defaultConfig.API_SERVER + '/v1/cart/subscriptions/' + sid, {
+      headers: this.headers,
+      params: { customer },
+      withCredentials: (configCors())
+    });
+  }
+
   subscriptionsGet(): Observable<CartSubscription[]> {
     return this.$http.get<CartSubscription[]>(this.defaultConfig.API_SERVER + '/v1/cart/subscription', {
       headers: this.headers,
@@ -655,7 +663,9 @@ export class CartService {
         // server subscription values
         this.cache.subscriptionsContent = this.cache.subscriptionsContent || [];
         const indexSub = this.cache.subscriptionsContent.findIndex(sub => sub.id == subscription.id);
-        Object.assign(this.cache.subscriptionsContent[indexSub], subscription);
+        if (indexSub >= 0) {
+          Object.assign(this.cache.subscriptionsContent[indexSub], subscription);
+        }
         this.subscription$.next(this.cache.subscriptionsContent);
         return subscription;
       })
