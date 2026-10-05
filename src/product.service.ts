@@ -253,7 +253,10 @@ export class ProductService {
             headers: this.headers,
             withCredentials:true
         }).pipe(
-            map(product => this.updateCache(product)),
+            map(product => {
+                this.cache.map.delete(product.sku);
+                return this.updateCache(product);
+            }),
             tap(this.product$.next.bind(this.product$))
         );
     }
