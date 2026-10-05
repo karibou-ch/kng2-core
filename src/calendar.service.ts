@@ -1142,7 +1142,8 @@ export class CalendarService {
 
   /**
    * Returns the first calendar date that matches `dayOfWeek` (0=Sun…6=Sat),
-   * starting from `startDate` (inclusive) or from tomorrow when omitted.
+   * starting the day after `startDate`, or from tomorrow when omitted.
+   * Pass `strictlyAfter: false` to include `startDate` (admin, which already shifts the anchor).
    *
    * This is the canonical proxy for "next occurrence of a weekday" used by admin
    * subscription creation. All date arithmetic must go through CalendarService —
@@ -1165,17 +1166,19 @@ export class CalendarService {
    * @param dayOfWeek  Target day-of-week (0 = Sunday … 6 = Saturday)
    * @param startDate  Earliest eligible date (defaults to tomorrow in hub timezone)
    * @param hub        Hub context for timezone normalisation and constraint checks
-   * @param options    `acceptAllWeekdays`: bypass hub.weekdays filter (contract use)
-   * @returns          First eligible date >= startDate whose getDay() === dayOfWeek
+   * @param options    `acceptAllWeekdays`: bypass hub.weekdays filter (contract use).
+   *                   `strictlyAfter`: default true, start the day after `startDate`.
+   *                   Admin passes false when it already moved the anchor forward.
+   * @returns          First eligible date after startDate (or on startDate if strictlyAfter is false)
    */
   firstDeliveryDate(
     dayOfWeek: number,
     startDate?: Date,
     hub?: any,
-    options: { acceptAllWeekdays?: boolean } = {}
+    options: { acceptAllWeekdays?: boolean; strictlyAfter?: boolean } = {}
   ): Date {
     const targetHub = hub || this.getDefaultHub();
-    const { acceptAllWeekdays = false } = options;
+    const { acceptAllWeekdays = false, strictlyAfter = true } = options;
 
     // Normalise reference point to hub timezone so getDay() comparisons are coherent
     const base = this.toHubTime(startDate || new Date(), targetHub);
@@ -1183,6 +1186,9 @@ export class CalendarService {
       base.setDate(base.getDate() + 1); // default: start from tomorrow
     }
     base.setHours(0, 0, 0, 0);
+    if (startDate && strictlyAfter) {
+      base.setDate(base.getDate() + 1);
+    }
 
     // Scan up to 14 days to handle noshipping windows that may span a full week
     for (let i = 0; i < 14; i++) {
