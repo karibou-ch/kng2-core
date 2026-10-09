@@ -62,7 +62,8 @@ export class CartItem {
     item.bundle = (item.bundle =='true');
     item.discount = (item.discount =='true');
     item.frequency = item.frequency == 'false' ? undefined : item.frequency;
-    item.timestamp = new Date(item.timestamp);
+    const timestamp = new Date(item.timestamp);
+    this.timestamp = Number.isFinite(timestamp.getTime()) ? timestamp : new Date();
   }
   shared?: boolean;
   deleted?: boolean;
@@ -361,12 +362,36 @@ export class CartConfig {
 
 }
 
+// Server cart empty + a hub fence: keep local lines that are not already ordered.
+// A missing date is not proof the line was ordered.
+export function cartItemsAfterLoad(localItems: any[], serverItems: any[], orderFence?: { [hub: string]: string | Date }): any[] {
+  if (serverItems && serverItems.length) {
+    return serverItems;
+  }
+  const fence = orderFence || {};
+  return (localItems || []).filter(item => {
+    if (item.frequency) {
+      return true;
+    }
+    const mark = fence[item.hub];
+    if (!mark) {
+      return true;
+    }
+    const ts = new Date(item.timestamp).getTime();
+    if (!Number.isFinite(ts)) {
+      return true;
+    }
+    return ts > new Date(mark).getTime();
+  });
+}
+
 //
 // server content
 export class CartModel {
   cid: string | [string];
   items: CartItem[];
   updated: Date;
+  order?: { [hub: string]: string | Date };
   reset: Date;
   subscriptionParams: CartSubscriptionParams;
   subscriptions: string[];
@@ -1409,9 +1434,11 @@ export class CartService {
 
         //
         // restore errors from the last checkout validation
-        const itemsWithError = this.cache.items.filter(item => item.error);
+        const localItems = (this.cache.items || []).slice();
+        const itemsWithError = localItems.filter(item => item.error);
+        const resolved = cartItemsAfterLoad(localItems, cart.items || [], cart.order);
 
-        this.cache.items = cart.items.map( item => {
+        this.cache.items = resolved.map( item => {
           const got = itemsWithError.find(itm => itm.sku == item.sku);
           item.error = got && got.error;
           item.shared=(!!shared);
@@ -1627,8 +1654,10 @@ export class CartService {
 
       //
       // restore errors from the last checkout validation
-      const itemsWithError = this.cache.items.filter(item => item.error);
-      state.server = this.cache.items = model.items.map( item => {
+      const localItems = (this.cache.items || []).slice();
+      const itemsWithError = localItems.filter(item => item.error);
+      const resolved = cartItemsAfterLoad(localItems, model.items || [], model.order);
+      state.server = this.cache.items = resolved.map( item => {
         const got = itemsWithError.find(itm => itm.sku == item.sku);
         item.error = got && got.error;
         return new CartItem(item)
