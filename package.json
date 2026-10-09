@@ -8,6 +8,7 @@
     "deploy": "npm run build && npm publish ./dist/v12",
     "start": "ng serve",
     "build": "ng build",
+    "build:test": "NODE_OPTIONS=--openssl-legacy-provider ng test --watch=false --browsers=ChromeHeadless",
     "test": "ng test",
     "lint": "ng lint",
     "e2e": "ng e2e"

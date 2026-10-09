@@ -1,7 +1,8 @@
-import { TestBed, inject, async } from '@angular/core/testing';
+import { TestBed, inject } from '@angular/core/testing';
 import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
 
-import { CartService, CartItem, CartAction } from './cart.service';
+import { CartService, CartItem, CartAction, CartItemsContext } from './cart.service';
+import { CalendarService } from './calendar.service';
 
 import { OrderService } from './order/order.service';
 import { ConfigService } from './config.service';
@@ -9,7 +10,6 @@ import { ConfigService } from './config.service';
 import { sharedRoot } from './test-payload/config';
 import { items } from './test-payload/items';
 import { User } from './user.service';
-import { CartItemsContext } from 'dist';
 
 describe('CartService : localStorage', () => {
   let cfg;
@@ -54,7 +54,7 @@ describe('CartService : localStorage', () => {
     user.id = 1;
     TestBed.configureTestingModule({
       imports: [HttpClientTestingModule],
-      providers: [CartService, OrderService, ConfigService,
+      providers: [CartService, CalendarService, OrderService, ConfigService,
                   { provide: 'KNG2_OPTIONS', useValue: {API_SERVER: 'test'}}
                 ]
     });
@@ -73,9 +73,7 @@ describe('CartService : localStorage', () => {
 
   });
 
-  afterEach(async(() => {
-    setTimeout(() => { }, 100);
-  }));
+  const lines = (cart: CartService) => cart.getItems({});
 
   it('load config shared', inject([ConfigService, HttpTestingController], (config: ConfigService, httpMock) => {
     // expect(config).toBeTruthy();
@@ -105,7 +103,7 @@ describe('CartService : localStorage', () => {
 
 
     cart.subscribe(state => {
-      expect(state.action).toEqual(5);
+      expect(state.action).toEqual(CartAction.CART_LOADED);
       cart.getCurrentShippingDay();
       const items = cart.getItems(ctx);
       expect( items.length).toEqual(0);
@@ -128,27 +126,27 @@ describe('CartService : localStorage', () => {
 
     cart.subscribe(state => {
 
-      if (state.action !== 5) {
+      if (state.action !== CartAction.CART_LOADED) {
           return;
       }
-      expect(state.action).toEqual(5);
+      expect(state.action).toEqual(CartAction.CART_LOADED);
       cart.getCurrentShippingDay();
 
       cart.add(new CartItem(items[0]));
       postSuccess(httpMock, simpleResult);
-      expect( cart.quantity()).toEqual(0);
+      expect( lines(cart).length).toEqual(0);
 
       cart.add(new CartItem(items[0]));
       postSuccess(httpMock, Object.assign({}, simpleResult, {items: [items[0]]}));
-      expect( cart.quantity()).toEqual(1);
+      expect( lines(cart).length).toEqual(1);
 
       cart.add(new CartItem(items[1]));
       postSuccess(httpMock, Object.assign({}, simpleResult, {items: [items[0], items[1]]}));
-      expect( cart.quantity()).toEqual(2);
+      expect( lines(cart).length).toEqual(2);
 
       cart.remove(new CartItem(items[0]));
       postSuccess(httpMock, simpleResult);
-      expect( cart.quantity()).toEqual(0);
+      expect( lines(cart).length).toEqual(0);
 
       expect(store['kng2-cart']).toBeDefined();
       expect(JSON.parse(store['kng2-cart']).items.length).toEqual(0);
@@ -170,8 +168,8 @@ describe('CartService : localStorage', () => {
     expect(cart).toBeTruthy();
 
     cart.subscribe(state => {
-      expect(state.action).toEqual(5);
-      expect( cart.quantity()).toEqual(1);
+      expect(state.action).toEqual(CartAction.CART_LOADED);
+      expect( lines(cart).length).toEqual(1);
     });
     cart.setContext(cfg, user);
     cart.getCurrentShippingDay();
@@ -194,12 +192,12 @@ describe('CartService : localStorage', () => {
 
       cart.add(new CartItem(items[0]));
       postSuccess(httpMock, Object.assign({}, simpleResult, {items: [items[0]]}));
-      expect( cart.quantity()).toEqual(1);
-      expect( cart.getItems()[0].sku).toEqual(items[0].sku);
+      expect( lines(cart).length).toEqual(1);
+      expect( lines(cart)[0].sku).toEqual(items[0].sku);
 
       cart.add(new CartItem(items[1]));
       postSuccess(httpMock, Object.assign({}, simpleResult, {items: [items[0], items[1]]}));
-      expect( cart.quantity()).toEqual(2);
+      expect( lines(cart).length).toEqual(2);
 
       expect(JSON.parse(store['kng2-cart']).items.length).toEqual(2);
 
@@ -226,12 +224,12 @@ describe('CartService : localStorage', () => {
 
       cart.add(new CartItem(items[0]));
       postSuccess(httpMock, Object.assign({}, simpleResult, {items: [items[0]]}));
-      expect( cart.quantity()).toEqual(1);
-      expect( cart.getItems()[0].sku).toEqual(items[0].sku);
+      expect( lines(cart).length).toEqual(1);
+      expect( lines(cart)[0].sku).toEqual(items[0].sku);
 
       cart.add(new CartItem(items[1]));
       postSuccess(httpMock, Object.assign({}, simpleResult, {items: [items[0], items[1]]}));
-      expect( cart.quantity()).toEqual(2);
+      expect( lines(cart).length).toEqual(2);
 
     });
     cart.setContext(cfg, user);

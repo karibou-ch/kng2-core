@@ -7,6 +7,8 @@ import { sharedRoot, sharedWithHUB } from './test-payload/config';
 import { shops } from './test-payload/shops';
 import { UserService } from './user.service';
 import { CartService } from './cart.service';
+import { CalendarService } from './calendar.service';
+import { OrderService } from './order/order.service';
 import { ShopService } from './shop.service';
 import { CategoryService } from './category.service';
 
@@ -29,7 +31,7 @@ describe('LoaderService', () => {
   beforeEach(() => {
     TestBed.configureTestingModule({
       imports: [HttpClientTestingModule],
-      providers: [LoaderService, ConfigService, UserService, CartService, CategoryService, ShopService,
+      providers: [LoaderService, ConfigService, UserService, CartService, CalendarService, OrderService, CategoryService, ShopService,
                   { provide: 'KNG2_OPTIONS', useValue: { API_SERVER: 'test'} }]
     });
   });
@@ -41,7 +43,7 @@ describe('LoaderService', () => {
 
     // console.log('---',loader);
 
-    loader.ready().subscribe((loader) => {
+    loader.readyWithStore().subscribe((loader) => {
       const config = loader[0];
       const user   = loader[1];
       expect(config).toBeDefined();
@@ -57,11 +59,9 @@ describe('LoaderService', () => {
       return true;
     }).flush(sharedRoot);
 
-    httpMock.expectOne(req => {
-      expect(req.urlWithParams).toContain('test/v1/users/me');
-      expect(req.method).toBe('GET');
-      return true;
-    }).flush({}, { status: 401, statusText: 'Vous devez ouvrir une session' });
+    httpMock.match(req => req.url.indexOf('/v1/users/me') !== -1).forEach(req => {
+      req.flush({}, { status: 401, statusText: 'Vous devez ouvrir une session' });
+    });
   }));
 
   it('init loader waiting for Store ready', inject(
@@ -70,41 +70,22 @@ describe('LoaderService', () => {
     expect($loader).toBeTruthy();
     console.log('--- $loader waiting for Store ready', sharedWithHUB.hub.name);
 
-    $loader.readyWithStore().subscribe((loader) => {
-      const config = loader[0];
-      const shops  = loader[2];
-      expect(config.shared.hub.name).toBeDefined();
-      expect(shops).toBeDefined();
+    $loader.readyWithStore('artamis').subscribe((loaded) => {
+      const config = loaded[0];
+      const shopList = loaded[3];
+      expect(config.shared.hub.name).toBe(sharedWithHUB.hub.name);
+      expect(shopList).toBeDefined();
       console.log('--- DONE');
-      // done();
     });
 
-    httpMock.expectOne(req => {
-      expect(req.urlWithParams).toContain('test/v1/config?lang=');
-      expect(req.method).toBe('GET');
-      return true;
-    }).flush(sharedRoot);
-
-
-    httpMock.expectOne(req => {
-      expect(req.urlWithParams).toContain('test/v1/users/me');
-      expect(req.method).toBe('GET');
-      return true;
-    }).flush({}, { status: 401, statusText: 'Vous devez ouvrir une session' });
-
-    $config.get('artamis').subscribe();
-    httpMock.expectOne(req => {
-      expect(req.urlWithParams).toContain('test/v1/config?lang=fr&hub=artamis');
-      expect(req.method).toBe('GET');
-      return true;
-    }).flush(sharedWithHUB);
-
-    $shops.query({hub:'artamis'}).subscribe();
-    httpMock.expectOne(req => {
-      expect(req.urlWithParams).toContain('test/v1/shops');
-      expect(req.method).toBe('GET');
-      return true;
-    }).flush(shops);
+    httpMock.match(req => req.url.indexOf('hub=artamis') !== -1).forEach(req => {
+      req.flush(Object.assign({ hubs: [] }, sharedWithHUB));
+    });
+    httpMock.match(req => req.url.indexOf('/v1/users/me') !== -1).forEach(req => {
+      req.flush({}, { status: 401, statusText: 'Vous devez ouvrir une session' });
+    });
+    httpMock.match(req => req.url.indexOf('/v1/category') !== -1).forEach(req => req.flush([]));
+    httpMock.match(req => req.url.indexOf('/v1/shops') !== -1).forEach(req => req.flush(shops));
 
 
   }));

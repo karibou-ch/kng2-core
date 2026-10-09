@@ -1,17 +1,27 @@
+/* To learn more about this file see: https://angular.io/config/tsconfig. */
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "outDir": "./out-tsc/spec",
+    "lib": ["es2020", "dom"],
     "types": [
-      "jasmine",
-      "node"
-    ]
+      "jasmine"
+    ],
+    "paths": {
+      "tslib": ["./node_modules/tslib/tslib.es6.js"],
+      "kng2-core": ["dist/kng2-core"],
+      "kng2-core/*": ["dist/kng2-core/*"]
+    }
+  },
+  "angularCompilerOptions": {
+    "enableIvy": true
   },
   "files": [
-    "src/test.ts"
+    "src/test.ts",
+    "src/polyfills.ts"
   ],
   "include": [
-    "**/*.spec.ts",
-    "**/*.d.ts"
+    "src/**/*.spec.ts",
+    "src/**/*.d.ts"
   ]
 }

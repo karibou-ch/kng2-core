@@ -19,7 +19,7 @@ describe('UserService', () => {
       expect(user.id).toEqual(1);
       user.display();
     });
-    const req = httpMock.expectOne('test/v1/users/1');
+    const req = httpMock.expectOne(request => request.url.indexOf('test/v1/users/1') === 0);
     expect(req.request.method).toBe('GET');
     req.flush({
       id: 1
