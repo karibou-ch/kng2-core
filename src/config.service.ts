@@ -87,6 +87,10 @@ export class ConfigService {
     }));
   }
 
+  private normalizeNotify(shared: any) {
+    shared.notify = Object.assign({ itemThreshold: 0 }, shared.notify || {});
+  }
+
   private normalizeServiceBlocks(shared:any) {
     // FIXME migration services[]: conserver ces blocs tant que les clients les lisent directement.
     // Ref: karibou-api/.cursor/rules/karibou-ch-TODO.mdc section 10.1
@@ -127,6 +131,7 @@ export class ConfigService {
         if (localHasHub &&
            !sharedHasHUB) {
             this.normalizeServiceBlocks(config.shared);
+            this.normalizeNotify(config.shared);
             return config;
         }
         //
@@ -170,6 +175,7 @@ export class ConfigService {
         config.shared.faq = config.shared.faq || [];
         config.shared.faq_title = config.shared.faq_title || {en:"",fr:""};
         this.normalizeServiceBlocks(config.shared);
+        this.normalizeNotify(config.shared);
         return config;
       }),
       tap(config => {
@@ -228,6 +234,7 @@ export class ConfigService {
         config.shared.faq == config.shared.faq || [];
         config.shared.faq_title = config.shared.faq_title || {en:"",fr:""};
         this.normalizeServiceBlocks(config.shared);
+        this.normalizeNotify(config.shared);
 
         return config;
       }),
