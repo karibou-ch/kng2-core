@@ -98,6 +98,7 @@ export interface OrderAddress{
   hours: number,
   name: string,
   note?: string,
+  privateNote?: string, // private note for logistic only
   phone?: string,
   streetAdress: string,
   floor: string,

@@ -1079,6 +1079,16 @@ export class UserService {
     );
   }
 
+  // app.post('/v1/users/:id/:attribut', auth.ensureAdmin, users.updateAttribute);
+  updateAttribute(id: number, attribut: string, value: string): Observable<User> {
+    return this.http.post<User>(this.config.API_SERVER + '/v1/users/' + id + '/' + attribut, { value }, {
+      headers: this.headers,
+      withCredentials: true
+    }).pipe(
+      map(user => this.updateCache(user))
+    );
+  }
+
   saveDelegated(user): Observable<User> {
     // autofill the address name when available
     user.populateAdresseName();

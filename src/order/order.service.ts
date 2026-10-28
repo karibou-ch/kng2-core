@@ -394,6 +394,42 @@ export class OrderService {
   //
   // update item for one order (shop preparation process)
   // role:shop:operator:admin
+  // app.post('/v1/orders/:oid/shipping', hub.ensureLogisticOrAdmin, orders.updateShipping);
+  updateShippingNote(order: Order, fields: { note?: string, privateNote?: string }): Observable<Order> {
+    return this.http.post<Order>(this.config.API_SERVER + '/v1/orders/' + order.oid + '/shipping', fields, {
+      headers: this.headers,
+      withCredentials: true
+    }).pipe(
+      map(order => this.updateCache(order)),
+      tap(order => this.order$.next(order))
+    );
+  }
+
+  // app.post('/v1/orders/:oid/billNote', auth.ensureLogisticOrAdmin, orders.updateBillNote);
+  updateBillNote(order: Order, billNote: string): Observable<Order> {
+    return this.http.post<Order>(this.config.API_SERVER + '/v1/orders/' + order.oid + '/billNote', { billNote }, {
+      headers: this.headers,
+      withCredentials: true
+    }).pipe(
+      map(order => this.updateCache(order)),
+      tap(order => this.order$.next(order))
+    );
+  }
+
+  updateItemNote(order: Order, item: OrderItem, note: string): Observable<Order> {
+    return this.http.post<Order>(this.config.API_SERVER + '/v1/orders/' + order.oid + '/items', [{
+      sku: item.sku,
+      vendor: item.vendor,
+      note: note
+    }], {
+      headers: this.headers,
+      withCredentials: true
+    }).pipe(
+      map(updated => this.updateCache(updated)),
+      tap(updated => this.order$.next(updated))
+    );
+  }
+
   updateItem(order: Order, items, fulfillment: EnumFulfillments): Observable<Order> {
     const tosave = items.map(item => {
       const elem = Object.assign({}, item);
@@ -416,9 +452,13 @@ export class OrderService {
   // update order with specific issue made by one shop
   // role:admin
   // app.post('/v1/orders/:oid/issue', auth.ensureAdmin, orders.updateIssue);
-  updateIssue(order: Order, item, issue: EnumOrderIssue): Observable<Order> {
+  updateIssue(order: Order, item, issue: EnumOrderIssue, note?: string): Observable<Order> {
     const tosave = Object.assign({}, item);
+    tosave.fulfillment = Object.assign({}, item.fulfillment);
     tosave.fulfillment.issue = EnumOrderIssue[issue];
+    if (note) {
+      tosave.fulfillment.note = note;
+    }
     return this.http.post<Order>(this.config.API_SERVER + '/v1/orders/' + order.oid + '/issue', [tosave], {
       headers: this.headers,
       withCredentials: true
