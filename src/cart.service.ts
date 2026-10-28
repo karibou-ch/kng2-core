@@ -1744,6 +1744,13 @@ export class CartService {
       currentShippingTime:hours,
       currentShippingLastMinute:lastMinute
     }
+    // A new day invalidates checkout errors computed for the previous day
+    // (timelimit, shop closed). The next checkout validates again.
+    this.clearErrors();
+
+    // FIXME: CART_SHIPPING is only a cart action. Replace it with a kngBus
+    // shipping-day signal so every date-dependent service subscribes once
+    // (cart errors, product timing, catalog queries) instead of listening ad hoc.
     this.save({ action: CartAction.CART_SHIPPING, data});
   }
 
